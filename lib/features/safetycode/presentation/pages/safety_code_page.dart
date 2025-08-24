@@ -11,12 +11,15 @@ class SafetyCodePage extends ConsumerStatefulWidget {
 }
 
 class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
-  final TextEditingController _safetyCodeController = TextEditingController();
+  late final TextEditingController _safetyCodeController;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    // No pre-filling - let user enter their own safety code
+    _safetyCodeController = TextEditingController();
+    
+    // No pre-filling - let user enter your own safety code
     print('🐛 Safety code page initialized');
     print('🐛 Controller text: "${_safetyCodeController.text}"');
     
@@ -24,6 +27,15 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
     _safetyCodeController.addListener(() {
       print('🐛 Controller listener triggered: "${_safetyCodeController.text}"');
     });
+    
+    _isInitialized = true;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    print('🐛 Safety code page dependencies changed');
+    print('🐛 Controller text after dependencies: "${_safetyCodeController.text}"');
   }
 
   @override
@@ -34,7 +46,12 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
 
   @override
   Widget build(BuildContext context) {
-    final safetyCodeState = ref.watch(safetyCodeVerifiedProvider);
+    // Use listen instead of watch to prevent unnecessary rebuilds
+    ref.listen(safetyCodeVerifiedProvider, (previous, next) {
+      print('🐛 Safety code state changed: ${next.isVerified}');
+    });
+    
+    final safetyCodeState = ref.read(safetyCodeVerifiedProvider);
     final safetyCodeNotifier = ref.read(safetyCodeNotifierProvider.notifier);
     return Scaffold(
       appBar: AppBar(title: const Text('Safety Code')),
