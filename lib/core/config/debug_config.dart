@@ -7,13 +7,13 @@ class DebugConfig {
   static bool get isDebugMode => _enableDebugMode;
   
   // Test user credentials for development
-  // TODO: Replace with actual test user credentials from backend
-  // To get test credentials:
-  // 1. Check with backend team for test user credentials
-  // 2. Or create a test user using the registration endpoint with valid tenant/application IDs
-  // 3. Update these credentials with the real test user
-  static const String testEmail = 'test_user@tsukiyo.com';
-  static const String testPassword = 'test123'; // Update with actual password
+  // ✅ Found in kch_dev backend database
+  // Email: test@tsukiyo.dev
+  // Password: password123
+  // Tenant ID: 1aca2ef7-b1fa-46bb-af08-a8fdb449b1f9
+  // Application ID: c8f67708-8f15-4205-be08-ebc676205d1d
+  static const String testEmail = 'test@tsukiyo.dev';
+  static const String testPassword = 'password123';
   
   // Debug API settings
   static const String debugApiUrl = 'http://localhost:8000/api';
