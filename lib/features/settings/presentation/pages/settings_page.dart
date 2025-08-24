@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mindhearth/app/providers/providers.dart';
+import 'package:mindhearth/core/config/debug_config.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -145,6 +146,47 @@ class SettingsPage extends ConsumerWidget {
                       }
                     },
                   ),
+                  
+                  // Debug section (only shown in debug mode)
+                  if (DebugConfig.isDebugMode) ...[
+                    const Divider(),
+                    ListTile(
+                      leading: Icon(Icons.bug_report, color: Colors.orange),
+                      title: const Text('Debug Information'),
+                      subtitle: Text('Environment: Debug | Backend: ${DebugConfig.apiUrl}'),
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Debug Information'),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Environment: Debug'),
+                                Text('Backend URL: ${DebugConfig.apiUrl}'),
+                                Text('Test Email: ${DebugConfig.testEmail}'),
+                                const SizedBox(height: 16),
+                                Text(
+                                  '⚠️  To use debug mode:\n'
+                                  '1. Ensure backend is running\n'
+                                  '2. Update test credentials in DebugConfig\n'
+                                  '3. Use valid tenant/application IDs',
+                                  style: TextStyle(color: Colors.orange[700]),
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('Close'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ],
               ),
             ),

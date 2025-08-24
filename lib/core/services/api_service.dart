@@ -68,23 +68,18 @@ class ApiService {
     required String email,
     required String password,
   }) async {
-    // Debug mode: Auto-login with test credentials
-    if (DebugConfig.isDebugMode && 
-        email == DebugConfig.testEmail && 
-        password == DebugConfig.testPassword) {
-      _logger.d('Debug mode: Auto-login with test credentials');
-      await Future.delayed(const Duration(milliseconds: 800)); // Simulate network delay
-      return ApiSuccess(data: DebugConfig.testAuthResponse);
-    }
-    
     try {
+      _logger.d('Attempting login with real backend: $email');
+      
       final response = await _dio.post('/auth/login', data: {
         'email': email,
         'password': password,
       });
       
+      _logger.d('Login successful');
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
+      _logger.e('Login failed: ${e.message}');
       return ApiError(
         message: e.response?.data?['detail'] ?? 'Login failed',
         statusCode: e.response?.statusCode,

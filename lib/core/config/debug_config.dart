@@ -7,8 +7,13 @@ class DebugConfig {
   static bool get isDebugMode => _enableDebugMode;
   
   // Test user credentials for development
-  static const String testEmail = 'test@mindhearth.com';
-  static const String testPassword = 'password123';
+  // TODO: Replace with actual test user credentials from backend
+  // To get test credentials:
+  // 1. Check with backend team for test user credentials
+  // 2. Or create a test user using the registration endpoint with valid tenant/application IDs
+  // 3. Update these credentials with the real test user
+  static const String testEmail = 'test_user@tsukiyo.com';
+  static const String testPassword = 'test123'; // Update with actual password
   
   // Debug API settings
   static const String debugApiUrl = 'http://localhost:8000/api';
@@ -20,21 +25,21 @@ class DebugConfig {
   // Debug features
   static bool get enableDebugLogging => isDebugMode;
   static bool get enableTestData => isDebugMode;
-  static bool get enableMockResponses => isDebugMode;
+  static bool get enableMockResponses => false; // Always use real backend
   
   // Debug navigation shortcuts
   static bool get enableDebugNavigation => isDebugMode;
   
   // Debug user state shortcuts
   static bool get enableAutoLogin => isDebugMode;
-  static bool get enableSkipOnboarding => isDebugMode;
-  static bool get enableSkipSafetyCode => isDebugMode;
+  static bool get enableSkipOnboarding => false; // Always go through real onboarding
+  static bool get enableSkipSafetyCode => false; // Always go through real safety code
   
   // Debug UI features
   static bool get showDebugBanner => isDebugMode;
   static bool get enablePerformanceOverlay => isDebugMode;
   
-  // Debug data
+  // Debug data - only used if backend is unavailable
   static Map<String, dynamic> get testUserData => {
     'id': 'test_user_123',
     'email': testEmail,
@@ -50,4 +55,7 @@ class DebugConfig {
     'tenant_id': testUserData['tenant_id'],
     'message': 'Debug login successful',
   };
+  
+  // Backend connectivity check
+  static bool get useRealBackend => true; // Always use real backend in debug mode
 }

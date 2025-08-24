@@ -107,26 +107,7 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
               ),
             ),
             
-            // Debug shortcuts (only shown in debug mode)
-            if (DebugConfig.isDebugMode) ...[
-              SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      // Skip safety code verification
-                      safetyCodeNotifier.verifySafetyCode('1234');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: Text('🐛 Skip Safety Code'),
-                  ),
-                ],
-              ),
-            ],
+
           ],
         ),
       ),

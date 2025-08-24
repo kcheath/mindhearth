@@ -174,7 +174,7 @@ class LoginPage extends HookConsumerWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Test credentials pre-filled\nAPI: ${DebugConfig.apiUrl}',
+                            'Using real backend: ${DebugConfig.apiUrl}\nTest credentials pre-filled\n\n⚠️  To use this debug mode:\n1. Ensure backend is running\n2. Update test credentials in DebugConfig\n3. Use valid tenant/application IDs',
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.blue[600],

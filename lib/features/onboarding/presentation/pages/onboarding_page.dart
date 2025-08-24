@@ -99,27 +99,7 @@ class OnboardingPage extends ConsumerWidget {
               ],
             ),
             
-            // Debug shortcuts (only shown in debug mode)
-            if (DebugConfig.isDebugMode) ...[
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      // Skip to last step
-                      onboardingNotifier.completeOnboarding();
-                      authNotifier.updateOnboardingStatus(true);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: Text('🐛 Skip Onboarding'),
-                  ),
-                ],
-              ),
-            ],
+
           ],
         ),
       ),
