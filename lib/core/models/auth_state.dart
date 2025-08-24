@@ -1,15 +1,33 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-import 'user.dart';
+import 'package:mindhearth/core/models/user.dart';
 
-part 'auth_state.freezed.dart';
+class AuthState {
+  final bool isLoading;
+  final bool isAuthenticated;
+  final User? user;
+  final String? accessToken;
+  final String? error;
 
-@freezed
-class AuthState with _$AuthState {
-  const factory AuthState({
-    @Default(false) bool isLoading,
-    @Default(false) bool isAuthenticated,
+  const AuthState({
+    this.isLoading = false,
+    this.isAuthenticated = false,
+    this.user,
+    this.accessToken,
+    this.error,
+  });
+
+  AuthState copyWith({
+    bool? isLoading,
+    bool? isAuthenticated,
     User? user,
     String? accessToken,
     String? error,
-  }) = _AuthState;
+  }) {
+    return AuthState(
+      isLoading: isLoading ?? this.isLoading,
+      isAuthenticated: isAuthenticated ?? this.isAuthenticated,
+      user: user ?? this.user,
+      accessToken: accessToken ?? this.accessToken,
+      error: error ?? this.error,
+    );
+  }
 }

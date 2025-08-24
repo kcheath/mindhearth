@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/app/providers/providers.dart';
-import 'package:mindhearth/core/models/auth_state.dart';
 
 void main() {
   group('AuthNotifier Tests', () {

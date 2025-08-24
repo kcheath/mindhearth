@@ -19,7 +19,7 @@ class AppTheme {
         tertiary: _tertiaryColor,
         error: _errorColor,
         surface: _surfaceColor,
-        surfaceVariant: _surfaceVariantColor,
+        surfaceContainerHighest: _surfaceVariantColor,
         outline: _outlineColor,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
@@ -36,7 +36,7 @@ class AppTheme {
         backgroundColor: _surfaceColor,
         foregroundColor: Color(0xFF1C1B1F),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 1,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -83,7 +83,7 @@ class AppTheme {
         tertiary: _tertiaryColor,
         error: _errorColor,
         surface: Color(0xFF1C1B1F),
-        surfaceVariant: Color(0xFF49454F),
+        surfaceContainerHighest: Color(0xFF49454F),
         outline: Color(0xFF938F99),
         onPrimary: Colors.white,
         onSecondary: Colors.white,
@@ -100,7 +100,7 @@ class AppTheme {
         backgroundColor: Color(0xFF1C1B1F),
         foregroundColor: Colors.white,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 1,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),

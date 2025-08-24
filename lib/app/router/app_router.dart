@@ -1,16 +1,15 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import '../providers/providers.dart';
-import '../../features/auth/presentation/pages/login_page.dart';
-import '../../features/onboarding/presentation/pages/onboarding_page.dart';
-import '../../features/safetycode/presentation/pages/safety_code_page.dart';
-import '../../features/chat/presentation/pages/chat_page.dart';
-import '../../features/sessions/presentation/pages/sessions_page.dart';
-import '../../features/journal/presentation/pages/journal_page.dart';
-import '../../features/documents/presentation/pages/documents_page.dart';
-import '../../features/reports/presentation/pages/reports_page.dart';
-import '../../features/settings/presentation/pages/settings_page.dart';
+import 'package:mindhearth/app/providers/providers.dart';
+import 'package:mindhearth/features/auth/presentation/pages/login_page.dart';
+import 'package:mindhearth/features/onboarding/presentation/pages/onboarding_page.dart';
+import 'package:mindhearth/features/safetycode/presentation/pages/safety_code_page.dart';
+import 'package:mindhearth/features/chat/presentation/pages/chat_page.dart';
+import 'package:mindhearth/features/sessions/presentation/pages/sessions_page.dart';
+import 'package:mindhearth/features/journal/presentation/pages/journal_page.dart';
+import 'package:mindhearth/features/documents/presentation/pages/documents_page.dart';
+import 'package:mindhearth/features/reports/presentation/pages/reports_page.dart';
+import 'package:mindhearth/features/settings/presentation/pages/settings_page.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);

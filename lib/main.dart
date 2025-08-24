@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'app/themes/app_theme.dart';
-import 'app/router/app_router.dart';
+import 'package:mindhearth/app/themes/app_theme.dart';
+import 'package:mindhearth/app/router/app_router.dart';
 
 void main() {
   runApp(

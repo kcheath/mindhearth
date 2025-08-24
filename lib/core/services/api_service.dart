@@ -1,8 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logger/logger.dart';
-import '../models/api_response.dart';
-import '../models/user.dart';
+import 'package:mindhearth/core/models/api_response.dart';
 
 class ApiService {
   static const String _baseUrl = 'http://localhost:8000/api';
@@ -75,9 +74,9 @@ class ApiService {
         'password': password,
       });
       
-      return ApiResponse.success(data: response.data);
+      return ApiSuccess(data: response.data);
     } on DioException catch (e) {
-      return ApiResponse.error(
+      return ApiError(
         message: e.response?.data?['detail'] ?? 'Login failed',
         statusCode: e.response?.statusCode,
       );
@@ -88,9 +87,9 @@ class ApiService {
   Future<ApiResponse<Map<String, dynamic>>> healthCheck() async {
     try {
       final response = await _dio.get('/health');
-      return ApiResponse.success(data: response.data);
+      return ApiSuccess(data: response.data);
     } on DioException catch (e) {
-      return ApiResponse.error(
+      return ApiError(
         message: 'Health check failed',
         statusCode: e.response?.statusCode,
       );
@@ -106,9 +105,9 @@ class ApiService {
         'messages': messages,
       });
       
-      return ApiResponse.success(data: response.data);
+      return ApiSuccess(data: response.data);
     } on DioException catch (e) {
-      return ApiResponse.error(
+      return ApiError(
         message: e.response?.data?['detail'] ?? 'Chat request failed',
         statusCode: e.response?.statusCode,
       );

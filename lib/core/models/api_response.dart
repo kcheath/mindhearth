@@ -1,24 +1,46 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+abstract class ApiResponse<T> {
+  const ApiResponse();
+  
+  R when<R>({
+    required R Function(T data, String? message) success,
+    required R Function(String message, int? statusCode, Map<String, dynamic>? errors) error,
+  });
+}
 
-part 'api_response.freezed.dart';
-part 'api_response.g.dart';
+class ApiSuccess<T> extends ApiResponse<T> {
+  final T data;
+  final String? message;
 
-@freezed
-class ApiResponse<T> with _$ApiResponse<T> {
-  const factory ApiResponse.success({
-    required T data,
-    String? message,
-  }) = ApiSuccess<T>;
+  const ApiSuccess({
+    required this.data,
+    this.message,
+  });
 
-  const factory ApiResponse.error({
-    required String message,
-    int? statusCode,
-    Map<String, dynamic>? errors,
-  }) = ApiError<T>;
+  @override
+  R when<R>({
+    required R Function(T data, String? message) success,
+    required R Function(String message, int? statusCode, Map<String, dynamic>? errors) error,
+  }) {
+    return success(data, message);
+  }
+}
 
-  factory ApiResponse.fromJson(
-    Map<String, dynamic> json,
-    T Function(Object? json) fromJsonT,
-  ) =>
-      _$ApiResponseFromJson(json, fromJsonT);
+class ApiError<T> extends ApiResponse<T> {
+  final String message;
+  final int? statusCode;
+  final Map<String, dynamic>? errors;
+
+  const ApiError({
+    required this.message,
+    this.statusCode,
+    this.errors,
+  });
+
+  @override
+  R when<R>({
+    required R Function(T data, String? message) success,
+    required R Function(String message, int? statusCode, Map<String, dynamic>? errors) error,
+  }) {
+    return error(message, statusCode, errors);
+  }
 }

@@ -1,24 +1,18 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../core/services/api_service.dart';
-import '../../core/models/auth_state.dart';
-import '../../core/models/user.dart';
-
-part 'providers.g.dart';
+import 'package:mindhearth/core/services/api_service.dart';
+import 'package:mindhearth/core/models/auth_state.dart';
+import 'package:mindhearth/core/models/user.dart';
 
 // API Service Provider
-@riverpod
-ApiService apiService(ApiServiceRef ref) {
+final apiServiceProvider = Provider<ApiService>((ref) {
   return ApiService();
-}
+});
 
 // Auth State Provider
-@riverpod
-class AuthNotifier extends _$AuthNotifier {
-  @override
-  AuthState build() {
-    return const AuthState();
-  }
+class AuthNotifier extends StateNotifier<AuthState> {
+  final Ref ref;
+
+  AuthNotifier(this.ref) : super(const AuthState());
 
   Future<void> login(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
@@ -28,7 +22,7 @@ class AuthNotifier extends _$AuthNotifier {
       final response = await apiService.login(email: email, password: password);
       
       response.when(
-        success: (data) async {
+        success: (data, message) async {
           final token = data['access_token'] as String;
           final userId = data['user_id'] as String;
           final tenantId = data['tenant_id'] as String;
@@ -84,8 +78,11 @@ class AuthNotifier extends _$AuthNotifier {
   }
 }
 
+final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  return AuthNotifier(ref);
+});
+
 // Auth State Provider
-@riverpod
-AuthState authState(AuthStateRef ref) {
+final authStateProvider = Provider<AuthState>((ref) {
   return ref.watch(authNotifierProvider);
-}
+});
