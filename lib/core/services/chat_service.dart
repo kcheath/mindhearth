@@ -2,7 +2,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/features/chat/widgets/chat_message_bubble.dart';
 import 'package:mindhearth/core/models/api_response.dart';
-import 'package:mindhearth/app/providers/providers.dart';
+import 'package:mindhearth/core/providers/api_providers.dart';
 
 class ChatService {
   final ApiService _apiService;

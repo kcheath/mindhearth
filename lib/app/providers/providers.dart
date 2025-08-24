@@ -6,11 +6,7 @@ import 'package:mindhearth/core/config/debug_config.dart';
 import 'package:mindhearth/core/services/chat_service.dart';
 import 'package:mindhearth/features/onboarding/domain/providers/onboarding_providers.dart';
 import 'package:mindhearth/features/safetycode/domain/providers/safety_code_providers.dart';
-
-// API Service Provider
-final apiServiceProvider = Provider<ApiService>((ref) {
-  return ApiService();
-});
+import 'package:mindhearth/core/providers/api_providers.dart';
 
 // Auth State Provider
 class AuthNotifier extends StateNotifier<AuthState> {
