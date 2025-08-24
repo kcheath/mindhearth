@@ -43,7 +43,7 @@ class OnboardingStepPrivacy extends StatelessWidget {
           child: Column(
             children: [
               _buildPrivacyItem(
-                Icons.encrypt_outlined,
+                Icons.lock_outline,
                 'End-to-End Encryption',
                 'All your conversations and data are encrypted',
               ),
