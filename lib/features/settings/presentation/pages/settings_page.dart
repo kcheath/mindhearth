@@ -166,12 +166,14 @@ class SettingsPage extends ConsumerWidget {
                                 const Text('Environment: Debug'),
                                 Text('Backend URL: ${DebugConfig.apiUrl}'),
                                 Text('Test Email: ${DebugConfig.testEmail}'),
+                                Text('Debug Banner: ${DebugConfig.showDebugBanner ? "Enabled" : "Disabled"}'),
                                 const SizedBox(height: 16),
                                 Text(
                                   '⚠️  To use debug mode:\n'
                                   '1. Ensure backend is running\n'
                                   '2. Update test credentials in DebugConfig\n'
-                                  '3. Use valid tenant/application IDs',
+                                  '3. Use valid tenant/application IDs\n'
+                                  '4. Enable debug banner in DebugConfig.showDebugBanner',
                                   style: TextStyle(color: Colors.orange[700]),
                                 ),
                               ],

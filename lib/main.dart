@@ -28,8 +28,8 @@ class MindhearthApp extends ConsumerWidget {
       debugShowCheckedModeBanner: DebugConfig.showDebugBanner,
       showPerformanceOverlay: DebugConfig.enablePerformanceOverlay,
       builder: (context, child) {
-        // Add debug banner overlay
-        if (DebugConfig.isDebugMode) {
+        // Add debug banner overlay (configurable via DebugConfig.showDebugBanner)
+        if (DebugConfig.isDebugMode && DebugConfig.showDebugBanner) {
           return Stack(
             children: [
               child!,

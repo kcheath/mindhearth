@@ -36,7 +36,8 @@ class DebugConfig {
   static bool get enableSkipSafetyCode => false; // Always go through real safety code
   
   // Debug UI features
-  static bool get showDebugBanner => isDebugMode;
+  // Set to true to show debug banner across the top of the app
+  static bool get showDebugBanner => false; // Disabled for cleaner UI
   static bool get enablePerformanceOverlay => isDebugMode;
   
   // Debug data - only used if backend is unavailable
