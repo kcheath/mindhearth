@@ -99,10 +99,10 @@ class ChatService {
       );
 
       return userResponse.when(
-        success: (data, message) {
+        success: (data, responseMessage) {
           return ChatMessage(
             id: data['id'] as String,
-            message: message,
+            message: message, // Use the original user message, not the API response message
             isUser: true,
             timestamp: DateTime.parse(data['created_at'] as String),
             sessionId: _currentSessionId,
