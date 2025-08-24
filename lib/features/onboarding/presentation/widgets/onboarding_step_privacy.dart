@@ -11,31 +11,31 @@ class OnboardingStepPrivacy extends StatelessWidget {
         children: [
           Icon(
             Icons.security,
-            size: 100,
+            size: 80,
             color: Color(0xFF6750A4),
           ),
-          SizedBox(height: 32),
+          SizedBox(height: 24),
           Text(
             'Your Privacy Matters',
             style: TextStyle(
-              fontSize: 28,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Color(0xFF6750A4),
             ),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 16),
+          SizedBox(height: 12),
           Text(
             'We take your privacy and security seriously',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               color: Colors.grey[600],
             ),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 32),
+          SizedBox(height: 24),
           Container(
-            padding: EdgeInsets.all(20),
+            padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.grey[50],
               borderRadius: BorderRadius.circular(12),
@@ -48,19 +48,19 @@ class OnboardingStepPrivacy extends StatelessWidget {
                   'End-to-End Encryption',
                   'All your conversations and data are encrypted',
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: 12),
                 _buildPrivacyItem(
                   Icons.local_activity_outlined,
                   'Local Processing',
                   'Sensitive data stays on your device',
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: 12),
                 _buildPrivacyItem(
                   Icons.visibility_off_outlined,
                   'No Data Sharing',
                   'We never share your personal information',
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: 12),
                 _buildPrivacyItem(
                   Icons.delete_outline,
                   'You Control Your Data',
@@ -69,7 +69,7 @@ class OnboardingStepPrivacy extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(height: 32),
+          SizedBox(height: 20),
           Container(
             padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -109,9 +109,9 @@ class OnboardingStepPrivacy extends StatelessWidget {
         Icon(
           icon,
           color: Color(0xFF6750A4),
-          size: 24,
+          size: 20,
         ),
-        SizedBox(width: 12),
+        SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,15 +119,15 @@ class OnboardingStepPrivacy extends StatelessWidget {
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              SizedBox(height: 4),
+              SizedBox(height: 2),
               Text(
                 description,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   color: Colors.grey[600],
                 ),
               ),
