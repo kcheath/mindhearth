@@ -3,6 +3,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/features/safetycode/domain/providers/safety_code_providers.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
 import 'package:mindhearth/features/onboarding/domain/providers/onboarding_providers.dart';
+import 'package:mindhearth/app/providers/providers.dart';
+import 'package:go_router/go_router.dart';
 
 class SafetyCodePage extends ConsumerStatefulWidget {
   const SafetyCodePage({super.key});
@@ -213,20 +215,76 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
                   final onboardingState = ref.watch(onboardingStateProvider);
                   final generatedCode = _generateSafetyCodeFromPassphrase(onboardingState.passphrase);
                   
-                  return SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        _safetyCodeController.text = generatedCode;
-                        print('🐛 Debug: Set safety code to $generatedCode');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 12),
+                  return Column(
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _safetyCodeController.text = generatedCode;
+                            print('🐛 Debug: Set safety code to $generatedCode');
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: Text('🐛 Debug: Fill Generated Code'),
+                        ),
                       ),
-                      child: Text('🐛 Debug: Fill Generated Code'),
-                    ),
+                      SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            // Show confirmation dialog
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text('Reset Onboarding Flow'),
+                                content: Text('This will reset your onboarding progress and log you out. You will need to complete onboarding again.'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(false),
+                                    child: Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(true),
+                                    child: Text('Reset'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            
+                            if (confirmed == true) {
+                              print('🐛 Debug: Resetting onboarding flow');
+                              
+                              // Get the auth notifier
+                              final authNotifier = ref.read(authNotifierProvider.notifier);
+                              final safetyCodeNotifier = ref.read(safetyCodeNotifierProvider.notifier);
+                              final onboardingNotifier = ref.read(onboardingStateProvider.notifier);
+                              
+                              // Reset onboarding status in backend
+                              await authNotifier.updateOnboardingStatus(false);
+                              
+                              // Clear local state
+                              safetyCodeNotifier.reset();
+                              onboardingNotifier.reset();
+                              
+                              // Logout and navigate to login
+                              authNotifier.logout();
+                              context.go('/login');
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: Text('🐛 Debug: Reset Onboarding Flow'),
+                        ),
+                      ),
+                    ],
                   );
                 },
               ),
