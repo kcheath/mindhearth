@@ -16,7 +16,7 @@ class SettingsPage extends ConsumerWidget {
         title: const Text('Settings'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () => context.go('/chat'),
         ),
       ),
       body: ListView(
