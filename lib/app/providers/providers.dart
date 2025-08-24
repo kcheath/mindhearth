@@ -2,6 +2,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/core/models/auth_state.dart';
 import 'package:mindhearth/core/models/user.dart';
+import 'package:mindhearth/features/onboarding/domain/providers/onboarding_providers.dart';
+import 'package:mindhearth/features/safetycode/domain/providers/safety_code_providers.dart';
 
 // API Service Provider
 final apiServiceProvider = Provider<ApiService>((ref) {
@@ -64,6 +66,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthState();
   }
 
+  Future<void> updateOnboardingStatus(bool isOnboarded) async {
+    if (state.user != null) {
+      final updatedUser = state.user!.copyWith(isOnboarded: isOnboarded);
+      state = state.copyWith(user: updatedUser);
+    }
+  }
+
   Future<void> checkAuthStatus() async {
     final apiService = ref.read(apiServiceProvider);
     final token = await apiService.getToken();
@@ -86,3 +95,14 @@ final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref
 final authStateProvider = Provider<AuthState>((ref) {
   return ref.watch(authNotifierProvider);
 });
+
+// Export all providers for easy access
+final appProviders = [
+  apiServiceProvider,
+  authNotifierProvider,
+  authStateProvider,
+  onboardingNotifierProvider,
+  onboardingStateProvider,
+  safetyCodeNotifierProvider,
+  safetyCodeVerifiedProvider,
+];

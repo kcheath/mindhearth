@@ -56,7 +56,7 @@ class SessionsPage extends StatelessWidget {
         onTap: (index) {
           switch (index) {
             case 0:
-              context.go('/');
+              context.go('/chat');
               break;
             case 1:
               context.go('/sessions');

@@ -10,17 +10,48 @@ import 'package:mindhearth/features/journal/presentation/pages/journal_page.dart
 import 'package:mindhearth/features/documents/presentation/pages/documents_page.dart';
 import 'package:mindhearth/features/reports/presentation/pages/reports_page.dart';
 import 'package:mindhearth/features/settings/presentation/pages/settings_page.dart';
+import 'package:mindhearth/features/safetycode/domain/providers/safety_code_providers.dart';
+import 'package:mindhearth/core/models/auth_state.dart';
+import 'package:flutter/foundation.dart';
+
+// GoRouter Refresh Stream for Riverpod integration
+class GoRouterRefreshStream extends ChangeNotifier {
+  late final ProviderSubscription<AuthState> _authSubscription;
+  late final ProviderSubscription<SafetyCodeState> _safetySubscription;
+
+  GoRouterRefreshStream(Ref ref) {
+    _authSubscription = ref.listen(authStateProvider, (previous, next) {
+      notifyListeners();
+    });
+    
+    _safetySubscription = ref.listen(safetyCodeVerifiedProvider, (previous, next) {
+      notifyListeners();
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription.close();
+    _safetySubscription.close();
+    super.dispose();
+  }
+}
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
+  final safetyCodeState = ref.watch(safetyCodeVerifiedProvider);
   
   return GoRouter(
     initialLocation: '/',
+    refreshListenable: GoRouterRefreshStream(ref),
     redirect: (context, state) {
       final isAuthenticated = authState.isAuthenticated;
       final isOnboarded = authState.user?.isOnboarded ?? false;
-      final isOnboardingRoute = state.matchedLocation == '/onboarding';
+      final isSafetyVerified = safetyCodeState.isVerified;
+      
       final isLoginRoute = state.matchedLocation == '/login';
+      final isOnboardingRoute = state.matchedLocation == '/onboarding';
+      final isSafetyRoute = state.matchedLocation == '/safety';
       
       // If not authenticated, redirect to login
       if (!isAuthenticated && !isLoginRoute) {
@@ -32,7 +63,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/onboarding';
       }
       
-      // If authenticated and onboarded, allow access to all routes
+      // If authenticated and onboarded but safety code not verified, redirect to safety
+      if (isAuthenticated && isOnboarded && !isSafetyVerified && !isSafetyRoute) {
+        return '/safety';
+      }
+      
+      // If authenticated, onboarded, and safety verified, redirect to chat (main app)
+      if (isAuthenticated && isOnboarded && isSafetyVerified && state.matchedLocation == '/') {
+        return '/chat';
+      }
+      
       return null;
     },
     routes: [
@@ -50,17 +90,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const OnboardingPage(),
       ),
       
-      // Main app routes
+      // Safety code route
       GoRoute(
-        path: '/',
-        name: 'home',
-        builder: (context, state) => const ChatPage(),
+        path: '/safety',
+        name: 'safety',
+        builder: (context, state) => const SafetyCodePage(),
       ),
       
+      // Main app routes
       GoRoute(
-        path: '/safety-code',
-        name: 'safety-code',
-        builder: (context, state) => const SafetyCodePage(),
+        path: '/chat',
+        name: 'chat',
+        builder: (context, state) => const ChatPage(),
       ),
       
       GoRoute(
