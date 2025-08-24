@@ -262,7 +262,7 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
                               // Get the auth notifier
                               final authNotifier = ref.read(authNotifierProvider.notifier);
                               final safetyCodeNotifier = ref.read(safetyCodeNotifierProvider.notifier);
-                              final onboardingNotifier = ref.read(onboardingStateProvider.notifier);
+                              final onboardingNotifier = ref.read(onboardingNotifierProvider.notifier);
                               
                               // Reset onboarding status in backend
                               await authNotifier.updateOnboardingStatus(false);
