@@ -11,24 +11,28 @@ class SafetyCodePage extends ConsumerStatefulWidget {
 }
 
 class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
-  late final TextEditingController _safetyCodeController;
-  bool _isInitialized = false;
+  // Use a static controller to prevent recreation on rebuilds
+  static final TextEditingController _safetyCodeController = TextEditingController();
+  static bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _safetyCodeController = TextEditingController();
     
-    // No pre-filling - let user enter your own safety code
-    print('🐛 Safety code page initialized');
-    print('🐛 Controller text: "${_safetyCodeController.text}"');
-    
-    // Add listener to track controller changes
-    _safetyCodeController.addListener(() {
-      print('🐛 Controller listener triggered: "${_safetyCodeController.text}"');
-    });
-    
-    _isInitialized = true;
+    if (!_isInitialized) {
+      // Only initialize once
+      print('🐛 Safety code page initialized');
+      print('🐛 Controller text: "${_safetyCodeController.text}"');
+      
+      // Add listener to track controller changes
+      _safetyCodeController.addListener(() {
+        print('🐛 Controller listener triggered: "${_safetyCodeController.text}"');
+      });
+      
+      _isInitialized = true;
+    } else {
+      print('🐛 Safety code page reinitialized, controller text: "${_safetyCodeController.text}"');
+    }
   }
 
   @override
@@ -38,9 +42,15 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
     print('🐛 Controller text after dependencies: "${_safetyCodeController.text}"');
   }
 
+  // Static method to clear the controller when needed
+  static void clearController() {
+    _safetyCodeController.clear();
+    print('🐛 Controller cleared');
+  }
+
   @override
   void dispose() {
-    _safetyCodeController.dispose();
+    // Don't dispose the static controller as it's shared across instances
     super.dispose();
   }
 
