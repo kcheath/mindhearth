@@ -17,6 +17,8 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
   void initState() {
     super.initState();
     // No pre-filling - let user enter their own safety code
+    print('🐛 Safety code page initialized');
+    print('🐛 Controller text: "${_safetyCodeController.text}"');
   }
 
   @override
@@ -84,8 +86,13 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
                 prefixIcon: Icon(Icons.lock),
               ),
               obscureText: true,
+              enabled: true,
               onChanged: (value) {
+                print('🐛 Safety code input changed: $value');
                 safetyCodeNotifier.setSafetyCode(value);
+              },
+              onTap: () {
+                print('🐛 Safety code field tapped');
               },
             ),
             SizedBox(height: 24),
@@ -109,6 +116,7 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
                 onPressed: safetyCodeState.isLoading
                     ? null
                     : () {
+                        print('🐛 Verify button pressed with text: "${_safetyCodeController.text}"');
                         safetyCodeNotifier.verifySafetyCode(_safetyCodeController.text);
                       },
                 style: ElevatedButton.styleFrom(
@@ -121,6 +129,24 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
                     : Text('Verify Safety Code'),
               ),
             ),
+            if (DebugConfig.isDebugMode) ...[
+              SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    _safetyCodeController.text = '0101190';
+                    print('🐛 Debug: Set safety code to 0101190');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: Text('🐛 Debug: Fill Test Code'),
+                ),
+              ),
+            ],
             
 
           ],
