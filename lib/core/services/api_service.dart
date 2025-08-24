@@ -117,4 +117,101 @@ class ApiService {
       );
     }
   }
+
+  // Session Management
+  Future<ApiResponse<Map<String, dynamic>>> createSession({
+    String? name,
+    String sessionType = 'conversation',
+    String? purpose,
+  }) async {
+    try {
+      final response = await _dio.post('/sessions/', data: {
+        if (name != null) 'name': name,
+        'session_type': sessionType,
+        if (purpose != null) 'purpose': purpose,
+      });
+      
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to create session',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> getSessions({
+    int limit = 100,
+    int offset = 0,
+    String? sessionType,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'limit': limit,
+        'offset': offset,
+      };
+      if (sessionType != null) {
+        queryParams['session_type'] = sessionType;
+      }
+      
+      final response = await _dio.get('/sessions/', queryParameters: queryParams);
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to get sessions',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  // Communication Management
+  Future<ApiResponse<Map<String, dynamic>>> createCommunication({
+    required String sessionId,
+    required String itemType,
+    required String role,
+    required String originalContent,
+    String? redactedContent,
+    bool consent = false,
+  }) async {
+    try {
+      final response = await _dio.post('/communications/', data: {
+        'session_id': sessionId,
+        'item_type': itemType,
+        'role': role,
+        'original_content': originalContent,
+        if (redactedContent != null) 'redacted_content': redactedContent,
+        'consent': consent,
+      });
+      
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to create communication',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> getCommunications({
+    String? sessionId,
+    String? itemType,
+    int limit = 100,
+    int offset = 0,
+  }) async {
+    try {
+      final response = await _dio.get('/communications/', queryParameters: {
+        if (sessionId != null) 'session_id': sessionId,
+        if (itemType != null) 'item_type': itemType,
+        'limit': limit,
+        'offset': offset,
+      });
+      
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to get communications',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
 }

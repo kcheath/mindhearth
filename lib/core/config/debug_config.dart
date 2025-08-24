@@ -38,7 +38,7 @@ class DebugConfig {
   // Debug UI features
   // Set to true to show debug banner across the top of the app
   static bool get showDebugBanner => false; // Disabled for cleaner UI
-  static bool get enablePerformanceOverlay => isDebugMode;
+  static bool get enablePerformanceOverlay => false; // Disabled for cleaner UI
   
   // Debug data - only used if backend is unavailable
   static Map<String, dynamic> get testUserData => {

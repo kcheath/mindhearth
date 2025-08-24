@@ -98,6 +98,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar>
   @override
   Widget build(BuildContext context) {
     final isLargeScreen = MediaQuery.of(context).size.width > 600;
+    final safeArea = MediaQuery.of(context).padding;
     
     return Column(
       children: [
@@ -129,9 +130,11 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar>
         
         // Main input bar
         Container(
-          margin: EdgeInsets.symmetric(
-            horizontal: isLargeScreen ? 32 : 16,
-            vertical: 8,
+          margin: EdgeInsets.only(
+            left: isLargeScreen ? 32 : 16,
+            right: isLargeScreen ? 32 : 16,
+            top: 8,
+            bottom: 8 + safeArea.bottom, // Add bottom safe area padding
           ),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,

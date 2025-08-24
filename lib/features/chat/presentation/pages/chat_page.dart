@@ -6,6 +6,7 @@ import 'package:mindhearth/app/widgets/adaptive_navigation.dart';
 import 'package:mindhearth/features/chat/widgets/chat_input_bar.dart';
 import 'package:mindhearth/features/chat/widgets/chat_message_bubble.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
+import 'package:mindhearth/core/services/chat_service.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
   const ChatPage({super.key});
@@ -19,11 +20,26 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
   int _selectedIndex = 0;
+  late ChatService _chatService;
 
   @override
   void initState() {
     super.initState();
-    _addWelcomeMessage();
+    _chatService = ref.read(chatServiceProvider);
+    _initializeChat();
+  }
+
+  Future<void> _initializeChat() async {
+    // Load existing chat history from backend
+    final history = await _chatService.loadChatHistory();
+    if (history.isNotEmpty) {
+      setState(() {
+        _messages.addAll(history);
+      });
+    } else {
+      // Add welcome message if no history
+      _addWelcomeMessage();
+    }
   }
 
   @override
@@ -66,19 +82,10 @@ How can I help you today?''';
     }
   }
 
-  void _handleSendMessage(String message) {
+  Future<void> _handleSendMessage(String message) async {
     if (message.trim().isEmpty) return;
 
-    // Add user message
-    final userMessage = ChatMessage(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      message: message,
-      isUser: true,
-      timestamp: DateTime.now(),
-    );
-    
     setState(() {
-      _messages.add(userMessage);
       _isLoading = true;
     });
 
@@ -87,41 +94,66 @@ How can I help you today?''';
       _scrollToBottom();
     });
 
-    // Simulate AI response (replace with real API call)
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        final aiMessage = ChatMessage(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          message: _generateAIResponse(message),
-          isUser: false,
-          timestamp: DateTime.now(),
-        );
-        
+    try {
+      // Send user message to backend
+      final userMessage = await _chatService.sendUserMessage(message);
+      if (userMessage != null) {
         setState(() {
-          _messages.add(aiMessage);
-          _isLoading = false;
+          _messages.add(userMessage);
         });
 
         // Scroll to bottom
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _scrollToBottom();
         });
+
+        // Get AI response from backend
+        final aiMessage = await _chatService.getAIResponse(message);
+        if (aiMessage != null) {
+          setState(() {
+            _messages.add(aiMessage);
+            _isLoading = false;
+          });
+
+          // Scroll to bottom
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _scrollToBottom();
+          });
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to send message. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
-    });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
-  String _generateAIResponse(String userMessage) {
-    // Simple response generation (replace with real AI)
-    final responses = [
-      "I hear you, and I want you to know that your feelings are valid. Can you tell me more about what's coming up for you right now?",
-      "Thank you for sharing that with me. It sounds like you're going through something really challenging. How are you feeling about it?",
-      "I appreciate you opening up to me. What you're experiencing is a normal response to difficult circumstances. Would you like to explore some coping strategies together?",
-      "I can sense that this is really important to you. Let's take a moment to breathe together. What would be most helpful for you right now?",
-      "Your courage in sharing this is remarkable. Healing is a journey, and you don't have to walk it alone. What kind of support would feel most helpful to you?",
-    ];
-    
-    return responses[DateTime.now().millisecond % responses.length];
-  }
+
 
   void _handleToolSelected() {
     // TODO: Implement tool selection logic
@@ -170,57 +202,60 @@ How can I help you today?''';
   @override
   Widget build(BuildContext context) {
     final isLargeScreen = MediaQuery.of(context).size.width > 600;
+    final safeArea = MediaQuery.of(context).padding;
     
     return AdaptiveNavigation(
       selectedIndex: _selectedIndex,
       onDestinationSelected: _onDestinationSelected,
       child: Scaffold(
-        body: Column(
-          children: [
-            // Chat messages
-            Expanded(
-              child: _messages.isEmpty
-                  ? _buildEmptyState()
-                  : _buildChatList(),
-            ),
-            
-            // Input bar
-            ChatInputBar(
-              onSendMessage: _handleSendMessage,
-              onToolSelected: _handleToolSelected,
-              availableTools: ChatTools.defaultTools,
-              isLoading: _isLoading,
-            ),
-            
-            // Loading indicator
-            if (_isLoading)
-              Container(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Theme.of(context).colorScheme.primary,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Chat messages
+              Expanded(
+                child: _messages.isEmpty
+                    ? _buildEmptyState()
+                    : _buildChatList(),
+              ),
+              
+              // Input bar
+              ChatInputBar(
+                onSendMessage: _handleSendMessage,
+                onToolSelected: _handleToolSelected,
+                availableTools: ChatTools.defaultTools,
+                isLoading: _isLoading,
+              ),
+              
+              // Loading indicator
+              if (_isLoading)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Theme.of(context).colorScheme.primary,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Mindhearth is thinking...',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontStyle: FontStyle.italic,
+                      const SizedBox(width: 12),
+                      Text(
+                        'Mindhearth is thinking...',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

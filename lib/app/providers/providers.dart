@@ -3,6 +3,7 @@ import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/core/models/auth_state.dart';
 import 'package:mindhearth/core/models/user.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
+import 'package:mindhearth/core/services/chat_service.dart';
 import 'package:mindhearth/features/onboarding/domain/providers/onboarding_providers.dart';
 import 'package:mindhearth/features/safetycode/domain/providers/safety_code_providers.dart';
 
@@ -117,6 +118,7 @@ final appProviders = [
   apiServiceProvider,
   authNotifierProvider,
   authStateProvider,
+  chatServiceProvider,
   onboardingNotifierProvider,
   onboardingStateProvider,
   safetyCodeNotifierProvider,
