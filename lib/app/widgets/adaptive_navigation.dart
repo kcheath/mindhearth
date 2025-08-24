@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/app/providers/providers.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
+import 'package:mindhearth/core/models/auth_state.dart';
 
 class AdaptiveNavigation extends ConsumerStatefulWidget {
   final Widget child;

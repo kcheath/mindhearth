@@ -31,10 +31,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
           
           await apiService.setToken(token);
           
+          // In debug mode, assume test user is already onboarded
+          // In production, this would come from a user profile endpoint
+          final isOnboarded = DebugConfig.isDebugMode ? true : false;
+          
           final user = User(
             id: userId,
             email: email,
             tenantId: tenantId,
+            isOnboarded: isOnboarded,
           );
           
           state = state.copyWith(
@@ -74,6 +79,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> checkAuthStatus() async {
+    // In debug mode, always start with no authentication to force login
+    if (DebugConfig.isDebugMode) {
+      // Clear any stored tokens to force fresh login
+      final apiService = ref.read(apiServiceProvider);
+      await apiService.clearToken();
+      state = const AuthState();
+      return;
+    }
+    
+    // For production, check stored tokens
     final apiService = ref.read(apiServiceProvider);
     final token = await apiService.getToken();
     

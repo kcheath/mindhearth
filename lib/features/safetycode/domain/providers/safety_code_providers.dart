@@ -1,4 +1,5 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mindhearth/core/config/debug_config.dart';
 
 // Safety Code State
 class SafetyCodeState {
@@ -33,7 +34,10 @@ class SafetyCodeState {
 class SafetyCodeNotifier extends StateNotifier<SafetyCodeState> {
   final Ref ref;
 
-  SafetyCodeNotifier(this.ref) : super(const SafetyCodeState());
+  SafetyCodeNotifier(this.ref) : super(SafetyCodeState(
+    // In debug mode, auto-verify safety code for test user
+    isVerified: DebugConfig.isDebugMode,
+  ));
 
   Future<void> verifySafetyCode(String code) async {
     state = state.copyWith(isLoading: true, error: null);
