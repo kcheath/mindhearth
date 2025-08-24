@@ -1,5 +1,6 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/app/providers/providers.dart';
+import 'package:mindhearth/core/providers/api_providers.dart';
 
 // Onboarding State
 class OnboardingState {
@@ -7,12 +8,14 @@ class OnboardingState {
   final int currentStep;
   final bool isCompleted;
   final String? error;
+  final String? passphrase;
 
   const OnboardingState({
     this.isOnboarding = false,
     this.currentStep = 0,
     this.isCompleted = false,
     this.error,
+    this.passphrase,
   });
 
   OnboardingState copyWith({
@@ -20,12 +23,14 @@ class OnboardingState {
     int? currentStep,
     bool? isCompleted,
     String? error,
+    String? passphrase,
   }) {
     return OnboardingState(
       isOnboarding: isOnboarding ?? this.isOnboarding,
       currentStep: currentStep ?? this.currentStep,
       isCompleted: isCompleted ?? this.isCompleted,
       error: error ?? this.error,
+      passphrase: passphrase ?? this.passphrase,
     );
   }
 }
@@ -41,11 +46,15 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
   }
 
   void nextStep() {
-    if (state.currentStep < 3) { // Assuming 4 steps (0-3)
+    if (state.currentStep < 3) { // 4 steps (0-3)
       state = state.copyWith(currentStep: state.currentStep + 1);
     } else {
       completeOnboarding();
     }
+  }
+
+  void setPassphrase(String passphrase) {
+    state = state.copyWith(passphrase: passphrase);
   }
 
   void previousStep() {
@@ -55,15 +64,51 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
   }
 
   Future<void> completeOnboarding() async {
-    // Update onboarding status in auth notifier
-    final authNotifier = ref.read(authNotifierProvider.notifier);
-    await authNotifier.updateOnboardingStatus(true);
+    try {
+      // Update onboarding status in auth notifier
+      final authNotifier = ref.read(authNotifierProvider.notifier);
+      await authNotifier.updateOnboardingStatus(true);
+      
+      // If we have a passphrase, generate and save safety codes
+      if (state.passphrase != null) {
+        await _generateAndSaveSafetyCodes(state.passphrase!);
+      }
+      
+      state = state.copyWith(
+        isOnboarding: false,
+        isCompleted: true,
+        currentStep: 0,
+      );
+    } catch (e) {
+      state = state.copyWith(error: 'Failed to complete onboarding: $e');
+    }
+  }
+
+  Future<void> _generateAndSaveSafetyCodes(String passphrase) async {
+    try {
+      // Generate safety codes based on passphrase
+      final safetyCodes = _generateSafetyCodes(passphrase);
+      
+      // Save safety codes to backend
+      final apiService = ref.read(apiServiceProvider);
+      await apiService.saveSafetyCodes(safetyCodes, passphrase);
+      
+      print('🐛 Safety codes generated and saved successfully');
+    } catch (e) {
+      print('🐛 Error generating safety codes: $e');
+      // Don't fail onboarding if safety code generation fails
+    }
+  }
+
+  Map<String, String> _generateSafetyCodes(String passphrase) {
+    // Simple hash-based generation for demo purposes
+    // In production, this should use proper cryptographic methods
+    final hash = passphrase.hashCode.toString();
+    final journalCode = (hash.length >= 7) ? hash.substring(0, 7) : hash.padRight(7, '0');
     
-    state = state.copyWith(
-      isOnboarding: false,
-      isCompleted: true,
-      currentStep: 0,
-    );
+    return {
+      'journal': journalCode,
+    };
   }
 
   void setError(String error) {
