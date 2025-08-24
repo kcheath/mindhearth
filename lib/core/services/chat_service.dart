@@ -1,6 +1,7 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/features/chat/widgets/chat_message_bubble.dart';
+import 'package:mindhearth/core/models/api_response.dart';
 
 class ChatService {
   final ApiService _apiService;
@@ -21,13 +22,16 @@ class ChatService {
         purpose: 'AI-assisted therapy conversation',
       );
 
-      if (response is ApiSuccess) {
-        _currentSessionId = response.data['id'] as String?;
-        return _currentSessionId;
-      } else {
-        print('Failed to create session: ${response.message}');
-        return null;
-      }
+      return response.when(
+        success: (data, message) {
+          _currentSessionId = data['id'] as String?;
+          return _currentSessionId;
+        },
+        error: (message, statusCode, errors) {
+          print('Failed to create session: $message');
+          return null;
+        },
+      );
     } catch (e) {
       print('Error creating session: $e');
       return null;
@@ -48,22 +52,25 @@ class ChatService {
         limit: 100,
       );
 
-      if (response is ApiSuccess) {
-        final communications = response.data['communications'] as List<dynamic>? ?? [];
-        return communications.map((comm) {
-          final data = comm as Map<String, dynamic>;
-          return ChatMessage(
-            id: data['id'] as String,
-            message: data['original_content'] as String? ?? '',
-            isUser: data['role'] == 'user',
-            timestamp: DateTime.parse(data['created_at'] as String),
-            sessionId: data['session_id'] as String?,
-          );
-        }).toList();
-      } else {
-        print('Failed to load chat history: ${response.message}');
-        return [];
-      }
+      return response.when(
+        success: (data, message) {
+          final communications = data['communications'] as List<dynamic>? ?? [];
+          return communications.map((comm) {
+            final commData = comm as Map<String, dynamic>;
+            return ChatMessage(
+              id: commData['id'] as String,
+              message: commData['original_content'] as String? ?? '',
+              isUser: commData['role'] == 'user',
+              timestamp: DateTime.parse(commData['created_at'] as String),
+              sessionId: commData['session_id'] as String?,
+            );
+          }).toList();
+        },
+        error: (message, statusCode, errors) {
+          print('Failed to load chat history: $message');
+          return [];
+        },
+      );
     } catch (e) {
       print('Error loading chat history: $e');
       return [];
@@ -90,19 +97,21 @@ class ChatService {
         consent: true,
       );
 
-      if (userResponse is ApiSuccess) {
-        final data = userResponse.data;
-        return ChatMessage(
-          id: data['id'] as String,
-          message: message,
-          isUser: true,
-          timestamp: DateTime.parse(data['created_at'] as String),
-          sessionId: _currentSessionId,
-        );
-      } else {
-        print('Failed to send user message: ${userResponse.message}');
-        return null;
-      }
+      return userResponse.when(
+        success: (data, message) {
+          return ChatMessage(
+            id: data['id'] as String,
+            message: message,
+            isUser: true,
+            timestamp: DateTime.parse(data['created_at'] as String),
+            sessionId: _currentSessionId,
+          );
+        },
+        error: (errorMessage, statusCode, errors) {
+          print('Failed to send user message: $errorMessage');
+          return null;
+        },
+      );
     } catch (e) {
       print('Error sending user message: $e');
       return null;
@@ -122,19 +131,21 @@ class ChatService {
         consent: true,
       );
 
-      if (aiResponse is ApiSuccess) {
-        final data = aiResponse.data;
-        return ChatMessage(
-          id: data['id'] as String,
-          message: data['original_content'] as String? ?? '',
-          isUser: false,
-          timestamp: DateTime.parse(data['created_at'] as String),
-          sessionId: _currentSessionId,
+      return aiResponse.when(
+        success: (data, message) {
+          return ChatMessage(
+            id: data['id'] as String,
+            message: data['original_content'] as String? ?? '',
+            isUser: false,
+            timestamp: DateTime.parse(data['created_at'] as String),
+            sessionId: _currentSessionId,
         );
-      } else {
-        print('Failed to get AI response: ${aiResponse.message}');
-        return null;
-      }
+        },
+        error: (errorMessage, statusCode, errors) {
+          print('Failed to get AI response: $errorMessage');
+          return null;
+        },
+      );
     } catch (e) {
       print('Error getting AI response: $e');
       return null;
@@ -162,6 +173,6 @@ class ChatService {
 
 // Provider for ChatService
 final chatServiceProvider = Provider<ChatService>((ref) {
-  final apiService = ref.watch(apiServiceProvider);
+  final apiService = ref.read(apiServiceProvider);
   return ChatService(apiService);
 });
