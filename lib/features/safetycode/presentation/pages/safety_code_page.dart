@@ -19,6 +19,11 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
     // No pre-filling - let user enter their own safety code
     print('🐛 Safety code page initialized');
     print('🐛 Controller text: "${_safetyCodeController.text}"');
+    
+    // Add listener to track controller changes
+    _safetyCodeController.addListener(() {
+      print('🐛 Controller listener triggered: "${_safetyCodeController.text}"');
+    });
   }
 
   @override
@@ -66,18 +71,33 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
                   borderRadius: BorderRadius.circular(4),
                   border: Border.all(color: Colors.orange.withOpacity(0.3)),
                 ),
-                child: Text(
-                  '🐛 Debug: Test user safety code is "0101190"',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.orange[700],
-                    fontFamily: 'monospace',
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '🐛 Debug: Test user safety code is "0101190"',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.orange[700],
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      '🐛 Current text field value: "${_safetyCodeController.text}"',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.orange[700],
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
             SizedBox(height: 48),
             TextField(
+              key: ValueKey('safety_code_field'),
               controller: _safetyCodeController,
               decoration: InputDecoration(
                 labelText: 'Safety Code',
@@ -87,12 +107,20 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
               ),
               obscureText: true,
               enabled: true,
+              keyboardType: TextInputType.number,
+              autofocus: false,
               onChanged: (value) {
                 print('🐛 Safety code input changed: $value');
+                print('🐛 Controller text after change: "${_safetyCodeController.text}"');
                 safetyCodeNotifier.setSafetyCode(value);
               },
               onTap: () {
                 print('🐛 Safety code field tapped');
+                print('🐛 Controller text on tap: "${_safetyCodeController.text}"');
+              },
+              onEditingComplete: () {
+                print('🐛 Safety code editing completed');
+                print('🐛 Final controller text: "${_safetyCodeController.text}"');
               },
             ),
             SizedBox(height: 24),
