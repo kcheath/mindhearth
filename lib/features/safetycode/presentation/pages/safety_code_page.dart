@@ -30,11 +30,6 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
         print('🐛 Controller listener triggered: "${_safetyCodeController.text}"');
       });
       
-      // Add focus listener to track focus changes
-      _focusNode.addListener(() {
-        print('🐛 Focus changed: ${_focusNode.hasFocus}');
-      });
-      
       _isInitialized = true;
     } else {
       print('🐛 Safety code page reinitialized, controller text: "${_safetyCodeController.text}"');
@@ -46,14 +41,6 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
     super.didChangeDependencies();
     print('🐛 Safety code page dependencies changed');
     print('🐛 Controller text after dependencies: "${_safetyCodeController.text}"');
-    
-    // Restore focus if the field had focus before rebuild
-    if (_focusNode.hasFocus) {
-      print('🐛 Restoring focus to text field');
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _focusNode.requestFocus();
-      });
-    }
   }
 
   // Static method to clear the controller when needed
@@ -154,7 +141,7 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
               onChanged: (value) {
                 print('🐛 Safety code input changed: $value');
                 print('🐛 Controller text after change: "${_safetyCodeController.text}"');
-                safetyCodeNotifier.setSafetyCode(value);
+                // Don't update state on every keystroke - only when verify button is pressed
               },
               onTap: () {
                 print('🐛 Safety code field tapped');
