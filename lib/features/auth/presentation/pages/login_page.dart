@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/app/providers/providers.dart';
+import 'package:mindhearth/core/config/debug_config.dart';
 
 class LoginPage extends HookConsumerWidget {
   const LoginPage({super.key});
@@ -17,6 +18,13 @@ class LoginPage extends HookConsumerWidget {
     useEffect(() {
       // Check auth status on mount
       ref.read(authNotifierProvider.notifier).checkAuthStatus();
+      
+      // Debug mode: Pre-fill test credentials
+      if (DebugConfig.isDebugMode) {
+        emailController.text = DebugConfig.testEmail;
+        passwordController.text = DebugConfig.testPassword;
+      }
+      
       return null;
     }, []);
     
@@ -144,6 +152,39 @@ class LoginPage extends HookConsumerWidget {
                     ),
                     textAlign: TextAlign.center,
                   ),
+                  
+                  // Debug Info (only shown in debug mode)
+                  if (DebugConfig.isDebugMode) ...[
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue[200]!),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            '🐛 Debug Mode Active',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue[700],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Test credentials pre-filled\nAPI: ${DebugConfig.apiUrl}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.blue[600],
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

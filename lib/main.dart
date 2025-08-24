@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/app/themes/app_theme.dart';
 import 'package:mindhearth/app/router/app_router.dart';
+import 'package:mindhearth/core/config/debug_config.dart';
 
 void main() {
   runApp(
@@ -24,7 +25,8 @@ class MindhearthApp extends ConsumerWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       routerConfig: router,
-      debugShowCheckedModeBanner: false,
+      debugShowCheckedModeBanner: DebugConfig.showDebugBanner,
+      showPerformanceOverlay: DebugConfig.enablePerformanceOverlay,
     );
   }
 }

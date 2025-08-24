@@ -2,9 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logger/logger.dart';
 import 'package:mindhearth/core/models/api_response.dart';
+import 'package:mindhearth/core/config/debug_config.dart';
 
 class ApiService {
-  static const String _baseUrl = 'http://localhost:8000/api';
   static const String _tokenKey = 'access_token';
   
   late final Dio _dio;
@@ -13,7 +13,7 @@ class ApiService {
 
   ApiService() {
     _dio = Dio(BaseOptions(
-      baseUrl: _baseUrl,
+      baseUrl: DebugConfig.apiUrl,
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
       headers: {
@@ -68,6 +68,15 @@ class ApiService {
     required String email,
     required String password,
   }) async {
+    // Debug mode: Auto-login with test credentials
+    if (DebugConfig.isDebugMode && 
+        email == DebugConfig.testEmail && 
+        password == DebugConfig.testPassword) {
+      _logger.d('Debug mode: Auto-login with test credentials');
+      await Future.delayed(const Duration(milliseconds: 800)); // Simulate network delay
+      return ApiSuccess(data: DebugConfig.testAuthResponse);
+    }
+    
     try {
       final response = await _dio.post('/auth/login', data: {
         'email': email,

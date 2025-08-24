@@ -1,5 +1,6 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/services/api_service.dart';
+import 'package:mindhearth/core/services/mock_api_service.dart';
 import 'package:mindhearth/core/models/auth_state.dart';
 import 'package:mindhearth/core/models/user.dart';
 import 'package:mindhearth/features/onboarding/domain/providers/onboarding_providers.dart';

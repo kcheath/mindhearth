@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/app/providers/providers.dart';
 import 'package:mindhearth/features/onboarding/domain/providers/onboarding_providers.dart';
+import 'package:mindhearth/core/config/debug_config.dart';
 
 class OnboardingPage extends ConsumerWidget {
   const OnboardingPage({super.key});
@@ -97,6 +98,28 @@ class OnboardingPage extends ConsumerWidget {
                 ),
               ],
             ),
+            
+            // Debug shortcuts (only shown in debug mode)
+            if (DebugConfig.isDebugMode) ...[
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      // Skip to last step
+                      onboardingNotifier.completeOnboarding();
+                      authNotifier.updateOnboardingStatus(true);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text('🐛 Skip Onboarding'),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

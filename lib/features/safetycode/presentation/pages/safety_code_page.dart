@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/features/safetycode/domain/providers/safety_code_providers.dart';
+import 'package:mindhearth/core/config/debug_config.dart';
 
 class SafetyCodePage extends ConsumerStatefulWidget {
   const SafetyCodePage({super.key});
@@ -11,6 +12,16 @@ class SafetyCodePage extends ConsumerStatefulWidget {
 
 class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
   final TextEditingController _safetyCodeController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Debug mode: Pre-fill test safety code
+    if (DebugConfig.isDebugMode) {
+      _safetyCodeController.text = '1234';
+    }
+  }
 
   @override
   void dispose() {
@@ -95,6 +106,27 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
                     : Text('Verify Safety Code'),
               ),
             ),
+            
+            // Debug shortcuts (only shown in debug mode)
+            if (DebugConfig.isDebugMode) ...[
+              SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      // Skip safety code verification
+                      safetyCodeNotifier.verifySafetyCode('1234');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text('🐛 Skip Safety Code'),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
