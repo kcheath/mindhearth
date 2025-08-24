@@ -16,11 +16,7 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
   @override
   void initState() {
     super.initState();
-    
-    // Debug mode: Pre-fill test safety code
-    if (DebugConfig.isDebugMode) {
-      _safetyCodeController.text = '1234';
-    }
+    // No pre-filling - let user enter their own safety code
   }
 
   @override
@@ -59,6 +55,25 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16),
             ),
+            if (DebugConfig.isDebugMode) ...[
+              SizedBox(height: 8),
+              Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                ),
+                child: Text(
+                  '🐛 Debug: Test user safety code is "0101190"',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.orange[700],
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ),
+            ],
             SizedBox(height: 48),
             TextField(
               controller: _safetyCodeController,
