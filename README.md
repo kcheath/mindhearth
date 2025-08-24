@@ -75,21 +75,22 @@ We use **GoRouter** for navigation with the following features:
 
 ```
 /login              # Authentication
-/onboarding         # User onboarding
-/                   # Main chat interface
-/sessions           # Session history
-/journal            # Journal entries
-/documents          # Document management
-/reports            # Reports and analytics
+/onboarding         # User onboarding (4-step flow)
+/safety             # Safety code verification
+/chat               # Main chat interface (Phase 3)
+/sessions           # Session history (Phase 3)
+/journal            # Journal entries (Phase 3)
+/documents          # Document management (Phase 3)
+/reports            # Reports and analytics (Phase 3)
 /settings           # App settings
-/safety-code        # Safety code management
 ```
 
 ### Navigation Guards
 
 - **Unauthenticated users**: Redirected to `/login`
 - **Authenticated but not onboarded**: Redirected to `/onboarding`
-- **Fully authenticated users**: Access to all routes
+- **Authenticated + onboarded but no safety code**: Redirected to `/safety`
+- **Fully authenticated + onboarded + safety verified**: Access to all routes (defaults to `/chat`)
 
 ## 🔧 Development Setup
 
@@ -192,21 +193,24 @@ test/
 
 ### Current Features
 
-- ✅ User authentication
-- ✅ Navigation with auth guards
-- ✅ Material 3 theming
+- ✅ User authentication with JWT tokens
+- ✅ Navigation with comprehensive auth guards
+- ✅ Material 3 theming with dynamic colors
 - ✅ Clean architecture structure
 - ✅ Riverpod state management
+- ✅ **Phase 2: Complete onboarding flow**
+- ✅ **Phase 2: Safety code verification system**
+- ✅ **Phase 2: Enhanced routing with state synchronization**
+- ✅ **Phase 2: Cross-feature state management**
 
 ### Planned Features
 
-- 🔄 AI chat interface
-- 🔄 Session management
-- 🔄 Journal entries
-- 🔄 Document upload
-- 🔄 Safety code system
-- 🔄 Reports and analytics
-- 🔄 User onboarding flow
+- 🔄 **Phase 3: Full AI chat interface**
+- 🔄 **Phase 3: Session management and history**
+- 🔄 **Phase 3: Journal entries and mood tracking**
+- 🔄 **Phase 3: Document upload and management**
+- 🔄 **Phase 3: Reports and analytics dashboard**
+- 🔄 **Phase 3: Real-time notifications**
 
 ## 🚀 Deployment
 
