@@ -103,7 +103,7 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '🐛 Debug: Test user safety code is "0101190"',
+                      '🐛 Debug: Test user safety code is "01011990"',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.orange[700],
@@ -192,8 +192,8 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    _safetyCodeController.text = '0101190';
-                    print('🐛 Debug: Set safety code to 0101190');
+                    _safetyCodeController.text = '01011990';
+                    print('🐛 Debug: Set safety code to 01011990');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange,
