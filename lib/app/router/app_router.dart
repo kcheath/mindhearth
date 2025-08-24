@@ -10,6 +10,7 @@ import 'package:mindhearth/features/journal/presentation/pages/journal_page.dart
 import 'package:mindhearth/features/documents/presentation/pages/documents_page.dart';
 import 'package:mindhearth/features/reports/presentation/pages/reports_page.dart';
 import 'package:mindhearth/features/settings/presentation/pages/settings_page.dart';
+import 'package:mindhearth/features/settings/presentation/pages/privacy_security_settings_page.dart';
 import 'package:mindhearth/features/safetycode/domain/providers/safety_code_providers.dart';
 import 'package:mindhearth/features/onboarding/domain/providers/onboarding_providers.dart';
 import 'package:mindhearth/core/models/auth_state.dart';
@@ -139,6 +140,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/settings',
         name: 'settings',
         builder: (context, state) => const SettingsPage(),
+      ),
+      
+      GoRoute(
+        path: '/settings/privacy-security',
+        name: 'privacy-security',
+        builder: (context, state) => const PrivacySecuritySettingsPage(),
       ),
     ],
   );

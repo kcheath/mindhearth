@@ -81,7 +81,7 @@ class SettingsPage extends ConsumerWidget {
                     subtitle: const Text('Manage your privacy settings'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
-                      // TODO: Navigate to privacy settings
+                      context.go('/settings/privacy-security');
                     },
                   ),
                   ListTile(

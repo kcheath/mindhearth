@@ -73,6 +73,10 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
   void clearError() {
     state = state.copyWith(error: null);
   }
+
+  void reset() {
+    state = const OnboardingState();
+  }
 }
 
 // Onboarding State Provider

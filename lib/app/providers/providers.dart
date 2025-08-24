@@ -90,23 +90,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthState();
   }
 
-  Future<void> updateOnboardingStatus(bool isOnboarded) async {
+  Future<bool> updateOnboardingStatus(bool isOnboarded) async {
     if (state.user != null) {
       try {
         final apiService = ref.read(apiServiceProvider);
         final response = await apiService.updateOnboardedStatus(isOnboarded);
         
-        response.when(
+        return response.when(
           success: (data, message) {
             // Update local state with the response from backend
             final updatedUser = state.user!.copyWith(isOnboarded: isOnboarded);
             state = state.copyWith(user: updatedUser);
+            return true;
           },
           error: (message, statusCode, errors) {
             // Log error but still update local state for UI consistency
             print('Failed to update onboarding status on backend: $message');
             final updatedUser = state.user!.copyWith(isOnboarded: isOnboarded);
             state = state.copyWith(user: updatedUser);
+            return false;
           },
         );
       } catch (e) {
@@ -114,8 +116,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         print('Error updating onboarding status: $e');
         final updatedUser = state.user!.copyWith(isOnboarded: isOnboarded);
         state = state.copyWith(user: updatedUser);
+        return false;
       }
     }
+    return false;
   }
 
   Future<void> checkAuthStatus() async {
