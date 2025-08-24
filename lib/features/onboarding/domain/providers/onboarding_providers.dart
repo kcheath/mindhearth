@@ -101,11 +101,16 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
   }
 
   Map<String, String> _generateSafetyCodes(String passphrase) {
-    // Generate a consistent safety code for demo purposes
+    // Generate safety codes based on the actual passphrase
     // In production, this should use proper cryptographic methods
-    // For now, use a fixed code that matches the expected "01011990"
+    // For now, use a simple hash-based method that's consistent
+    final hash = passphrase.hashCode.toString();
+    final journalCode = (hash.length >= 8) ? hash.substring(0, 8) : hash.padRight(8, '0');
+    
+    print('🐛 Generated safety code from passphrase: $journalCode');
+    
     return {
-      'journal': '01011990',
+      'journal': journalCode,
     };
   }
 

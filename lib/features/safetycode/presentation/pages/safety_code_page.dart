@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/features/safetycode/domain/providers/safety_code_providers.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
+import 'package:mindhearth/features/onboarding/domain/providers/onboarding_providers.dart';
 
 class SafetyCodePage extends ConsumerStatefulWidget {
   const SafetyCodePage({super.key});
@@ -55,6 +56,18 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
     super.dispose();
   }
 
+  String _generateSafetyCodeFromPassphrase(String? passphrase) {
+    if (passphrase == null || passphrase.isEmpty) {
+      return 'No passphrase set';
+    }
+    
+    // Use the same logic as the onboarding provider
+    final hash = passphrase.hashCode.toString();
+    final journalCode = (hash.length >= 8) ? hash.substring(0, 8) : hash.padRight(8, '0');
+    
+    return journalCode;
+  }
+
   @override
   Widget build(BuildContext context) {
     // Use listen instead of watch to prevent unnecessary rebuilds
@@ -92,35 +105,42 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
             ),
             if (DebugConfig.isDebugMode) ...[
               SizedBox(height: 8),
-              Container(
-                padding: EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '🐛 Debug: Test user safety code is "01011990"',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.orange[700],
-                        fontFamily: 'monospace',
-                      ),
+              Builder(
+                builder: (context) {
+                  final onboardingState = ref.watch(onboardingStateProvider);
+                  final generatedCode = _generateSafetyCodeFromPassphrase(onboardingState.passphrase);
+                  
+                  return Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: Colors.orange.withOpacity(0.3)),
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      '🐛 Current text field value: "${_safetyCodeController.text}"',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.orange[700],
-                        fontFamily: 'monospace',
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '🐛 Debug: Generated safety code is "$generatedCode"',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.orange[700],
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          '🐛 Current text field value: "${_safetyCodeController.text}"',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.orange[700],
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
             ],
             SizedBox(height: 48),
@@ -188,20 +208,27 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
             ),
             if (DebugConfig.isDebugMode) ...[
               SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    _safetyCodeController.text = '01011990';
-                    print('🐛 Debug: Set safety code to 01011990');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: Text('🐛 Debug: Fill Test Code'),
-                ),
+              Builder(
+                builder: (context) {
+                  final onboardingState = ref.watch(onboardingStateProvider);
+                  final generatedCode = _generateSafetyCodeFromPassphrase(onboardingState.passphrase);
+                  
+                  return SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _safetyCodeController.text = generatedCode;
+                        print('🐛 Debug: Set safety code to $generatedCode');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: Text('🐛 Debug: Fill Generated Code'),
+                    ),
+                  );
+                },
               ),
             ],
             
