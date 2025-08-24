@@ -1,4 +1,5 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mindhearth/app/providers/providers.dart';
 
 // Onboarding State
 class OnboardingState {
@@ -53,7 +54,11 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     }
   }
 
-  void completeOnboarding() {
+  Future<void> completeOnboarding() async {
+    // Update onboarding status in auth notifier
+    final authNotifier = ref.read(authNotifierProvider.notifier);
+    await authNotifier.updateOnboardingStatus(true);
+    
     state = state.copyWith(
       isOnboarding: false,
       isCompleted: true,

@@ -214,4 +214,61 @@ class ApiService {
       );
     }
   }
+
+  // User Management
+  Future<ApiResponse<Map<String, dynamic>>> getCurrentUser() async {
+    try {
+      final response = await _dio.get('/users/me');
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to get user information',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> updateOnboardedStatus(bool onboarded) async {
+    try {
+      final response = await _dio.put('/users/onboarded', data: {
+        'onboarded': onboarded,
+      });
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to update onboarded status',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> validateSafetyCode(String code, String passphrase) async {
+    try {
+      final response = await _dio.post('/users/safety-codes/validate', data: {
+        'code': code,
+        'passphrase': passphrase,
+      });
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to validate safety code',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> saveSafetyCodes(Map<String, String> codes, String passphrase) async {
+    try {
+      final response = await _dio.post('/users/safety-codes', data: {
+        'codes': codes,
+        'passphrase': passphrase,
+      });
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to save safety codes',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
 }

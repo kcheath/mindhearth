@@ -1,5 +1,6 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
+import 'package:mindhearth/core/services/api_service.dart';
 
 // Safety Code State
 class SafetyCodeState {
@@ -34,31 +35,43 @@ class SafetyCodeState {
 class SafetyCodeNotifier extends StateNotifier<SafetyCodeState> {
   final Ref ref;
 
-  SafetyCodeNotifier(this.ref) : super(SafetyCodeState(
-    // In debug mode, auto-verify safety code for test user
-    isVerified: DebugConfig.isDebugMode,
-  ));
+  SafetyCodeNotifier(this.ref) : super(const SafetyCodeState());
 
   Future<void> verifySafetyCode(String code) async {
     state = state.copyWith(isLoading: true, error: null);
     
     try {
-      // TODO: Implement actual safety code verification with backend
-      // For now, simulate verification
-      await Future.delayed(const Duration(seconds: 1));
+      final apiService = ref.read(apiServiceProvider);
       
-      if (code.length >= 4) {
-        state = state.copyWith(
-          isVerified: true,
-          isLoading: false,
-          safetyCode: code,
-        );
-      } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Safety code must be at least 4 characters long',
-        );
-      }
+      // For now, use a default passphrase. In a real app, this would be user-provided
+      const passphrase = 'default_passphrase';
+      
+      final response = await apiService.validateSafetyCode(code, passphrase);
+      
+      response.when(
+        success: (data, message) {
+          final isValid = data['valid'] as bool? ?? false;
+          
+          if (isValid) {
+            state = state.copyWith(
+              isVerified: true,
+              isLoading: false,
+              safetyCode: code,
+            );
+          } else {
+            state = state.copyWith(
+              isLoading: false,
+              error: 'Invalid safety code. Please try again.',
+            );
+          }
+        },
+        error: (message, statusCode, errors) {
+          state = state.copyWith(
+            isLoading: false,
+            error: message,
+          );
+        },
+      );
     } catch (e) {
       state = state.copyWith(
         isLoading: false,

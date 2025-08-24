@@ -33,22 +33,43 @@ class AuthNotifier extends StateNotifier<AuthState> {
           
           await apiService.setToken(token);
           
-          // In debug mode, assume test user is already onboarded
-          // In production, this would come from a user profile endpoint
-          final isOnboarded = DebugConfig.isDebugMode ? true : false;
+          // Fetch user data from backend to get onboarding status
+          final userResponse = await apiService.getCurrentUser();
           
-          final user = User(
-            id: userId,
-            email: email,
-            tenantId: tenantId,
-            isOnboarded: isOnboarded,
-          );
-          
-          state = state.copyWith(
-            isLoading: false,
-            isAuthenticated: true,
-            user: user,
-            accessToken: token,
+          userResponse.when(
+            success: (userData, userMessage) {
+              final isOnboarded = userData['onboarded'] as bool? ?? false;
+              
+              final user = User(
+                id: userId,
+                email: email,
+                tenantId: tenantId,
+                isOnboarded: isOnboarded,
+              );
+              
+              state = state.copyWith(
+                isLoading: false,
+                isAuthenticated: true,
+                user: user,
+                accessToken: token,
+              );
+            },
+            error: (userMessage, userStatusCode, userErrors) {
+              // Fallback to basic user data if /users/me fails
+              final user = User(
+                id: userId,
+                email: email,
+                tenantId: tenantId,
+                isOnboarded: false, // Default to false for safety
+              );
+              
+              state = state.copyWith(
+                isLoading: false,
+                isAuthenticated: true,
+                user: user,
+                accessToken: token,
+              );
+            },
           );
         },
         error: (message, statusCode, errors) {
@@ -75,8 +96,29 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> updateOnboardingStatus(bool isOnboarded) async {
     if (state.user != null) {
-      final updatedUser = state.user!.copyWith(isOnboarded: isOnboarded);
-      state = state.copyWith(user: updatedUser);
+      try {
+        final apiService = ref.read(apiServiceProvider);
+        final response = await apiService.updateOnboardedStatus(isOnboarded);
+        
+        response.when(
+          success: (data, message) {
+            // Update local state with the response from backend
+            final updatedUser = state.user!.copyWith(isOnboarded: isOnboarded);
+            state = state.copyWith(user: updatedUser);
+          },
+          error: (message, statusCode, errors) {
+            // Log error but still update local state for UI consistency
+            print('Failed to update onboarding status on backend: $message');
+            final updatedUser = state.user!.copyWith(isOnboarded: isOnboarded);
+            state = state.copyWith(user: updatedUser);
+          },
+        );
+      } catch (e) {
+        // Log error but still update local state for UI consistency
+        print('Error updating onboarding status: $e');
+        final updatedUser = state.user!.copyWith(isOnboarded: isOnboarded);
+        state = state.copyWith(user: updatedUser);
+      }
     }
   }
 

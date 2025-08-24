@@ -11,6 +11,7 @@ import 'package:mindhearth/features/documents/presentation/pages/documents_page.
 import 'package:mindhearth/features/reports/presentation/pages/reports_page.dart';
 import 'package:mindhearth/features/settings/presentation/pages/settings_page.dart';
 import 'package:mindhearth/features/safetycode/domain/providers/safety_code_providers.dart';
+import 'package:mindhearth/features/onboarding/domain/providers/onboarding_providers.dart';
 import 'package:mindhearth/core/models/auth_state.dart';
 import 'package:flutter/foundation.dart';
 
@@ -18,6 +19,7 @@ import 'package:flutter/foundation.dart';
 class GoRouterRefreshStream extends ChangeNotifier {
   late final ProviderSubscription<AuthState> _authSubscription;
   late final ProviderSubscription<SafetyCodeState> _safetySubscription;
+  late final ProviderSubscription<OnboardingState> _onboardingSubscription;
 
   GoRouterRefreshStream(Ref ref) {
     _authSubscription = ref.listen(authStateProvider, (previous, next) {
@@ -27,12 +29,17 @@ class GoRouterRefreshStream extends ChangeNotifier {
     _safetySubscription = ref.listen(safetyCodeVerifiedProvider, (previous, next) {
       notifyListeners();
     });
+    
+    _onboardingSubscription = ref.listen(onboardingStateProvider, (previous, next) {
+      notifyListeners();
+    });
   }
 
   @override
   void dispose() {
     _authSubscription.close();
     _safetySubscription.close();
+    _onboardingSubscription.close();
     super.dispose();
   }
 }
