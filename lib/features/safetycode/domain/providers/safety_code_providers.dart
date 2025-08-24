@@ -2,6 +2,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
 import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
+import 'package:mindhearth/features/onboarding/domain/providers/onboarding_providers.dart';
 
 // Safety Code State
 class SafetyCodeState {
@@ -44,8 +45,11 @@ class SafetyCodeNotifier extends StateNotifier<SafetyCodeState> {
     try {
       final apiService = ref.read(apiServiceProvider);
       
-      // For now, use a default passphrase. In a real app, this would be user-provided
-      const passphrase = 'default_passphrase';
+      // Get the passphrase from onboarding state, or use default for existing users
+      final onboardingState = ref.read(onboardingStateProvider);
+      final passphrase = onboardingState.passphrase ?? 'default_passphrase';
+      
+      print('🐛 Verifying safety code with passphrase: $passphrase');
       
       final response = await apiService.validateSafetyCode(code, passphrase);
       
