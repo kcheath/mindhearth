@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mindhearth/core/models/api_response.dart';
@@ -346,8 +347,10 @@ class ApiService {
   Future<ApiResponse<Map<String, dynamic>>> saveRedactionProfile(Map<String, dynamic> profileData) async {
     try {
       // Create or update redaction profile
+      // Convert profile data to JSON string as expected by backend
+      final profileDataString = jsonEncode(profileData);
       final response = await _dio.post('/redaction-profiles/', data: {
-        'encrypted_profile_data': profileData, // This should be encrypted in production
+        'encrypted_profile_data': profileDataString, // Backend expects a string
       });
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
