@@ -73,7 +73,7 @@ class _OnboardingStepConsentState extends ConsumerState<OnboardingStepConsent> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Header
+        // Header with information from the card
         Icon(
           Icons.psychology,
           size: 80,
@@ -81,7 +81,7 @@ class _OnboardingStepConsentState extends ConsumerState<OnboardingStepConsent> {
         ),
         SizedBox(height: 24),
         Text(
-          'AI Training Consent',
+          'Help Improve Mental Health AI',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -89,87 +89,49 @@ class _OnboardingStepConsentState extends ConsumerState<OnboardingStepConsent> {
           ),
           textAlign: TextAlign.center,
         ),
+        SizedBox(height: 16),
+        Text(
+          'Your redacted conversations help us train our AI to better understand mental health challenges and provide more empathetic support.',
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey[600],
+            height: 1.4,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        SizedBox(height: 16),
+        Text(
+          '• All personal information is automatically removed\n• Only emotional content and insights remain\n• You can change this setting anytime\n• Your privacy and security are our top priority',
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey[600],
+            height: 1.3,
+          ),
+          textAlign: TextAlign.center,
+        ),
         SizedBox(height: 32),
 
-        // Consent form content
-        Expanded(
-          child: Column(
-            children: [
-              Flexible(
-                child: Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.all(12),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.psychology,
-                          size: 32,
-                          color: Color(0xFF6750A4),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Help Improve Mental Health AI',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey[800],
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        SizedBox(height: 6),
-                        Text(
-                          'Your redacted conversations help us train our AI to better understand mental health challenges and provide more empathetic support.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                            height: 1.3,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          '• All personal information is automatically removed\n• Only emotional content and insights remain\n• You can change this setting anytime\n• Your privacy and security are our top priority',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey[600],
-                            height: 1.2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: 12),
-              SwitchListTile(
-                title: Text(
-                  'Allow AI training with my redacted conversations',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                subtitle: Text(
-                  'This helps improve mental health support for everyone',
-                  style: TextStyle(fontSize: 12),
-                ),
-                value: _analysisConsent,
-                onChanged: (value) {
-                  setState(() {
-                    _analysisConsent = value;
-                  });
-                },
-                activeColor: Color(0xFF6750A4),
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-              ),
-            ],
+        // Consent switch
+        SwitchListTile(
+          title: Text(
+            'Allow AI training with my redacted conversations',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
           ),
+          subtitle: Text(
+            'This helps improve mental health support for everyone',
+            style: TextStyle(fontSize: 14),
+          ),
+          value: _analysisConsent,
+          onChanged: (value) {
+            setState(() {
+              _analysisConsent = value;
+            });
+          },
+          activeColor: Color(0xFF6750A4),
+          contentPadding: EdgeInsets.zero,
         ),
       ],
     );
