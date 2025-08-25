@@ -89,15 +89,6 @@ class _OnboardingStepConsentState extends ConsumerState<OnboardingStepConsent> {
           ),
           textAlign: TextAlign.center,
         ),
-        SizedBox(height: 16),
-        Text(
-          'Allow us to use your redacted conversations to improve our AI assistant and provide better mental health support.',
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.grey[600],
-          ),
-          textAlign: TextAlign.center,
-        ),
         SizedBox(height: 32),
 
         // Consent form content
