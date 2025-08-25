@@ -368,4 +368,16 @@ class ApiService {
       );
     }
   }
+
+  Future<ApiResponse<Map<String, dynamic>>> clearOnboardingData() async {
+    try {
+      final response = await _dio.delete('/onboarding/data');
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to clear onboarding data',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
 }

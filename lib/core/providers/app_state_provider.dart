@@ -423,26 +423,52 @@ class AppStateNotifier extends StateNotifier<AppState> {
         appLogger.onboarding('starting_complete_reset', null);
       }
       
-      // Update backend onboarding status
       final apiService = ref.read(apiServiceProvider);
-      final response = await apiService.updateOnboardedStatus(false);
       
-      response.when(
+      // 1. Update backend onboarding status
+      final onboardingResponse = await apiService.updateOnboardedStatus(false);
+      onboardingResponse.when(
         success: (data, message) {
           if (LoggingConfig.enableOnboardingLogs) {
-        appLogger.onboarding('backend_status_reset', null);
-      }
+            appLogger.onboarding('backend_status_reset', null);
+          }
         },
         error: (message, statusCode, errors) {
-                      appLogger.warning('Failed to reset backend onboarding status', {'message': message});
+          appLogger.warning('Failed to reset backend onboarding status', {'message': message});
         },
       );
       
-      // Clear all stored data
-      await EncryptionService.clearPassphrase();
-      await clearSafetyCodes();
+      // 2. Clear safety codes from backend
+      final safetyCodesResponse = await apiService.clearSafetyCodes();
+      safetyCodesResponse.when(
+        success: (data, message) {
+          if (LoggingConfig.enableOnboardingLogs) {
+            appLogger.onboarding('backend_safety_codes_cleared', null);
+          }
+        },
+        error: (message, statusCode, errors) {
+          appLogger.warning('Failed to clear backend safety codes', {'message': message});
+        },
+      );
       
-      // Reset all state
+      // 3. Clear onboarding data from backend
+      final onboardingDataResponse = await apiService.clearOnboardingData();
+      onboardingDataResponse.when(
+        success: (data, message) {
+          if (LoggingConfig.enableOnboardingLogs) {
+            appLogger.onboarding('backend_onboarding_data_cleared', null);
+          }
+        },
+        error: (message, statusCode, errors) {
+          appLogger.warning('Failed to clear backend onboarding data', {'message': message});
+        },
+      );
+      
+      // 4. Clear all local stored data
+      await EncryptionService.clearPassphrase();
+      await EncryptionService.clearSafetyCodes();
+      
+      // 5. Reset all onboarding-related state
       final updatedUser = state.user?.copyWith(isOnboarded: false);
       state = state.copyWith(
         isOnboarding: false,
@@ -450,10 +476,17 @@ class AppStateNotifier extends StateNotifier<AppState> {
         currentStep: 0,
         isSafetyCodeVerified: false,
         currentSafetyCode: null,
+        hasSafetyCodes: false,
+        hasPassphrase: false,
+        // Clear all new onboarding data
+        onboardingData: null,
+        selectedSituationId: null,
+        selectedRedactionProfileId: null,
+        consentAccepted: null,
         user: updatedUser,
       );
       
-      // Re-initialize state from storage
+      // 6. Re-initialize state from storage
       await _initializeState();
       
       if (LoggingConfig.enableOnboardingLogs) {
