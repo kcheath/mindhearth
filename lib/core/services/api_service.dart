@@ -314,14 +314,15 @@ class ApiService {
     }
   }
 
-  // Onboarding Data Management
+  // Onboarding Data Management - Using user data approach like kch_dev
   Future<ApiResponse<Map<String, dynamic>>> getOnboardingData() async {
     try {
-      final response = await _dio.get('/onboarding/data');
+      // Use /users/me to get user data including onboarding information
+      final response = await _dio.get('/users/me');
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
       return ApiError(
-        message: e.response?.data?['detail'] ?? 'Failed to get onboarding data',
+        message: e.response?.data?['detail'] ?? 'Failed to get user onboarding data',
         statusCode: e.response?.statusCode,
       );
     }
@@ -329,8 +330,9 @@ class ApiService {
 
   Future<ApiResponse<Map<String, dynamic>>> saveCurrentSituation(String situationId) async {
     try {
-      final response = await _dio.post('/onboarding/current-situation', data: {
-        'situation_id': situationId,
+      // Update user data with current situation
+      final response = await _dio.put('/users/me', data: {
+        'current_situation_id': situationId,
       });
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
@@ -343,8 +345,9 @@ class ApiService {
 
   Future<ApiResponse<Map<String, dynamic>>> saveRedactionProfile(String profileId) async {
     try {
-      final response = await _dio.post('/onboarding/redaction-profile', data: {
-        'profile_id': profileId,
+      // Update user data with redaction profile
+      final response = await _dio.put('/users/me', data: {
+        'redaction_profile_id': profileId,
       });
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
@@ -357,8 +360,9 @@ class ApiService {
 
   Future<ApiResponse<Map<String, dynamic>>> saveConsentForm(bool accepted) async {
     try {
-      final response = await _dio.post('/onboarding/consent', data: {
-        'accepted': accepted,
+      // Update user data with consent status
+      final response = await _dio.put('/users/me', data: {
+        'consent_accepted': accepted,
       });
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
@@ -371,7 +375,12 @@ class ApiService {
 
   Future<ApiResponse<Map<String, dynamic>>> clearOnboardingData() async {
     try {
-      final response = await _dio.delete('/onboarding/data');
+      // Clear onboarding data by updating user data
+      final response = await _dio.put('/users/me', data: {
+        'current_situation_id': null,
+        'redaction_profile_id': null,
+        'consent_accepted': null,
+      });
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
       return ApiError(

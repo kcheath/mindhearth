@@ -226,17 +226,126 @@ class OnboardingData {
   });
 
   factory OnboardingData.fromJson(Map<String, dynamic> json) {
+    // Extract user's selected values from user data
+    final selectedSituationId = json['current_situation_id'] as String?;
+    final selectedRedactionProfileId = json['redaction_profile_id'] as String?;
+    final consentAccepted = json['consent_accepted'] as bool?;
+    
+    // Create static onboarding options (these would normally come from backend)
+    final currentSituations = [
+      CurrentSituation(
+        id: 'situation_1',
+        title: 'General Mental Health Support',
+        description: 'I\'m looking for general mental health support and guidance.',
+        tags: ['general', 'support'],
+        isSelected: selectedSituationId == 'situation_1',
+      ),
+      CurrentSituation(
+        id: 'situation_2',
+        title: 'Anxiety & Stress Management',
+        description: 'I\'m dealing with anxiety, stress, or overwhelming emotions.',
+        tags: ['anxiety', 'stress'],
+        isSelected: selectedSituationId == 'situation_2',
+      ),
+      CurrentSituation(
+        id: 'situation_3',
+        title: 'Depression Support',
+        description: 'I\'m experiencing symptoms of depression or low mood.',
+        tags: ['depression', 'mood'],
+        isSelected: selectedSituationId == 'situation_3',
+      ),
+      CurrentSituation(
+        id: 'situation_4',
+        title: 'Crisis Support',
+        description: 'I\'m in crisis and need immediate support.',
+        tags: ['crisis', 'emergency'],
+        isSelected: selectedSituationId == 'situation_4',
+      ),
+    ];
+    
+    final redactionProfiles = [
+      RedactionProfile(
+        id: 'profile_1',
+        name: 'Standard Privacy',
+        description: 'Standard privacy settings with basic content filtering.',
+        redactionRules: {
+          'personal_info': true,
+          'locations': true,
+          'dates': false,
+          'context': false,
+        },
+        isSelected: selectedRedactionProfileId == 'profile_1',
+      ),
+      RedactionProfile(
+        id: 'profile_2',
+        name: 'Enhanced Privacy',
+        description: 'Enhanced privacy with stricter content filtering.',
+        redactionRules: {
+          'personal_info': true,
+          'locations': true,
+          'dates': true,
+          'context': false,
+        },
+        isSelected: selectedRedactionProfileId == 'profile_2',
+      ),
+      RedactionProfile(
+        id: 'profile_3',
+        name: 'Maximum Privacy',
+        description: 'Maximum privacy with comprehensive content filtering.',
+        redactionRules: {
+          'personal_info': true,
+          'locations': true,
+          'dates': true,
+          'context': true,
+        },
+        isSelected: selectedRedactionProfileId == 'profile_3',
+      ),
+    ];
+    
+    final consentForm = ConsentForm(
+      id: 'privacy_consent',
+      title: 'Privacy & Data Consent',
+      content: 'Please review and accept our privacy policy and data handling practices.',
+      sections: [
+        ConsentSection(
+          id: 'privacy_policy',
+          title: 'Privacy Policy',
+          content: 'We are committed to protecting your privacy. Your data is encrypted and stored securely.',
+          isRequired: true,
+          isAccepted: consentAccepted == true,
+        ),
+        ConsentSection(
+          id: 'data_usage',
+          title: 'Data Usage',
+          content: 'Your data is used solely to provide mental health support and improve our services.',
+          isRequired: true,
+          isAccepted: consentAccepted == true,
+        ),
+        ConsentSection(
+          id: 'third_party',
+          title: 'Third-Party Services',
+          content: 'We may use third-party services for analytics and support, all with appropriate safeguards.',
+          isRequired: false,
+          isAccepted: consentAccepted == true,
+        ),
+        ConsentSection(
+          id: 'emergency_contact',
+          title: 'Emergency Contact',
+          content: 'In case of emergency, we may contact emergency services if necessary.',
+          isRequired: true,
+          isAccepted: consentAccepted == true,
+        ),
+      ],
+      isAccepted: consentAccepted == true,
+    );
+    
     return OnboardingData(
-      currentSituations: (json['current_situations'] as List<dynamic>?)
-          ?.map((e) => CurrentSituation.fromJson(e as Map<String, dynamic>))
-          .toList() ?? [],
-      redactionProfiles: (json['redaction_profiles'] as List<dynamic>?)
-          ?.map((e) => RedactionProfile.fromJson(e as Map<String, dynamic>))
-          .toList() ?? [],
-      consentForm: ConsentForm.fromJson(json['consent_form'] as Map<String, dynamic>),
-      selectedSituationId: json['selected_situation_id'] as String?,
-      selectedRedactionProfileId: json['selected_redaction_profile_id'] as String?,
-      consentAccepted: json['consent_accepted'] as bool?,
+      currentSituations: currentSituations,
+      redactionProfiles: redactionProfiles,
+      consentForm: consentForm,
+      selectedSituationId: selectedSituationId,
+      selectedRedactionProfileId: selectedRedactionProfileId,
+      consentAccepted: consentAccepted,
     );
   }
 
