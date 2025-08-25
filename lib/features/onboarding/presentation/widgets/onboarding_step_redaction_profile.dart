@@ -16,7 +16,13 @@ class OnboardingStepRedactionProfile extends ConsumerStatefulWidget {
 }
 
 class _OnboardingStepRedactionProfileState extends ConsumerState<OnboardingStepRedactionProfile> {
-  String? _selectedProfileId;
+  final _userNamesController = TextEditingController();
+  final _childNamesController = TextEditingController();
+  final _emailsController = TextEditingController();
+  final _phoneNumbersController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _peopleToRedactController = TextEditingController();
+  bool _redactPronouns = false;
 
   @override
   void initState() {
@@ -25,11 +31,30 @@ class _OnboardingStepRedactionProfileState extends ConsumerState<OnboardingStepR
     widget.onSave(_saveRedactionProfile);
   }
 
+  @override
+  void dispose() {
+    _userNamesController.dispose();
+    _childNamesController.dispose();
+    _emailsController.dispose();
+    _phoneNumbersController.dispose();
+    _addressController.dispose();
+    _peopleToRedactController.dispose();
+    super.dispose();
+  }
+
   void _saveRedactionProfile() {
-    if (_selectedProfileId != null) {
-      final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
-      appStateNotifier.setRedactionProfile(_selectedProfileId!);
-    }
+    final profileData = {
+      'user_names': _userNamesController.text.isNotEmpty ? _userNamesController.text : null,
+      'child_names': _childNamesController.text.isNotEmpty ? _childNamesController.text : null,
+      'emails': _emailsController.text.isNotEmpty ? _emailsController.text : null,
+      'phone_numbers': _phoneNumbersController.text.isNotEmpty ? _phoneNumbersController.text : null,
+      'address': _addressController.text.isNotEmpty ? _addressController.text : null,
+      'people_to_redact': _peopleToRedactController.text.isNotEmpty ? _peopleToRedactController.text : null,
+      'redact_pronouns': _redactPronouns,
+    };
+    
+    final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
+    appStateNotifier.setRedactionProfile(profileData);
   }
 
   @override
@@ -81,7 +106,7 @@ class _OnboardingStepRedactionProfileState extends ConsumerState<OnboardingStepR
         ),
         SizedBox(height: 24),
         Text(
-          'Choose Your Privacy Level',
+          'Privacy & Redaction Settings',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -91,7 +116,7 @@ class _OnboardingStepRedactionProfileState extends ConsumerState<OnboardingStepR
         ),
         SizedBox(height: 16),
         Text(
-          'Select how you want your data to be processed and protected. You can change this later in settings.',
+          'Tell us what information should be automatically removed from your conversations for privacy.',
           style: TextStyle(
             fontSize: 16,
             color: Colors.grey[600],
@@ -100,107 +125,102 @@ class _OnboardingStepRedactionProfileState extends ConsumerState<OnboardingStepR
         ),
         SizedBox(height: 32),
 
-        // Redaction profile options
+        // Redaction form fields
         Expanded(
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: onboardingData.redactionProfiles.length,
-            itemBuilder: (context, index) {
-              final profile = onboardingData.redactionProfiles[index];
-              final isSelected = _selectedProfileId == profile.id;
-
-              return Card(
-                margin: EdgeInsets.only(bottom: 12),
-                elevation: isSelected ? 4 : 1,
-                color: isSelected ? Color(0xFF6750A4).withOpacity(0.1) : Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(
-                    color: isSelected ? Color(0xFF6750A4) : Colors.grey[300]!,
-                    width: isSelected ? 2 : 1,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _userNamesController,
+                  decoration: InputDecoration(
+                    labelText: 'User names to redact',
+                    hintText: 'e.g., John, Jane, Mom, Dad',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: Icon(Icons.person),
                   ),
+                  maxLines: 2,
                 ),
-                child: InkWell(
-                  onTap: () {
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: _childNamesController,
+                  decoration: InputDecoration(
+                    labelText: 'Child names to redact',
+                    hintText: 'e.g., Emma, Liam, Baby',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: Icon(Icons.child_care),
+                  ),
+                  maxLines: 2,
+                ),
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: _emailsController,
+                  decoration: InputDecoration(
+                    labelText: 'Email addresses to redact',
+                    hintText: 'e.g., john@email.com, jane@work.com',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: Icon(Icons.email),
+                  ),
+                  maxLines: 2,
+                ),
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: _phoneNumbersController,
+                  decoration: InputDecoration(
+                    labelText: 'Phone numbers to redact',
+                    hintText: 'e.g., 555-123-4567, +1-555-987-6543',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: Icon(Icons.phone),
+                  ),
+                  maxLines: 2,
+                ),
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: _addressController,
+                  decoration: InputDecoration(
+                    labelText: 'Address to redact (optional)',
+                    hintText: 'e.g., 123 Main St, Anytown, CA 90210',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: Icon(Icons.home),
+                  ),
+                  maxLines: 2,
+                ),
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: _peopleToRedactController,
+                  decoration: InputDecoration(
+                    labelText: 'Other people to redact',
+                    hintText: 'e.g., boss, therapist, friend Sarah',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: Icon(Icons.people),
+                  ),
+                  maxLines: 2,
+                ),
+                SizedBox(height: 16),
+                SwitchListTile(
+                  title: Text('Redact pronouns'),
+                  subtitle: Text('Automatically replace he/she/they with [PERSON]'),
+                  value: _redactPronouns,
+                  onChanged: (value) {
                     setState(() {
-                      _selectedProfileId = profile.id;
+                      _redactPronouns = value;
                     });
                   },
-                  borderRadius: BorderRadius.circular(12),
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                profile.name,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: isSelected ? Color(0xFF6750A4) : Colors.grey[800],
-                                ),
-                              ),
-                            ),
-                            if (isSelected)
-                              Icon(
-                                Icons.check_circle,
-                                color: Color(0xFF6750A4),
-                                size: 24,
-                              ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          profile.description,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        SizedBox(height: 12),
-                        // Redaction rules
-                        Text(
-                          'Privacy Rules:',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        ...profile.redactionRules.entries.map((entry) {
-                          return Padding(
-                            padding: EdgeInsets.only(bottom: 4),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  entry.value ? Icons.check_circle : Icons.cancel,
-                                  size: 16,
-                                  color: entry.value ? Colors.green : Colors.red,
-                                ),
-                                SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    _formatRedactionRule(entry.key),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      ],
-                    ),
-                  ),
+                  activeColor: Color(0xFF6750A4),
                 ),
-              );
-            },
+              ],
+            ),
           ),
         ),
       ],

@@ -32,9 +32,6 @@ class AppState {
   
   // Additional onboarding data
   final OnboardingData? onboardingData;
-  final String? selectedSituationId;
-  final String? selectedRedactionProfileId;
-  final bool? consentAccepted;
 
   const AppState({
     this.isAuthenticated = false,
@@ -50,9 +47,6 @@ class AppState {
     this.currentSafetyCode,
     this.hasPassphrase = false,
     this.onboardingData,
-    this.selectedSituationId,
-    this.selectedRedactionProfileId,
-    this.consentAccepted,
   });
 
   AppState copyWith({
@@ -69,9 +63,6 @@ class AppState {
     String? currentSafetyCode,
     bool? hasPassphrase,
     OnboardingData? onboardingData,
-    String? selectedSituationId,
-    String? selectedRedactionProfileId,
-    bool? consentAccepted,
   }) {
     return AppState(
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
@@ -87,9 +78,6 @@ class AppState {
       currentSafetyCode: currentSafetyCode ?? this.currentSafetyCode,
       hasPassphrase: hasPassphrase ?? this.hasPassphrase,
       onboardingData: onboardingData ?? this.onboardingData,
-      selectedSituationId: selectedSituationId ?? this.selectedSituationId,
-      selectedRedactionProfileId: selectedRedactionProfileId ?? this.selectedRedactionProfileId,
-      consentAccepted: consentAccepted ?? this.consentAccepted,
     );
   }
 }
@@ -480,9 +468,7 @@ class AppStateNotifier extends StateNotifier<AppState> {
         hasPassphrase: false,
         // Clear all new onboarding data
         onboardingData: null,
-        selectedSituationId: null,
-        selectedRedactionProfileId: null,
-        consentAccepted: null,
+
         user: updatedUser,
       );
       
@@ -538,40 +524,47 @@ class AppStateNotifier extends StateNotifier<AppState> {
       }
     }
 
-    Future<void> setCurrentSituation(String situationId) async {
+    Future<void> setSituationData(Map<String, dynamic> situationData) async {
       try {
         final apiService = ref.read(apiServiceProvider);
-        final response = await apiService.saveCurrentSituation(situationId);
+        final response = await apiService.saveSituationData(situationData);
         
         response.when(
           success: (data, message) {
-            state = state.copyWith(selectedSituationId: situationId);
+            final updatedOnboardingData = state.onboardingData?.copyWith(
+              situationData: SituationData.fromJson(situationData),
+            );
+            state = state.copyWith(onboardingData: updatedOnboardingData);
             if (LoggingConfig.enableOnboardingLogs) {
-              appLogger.onboarding('situation_selected', {'situationId': situationId});
+              appLogger.onboarding('situation_data_saved', {'data': situationData});
             }
           },
           error: (message, statusCode, errors) {
-            appLogger.error('Failed to save current situation', {'message': message});
+            appLogger.error('Failed to save situation data', {'message': message});
           },
         );
       } catch (e) {
-        appLogger.error('Error saving current situation', {'error': e.toString()});
+        appLogger.error('Error saving situation data', {'error': e.toString()});
       }
     }
 
-    Future<void> setRedactionProfile(String profileId) async {
+    Future<void> setRedactionProfile(Map<String, dynamic> profileData) async {
       try {
         final apiService = ref.read(apiServiceProvider);
-        final response = await apiService.saveRedactionProfile(profileId);
+        final response = await apiService.saveRedactionProfile(profileData);
         
         response.when(
           success: (data, message) {
-            state = state.copyWith(selectedRedactionProfileId: profileId);
+            final updatedOnboardingData = state.onboardingData?.copyWith(
+              redactionProfile: RedactionProfile.fromJson(profileData),
+            );
+            state = state.copyWith(onboardingData: updatedOnboardingData);
             if (LoggingConfig.enableOnboardingLogs) {
-              appLogger.onboarding('redaction_profile_selected', {'profileId': profileId});
+              appLogger.onboarding('redaction_profile_saved', {'data': profileData});
             }
           },
           error: (message, statusCode, errors) {
+            appLogger.error('Failed to save redaction profile', {'message': message});
             appLogger.error('Failed to save redaction profile', {'message': message});
           },
         );
@@ -587,7 +580,10 @@ class AppStateNotifier extends StateNotifier<AppState> {
         
         response.when(
           success: (data, message) {
-            state = state.copyWith(consentAccepted: accepted);
+            final updatedOnboardingData = state.onboardingData?.copyWith(
+              consentData: ConsentData(analysisConsent: accepted),
+            );
+            state = state.copyWith(onboardingData: updatedOnboardingData);
             if (LoggingConfig.enableOnboardingLogs) {
               appLogger.onboarding('consent_updated', {'accepted': accepted});
             }

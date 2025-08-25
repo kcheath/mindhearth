@@ -328,26 +328,26 @@ class ApiService {
     }
   }
 
-  Future<ApiResponse<Map<String, dynamic>>> saveCurrentSituation(String situationId) async {
+  Future<ApiResponse<Map<String, dynamic>>> saveSituationData(Map<String, dynamic> situationData) async {
     try {
-      // Update user data with current situation
-      final response = await _dio.put('/users/me', data: {
-        'current_situation_id': situationId,
+      // Update user's relationship context
+      final response = await _dio.put('/users/relationship-context', data: {
+        'relationship_context': situationData,
       });
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
       return ApiError(
-        message: e.response?.data?['detail'] ?? 'Failed to save current situation',
+        message: e.response?.data?['detail'] ?? 'Failed to save situation data',
         statusCode: e.response?.statusCode,
       );
     }
   }
 
-  Future<ApiResponse<Map<String, dynamic>>> saveRedactionProfile(String profileId) async {
+  Future<ApiResponse<Map<String, dynamic>>> saveRedactionProfile(Map<String, dynamic> profileData) async {
     try {
-      // Update user data with redaction profile
-      final response = await _dio.put('/users/me', data: {
-        'redaction_profile_id': profileId,
+      // Create or update redaction profile
+      final response = await _dio.post('/redaction-profiles/', data: {
+        'encrypted_profile_data': profileData, // This should be encrypted in production
       });
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
@@ -360,9 +360,9 @@ class ApiService {
 
   Future<ApiResponse<Map<String, dynamic>>> saveConsentForm(bool accepted) async {
     try {
-      // Update user data with consent status
-      final response = await _dio.put('/users/me', data: {
-        'consent_accepted': accepted,
+      // Update consent for LLM training
+      final response = await _dio.post('/redaction-profiles/consent', data: {
+        'consent': accepted,
       });
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
@@ -377,9 +377,9 @@ class ApiService {
     try {
       // Clear onboarding data by updating user data
       final response = await _dio.put('/users/me', data: {
-        'current_situation_id': null,
-        'redaction_profile_id': null,
-        'consent_accepted': null,
+        'relationship_context': null,
+        'redaction_profile': null,
+        'llm_training_consent': null,
       });
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
