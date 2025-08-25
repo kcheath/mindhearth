@@ -127,61 +127,59 @@ class _OnboardingStepCurrentSituationState extends ConsumerState<OnboardingStepC
 
         // Form fields
         Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextFormField(
-                  controller: _ageController,
-                  decoration: InputDecoration(
-                    labelText: 'Age (optional)',
-                    hintText: 'e.g., 35',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: Icon(Icons.cake),
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _ageController,
+                decoration: InputDecoration(
+                  labelText: 'Age (optional)',
+                  hintText: 'e.g., 35',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  keyboardType: TextInputType.number,
+                  prefixIcon: Icon(Icons.cake),
                 ),
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: _stateController,
-                  decoration: InputDecoration(
-                    labelText: 'State/Region (optional)',
-                    hintText: 'e.g., California',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: Icon(Icons.location_on),
+                keyboardType: TextInputType.number,
+              ),
+              SizedBox(height: 12),
+              TextFormField(
+                controller: _stateController,
+                decoration: InputDecoration(
+                  labelText: 'State/Region (optional)',
+                  hintText: 'e.g., California',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  prefixIcon: Icon(Icons.location_on),
                 ),
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: _childrenController,
-                  decoration: InputDecoration(
-                    labelText: 'Children (optional)',
-                    hintText: 'e.g., 2 children ages 5 and 7',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: Icon(Icons.family_restroom),
+              ),
+              SizedBox(height: 12),
+              TextFormField(
+                controller: _childrenController,
+                decoration: InputDecoration(
+                  labelText: 'Children (optional)',
+                  hintText: 'e.g., 2 children ages 5 and 7',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  maxLines: 2,
+                  prefixIcon: Icon(Icons.family_restroom),
                 ),
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: _backgroundController,
-                  decoration: InputDecoration(
-                    labelText: 'Additional background (optional)',
-                    hintText: 'Any other context that might be helpful...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: Icon(Icons.info),
+                maxLines: 1,
+              ),
+              SizedBox(height: 12),
+              TextFormField(
+                controller: _backgroundController,
+                decoration: InputDecoration(
+                  labelText: 'Additional background (optional)',
+                  hintText: 'Any other context that might be helpful...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  maxLines: 3,
+                  prefixIcon: Icon(Icons.info),
                 ),
-              ],
-            ),
+                maxLines: 2,
+              ),
+            ],
           ),
         ),
       ],

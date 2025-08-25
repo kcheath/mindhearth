@@ -127,100 +127,99 @@ class _OnboardingStepRedactionProfileState extends ConsumerState<OnboardingStepR
 
         // Redaction form fields
         Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextFormField(
-                  controller: _userNamesController,
-                  decoration: InputDecoration(
-                    labelText: 'User names to redact',
-                    hintText: 'e.g., John, Jane, Mom, Dad',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: Icon(Icons.person),
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _userNamesController,
+                decoration: InputDecoration(
+                  labelText: 'User names to redact',
+                  hintText: 'e.g., John, Jane, Mom, Dad',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  maxLines: 2,
+                  prefixIcon: Icon(Icons.person),
                 ),
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: _childNamesController,
-                  decoration: InputDecoration(
-                    labelText: 'Child names to redact',
-                    hintText: 'e.g., Emma, Liam, Baby',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: Icon(Icons.child_care),
+                maxLines: 1,
+              ),
+              SizedBox(height: 12),
+              TextFormField(
+                controller: _childNamesController,
+                decoration: InputDecoration(
+                  labelText: 'Child names to redact',
+                  hintText: 'e.g., Emma, Liam, Baby',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  maxLines: 2,
+                  prefixIcon: Icon(Icons.child_care),
                 ),
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: _emailsController,
-                  decoration: InputDecoration(
-                    labelText: 'Email addresses to redact',
-                    hintText: 'e.g., john@email.com, jane@work.com',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: Icon(Icons.email),
+                maxLines: 1,
+              ),
+              SizedBox(height: 12),
+              TextFormField(
+                controller: _emailsController,
+                decoration: InputDecoration(
+                  labelText: 'Email addresses to redact',
+                  hintText: 'e.g., john@email.com, jane@work.com',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  maxLines: 2,
+                  prefixIcon: Icon(Icons.email),
                 ),
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: _phoneNumbersController,
-                  decoration: InputDecoration(
-                    labelText: 'Phone numbers to redact',
-                    hintText: 'e.g., 555-123-4567, +1-555-987-6543',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: Icon(Icons.phone),
+                maxLines: 1,
+              ),
+              SizedBox(height: 12),
+              TextFormField(
+                controller: _phoneNumbersController,
+                decoration: InputDecoration(
+                  labelText: 'Phone numbers to redact',
+                  hintText: 'e.g., 555-123-4567, +1-555-987-6543',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  maxLines: 2,
+                  prefixIcon: Icon(Icons.phone),
                 ),
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: _addressController,
-                  decoration: InputDecoration(
-                    labelText: 'Address to redact (optional)',
-                    hintText: 'e.g., 123 Main St, Anytown, CA 90210',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: Icon(Icons.home),
+                maxLines: 1,
+              ),
+              SizedBox(height: 12),
+              TextFormField(
+                controller: _addressController,
+                decoration: InputDecoration(
+                  labelText: 'Address to redact (optional)',
+                  hintText: 'e.g., 123 Main St, Anytown, CA 90210',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  maxLines: 2,
+                  prefixIcon: Icon(Icons.home),
                 ),
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: _peopleToRedactController,
-                  decoration: InputDecoration(
-                    labelText: 'Other people to redact',
-                    hintText: 'e.g., boss, therapist, friend Sarah',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: Icon(Icons.people),
+                maxLines: 1,
+              ),
+              SizedBox(height: 12),
+              TextFormField(
+                controller: _peopleToRedactController,
+                decoration: InputDecoration(
+                  labelText: 'Other people to redact',
+                  hintText: 'e.g., boss, therapist, friend Sarah',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  maxLines: 2,
+                  prefixIcon: Icon(Icons.people),
                 ),
-                SizedBox(height: 16),
-                SwitchListTile(
-                  title: Text('Redact pronouns'),
-                  subtitle: Text('Automatically replace he/she/they with [PERSON]'),
-                  value: _redactPronouns,
-                  onChanged: (value) {
-                    setState(() {
-                      _redactPronouns = value;
-                    });
-                  },
-                  activeColor: Color(0xFF6750A4),
-                ),
-              ],
-            ),
+                maxLines: 1,
+              ),
+              SizedBox(height: 12),
+              SwitchListTile(
+                title: Text('Redact pronouns'),
+                subtitle: Text('Automatically replace he/she/they with [PERSON]'),
+                value: _redactPronouns,
+                onChanged: (value) {
+                  setState(() {
+                    _redactPronouns = value;
+                  });
+                },
+                activeColor: Color(0xFF6750A4),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ],
           ),
         ),
       ],

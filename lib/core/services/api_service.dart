@@ -346,13 +346,26 @@ class ApiService {
 
   Future<ApiResponse<Map<String, dynamic>>> saveRedactionProfile(Map<String, dynamic> profileData) async {
     try {
-      // Create or update redaction profile
       // Convert profile data to JSON string as expected by backend
       final profileDataString = jsonEncode(profileData);
-      final response = await _dio.post('/redaction-profiles/', data: {
-        'encrypted_profile_data': profileDataString, // Backend expects a string
-      });
-      return ApiSuccess(data: response.data);
+      
+      // Try to create new profile first
+      try {
+        final response = await _dio.post('/redaction-profiles/', data: {
+          'encrypted_profile_data': profileDataString, // Backend expects a string
+        });
+        return ApiSuccess(data: response.data);
+      } on DioException catch (e) {
+        // If profile already exists (409), try to update it
+        if (e.response?.statusCode == 409) {
+          final updateResponse = await _dio.put('/redaction-profiles/', data: {
+            'encrypted_profile_data': profileDataString,
+          });
+          return ApiSuccess(data: updateResponse.data);
+        }
+        // Re-throw other errors
+        rethrow;
+      }
     } on DioException catch (e) {
       return ApiError(
         message: e.response?.data?['detail'] ?? 'Failed to save redaction profile',
