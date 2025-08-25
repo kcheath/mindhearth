@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mindhearth/app/providers/providers.dart';
-import 'package:mindhearth/features/safetycode/domain/providers/safety_code_providers.dart';
-import 'package:mindhearth/features/onboarding/domain/providers/onboarding_providers.dart';
+import 'package:mindhearth/core/providers/app_state_provider.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
+import 'package:mindhearth/core/services/encryption_service.dart';
 
 class PrivacySecuritySettingsPage extends ConsumerWidget {
   const PrivacySecuritySettingsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authStateProvider);
+    final appState = ref.watch(appStateProvider);
     
     return Scaffold(
       appBar: AppBar(
@@ -175,6 +174,8 @@ class PrivacySecuritySettingsPage extends ConsumerWidget {
 
   Future<void> _resetOnboardingFlow(BuildContext context, WidgetRef ref) async {
     try {
+      print('🐛 Debug: Starting onboarding reset...');
+      
       // Show loading indicator
       showDialog<void>(
         context: context,
@@ -192,37 +193,25 @@ class PrivacySecuritySettingsPage extends ConsumerWidget {
         },
       );
 
-      // 1. Update backend to set onboarded = false
-      final authNotifier = ref.read(authNotifierProvider.notifier);
-      final success = await authNotifier.updateOnboardingStatus(false);
-      
-      if (!success) {
+      // Use unified app state notifier for reset
+      print('🐛 Debug: Using unified app state for reset...');
+      final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
+      await appStateNotifier.resetOnboarding();
+
+      // Close loading dialog and show success message
+      print('🐛 Debug: Onboarding reset completed successfully');
+      if (context.mounted) {
         Navigator.of(context).pop(); // Close loading dialog
-        _showErrorDialog(context, 'Failed to reset onboarding status. Please try again.');
-        return;
+        _showSuccessDialog(context, 'Onboarding flow has been reset. You will be redirected to login.');
       }
-
-      // 2. Clear safety code state
-      final safetyCodeNotifier = ref.read(safetyCodeNotifierProvider.notifier);
-      safetyCodeNotifier.reset();
-
-      // 3. Clear onboarding state
-      final onboardingNotifier = ref.read(onboardingNotifierProvider.notifier);
-      onboardingNotifier.reset();
-
-      // 4. Log out the user
-      await authNotifier.logout();
-
-      // Close loading dialog
-      Navigator.of(context).pop();
-
-      // Show success message and navigate to login
-      _showSuccessDialog(context, 'Onboarding flow has been reset. You will be redirected to login.');
 
     } catch (e) {
       // Close loading dialog
-      Navigator.of(context).pop();
-      _showErrorDialog(context, 'An error occurred while resetting the onboarding flow: $e');
+      print('🐛 Debug: Error during onboarding reset: $e');
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        _showErrorDialog(context, 'An error occurred while resetting the onboarding flow: $e');
+      }
     }
   }
 

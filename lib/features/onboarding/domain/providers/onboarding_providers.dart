@@ -1,6 +1,8 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/app/providers/providers.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
+import 'package:mindhearth/core/services/encryption_service.dart';
+
 
 // Onboarding State
 class OnboardingState {
@@ -9,6 +11,7 @@ class OnboardingState {
   final bool isCompleted;
   final String? error;
   final String? passphrase;
+  final Map<String, String>? safetyCodes;
 
   const OnboardingState({
     this.isOnboarding = false,
@@ -16,6 +19,7 @@ class OnboardingState {
     this.isCompleted = false,
     this.error,
     this.passphrase,
+    this.safetyCodes,
   });
 
   OnboardingState copyWith({
@@ -24,6 +28,7 @@ class OnboardingState {
     bool? isCompleted,
     String? error,
     String? passphrase,
+    Map<String, String>? safetyCodes,
   }) {
     return OnboardingState(
       isOnboarding: isOnboarding ?? this.isOnboarding,
@@ -31,6 +36,7 @@ class OnboardingState {
       isCompleted: isCompleted ?? this.isCompleted,
       error: error ?? this.error,
       passphrase: passphrase ?? this.passphrase,
+      safetyCodes: safetyCodes ?? this.safetyCodes,
     );
   }
 }
@@ -46,7 +52,7 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
   }
 
   void nextStep() {
-    if (state.currentStep < 3) { // 4 steps (0-3)
+    if (state.currentStep < 4) { // 5 steps (0-4): Welcome, Privacy, Passphrase, Safety Code, Complete
       state = state.copyWith(currentStep: state.currentStep + 1);
     } else {
       completeOnboarding();
@@ -57,6 +63,10 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     state = state.copyWith(passphrase: passphrase);
   }
 
+  void setSafetyCodes(Map<String, String> safetyCodes) {
+    state = state.copyWith(safetyCodes: safetyCodes);
+  }
+
   void previousStep() {
     if (state.currentStep > 0) {
       state = state.copyWith(currentStep: state.currentStep - 1);
@@ -65,14 +75,24 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
 
   Future<void> completeOnboarding() async {
     try {
+      // Store the passphrase securely if we have one
+      if (state.passphrase != null) {
+        await EncryptionService.storePassphrase(state.passphrase!);
+        print('🐛 Passphrase stored securely');
+      }
+      
+      // Store safety codes if user entered them
+      if (state.safetyCodes != null && state.safetyCodes!.isNotEmpty) {
+        await EncryptionService.storeSafetyCodes(state.safetyCodes!);
+        print('🐛 Safety codes stored securely');
+        
+        // Safety codes are now managed by the unified app state
+        print('🐛 Debug: Safety codes stored successfully');
+      }
+      
       // Update onboarding status in auth notifier
       final authNotifier = ref.read(authNotifierProvider.notifier);
       await authNotifier.updateOnboardingStatus(true);
-      
-      // If we have a passphrase, generate and save safety codes
-      if (state.passphrase != null) {
-        await _generateAndSaveSafetyCodes(state.passphrase!);
-      }
       
       state = state.copyWith(
         isOnboarding: false,
@@ -84,34 +104,18 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     }
   }
 
-  Future<void> _generateAndSaveSafetyCodes(String passphrase) async {
+  Future<void> _saveSafetyCodesToBackend(Map<String, String> safetyCodes) async {
     try {
-      // Generate safety codes based on passphrase
-      final safetyCodes = _generateSafetyCodes(passphrase);
-      
       // Save safety codes to backend
       final apiService = ref.read(apiServiceProvider);
+      final passphrase = state.passphrase ?? '';
       await apiService.saveSafetyCodes(safetyCodes, passphrase);
       
-      print('🐛 Safety codes generated and saved successfully');
+      print('🐛 Safety codes saved to backend successfully');
     } catch (e) {
-      print('🐛 Error generating safety codes: $e');
-      // Don't fail onboarding if safety code generation fails
+      print('🐛 Error saving safety codes to backend: $e');
+      // Don't fail onboarding if backend save fails
     }
-  }
-
-  Map<String, String> _generateSafetyCodes(String passphrase) {
-    // Generate safety codes based on the actual passphrase
-    // In production, this should use proper cryptographic methods
-    // For now, use a simple hash-based method that's consistent
-    final hash = passphrase.hashCode.toString();
-    final journalCode = (hash.length >= 8) ? hash.substring(0, 8) : hash.padRight(8, '0');
-    
-    print('🐛 Generated safety code from passphrase: $journalCode');
-    
-    return {
-      'journal': journalCode,
-    };
   }
 
   void setError(String error) {

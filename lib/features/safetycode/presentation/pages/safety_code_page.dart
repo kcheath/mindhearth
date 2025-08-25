@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mindhearth/features/safetycode/domain/providers/safety_code_providers.dart';
+import 'package:mindhearth/core/providers/app_state_provider.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
-import 'package:mindhearth/features/onboarding/domain/providers/onboarding_providers.dart';
-import 'package:mindhearth/app/providers/providers.dart';
+import 'package:mindhearth/core/services/encryption_service.dart';
 import 'package:go_router/go_router.dart';
 
 class SafetyCodePage extends ConsumerStatefulWidget {
@@ -14,29 +13,24 @@ class SafetyCodePage extends ConsumerStatefulWidget {
 }
 
 class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
-  // Use a static controller to prevent recreation on rebuilds
-  static final TextEditingController _safetyCodeController = TextEditingController();
-  static bool _isInitialized = false;
-  static final FocusNode _focusNode = FocusNode();
+  // Use instance controller to allow proper cleanup
+  late final TextEditingController _safetyCodeController;
+  late final FocusNode _focusNode;
 
   @override
   void initState() {
     super.initState();
     
-    if (!_isInitialized) {
-      // Only initialize once
-      print('🐛 Safety code page initialized');
-      print('🐛 Controller text: "${_safetyCodeController.text}"');
-      
-      // Add listener to track controller changes
-      _safetyCodeController.addListener(() {
-        print('🐛 Controller listener triggered: "${_safetyCodeController.text}"');
-      });
-      
-      _isInitialized = true;
-    } else {
-      print('🐛 Safety code page reinitialized, controller text: "${_safetyCodeController.text}"');
-    }
+    _safetyCodeController = TextEditingController();
+    _focusNode = FocusNode();
+    
+    print('🐛 Safety code page initialized');
+    print('🐛 Controller text: "${_safetyCodeController.text}"');
+    
+    // Add listener to track controller changes
+    _safetyCodeController.addListener(() {
+      print('🐛 Controller listener triggered: "${_safetyCodeController.text}"');
+    });
   }
 
   @override
@@ -46,39 +40,29 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
     print('🐛 Controller text after dependencies: "${_safetyCodeController.text}"');
   }
 
-  // Static method to clear the controller when needed
-  static void clearController() {
-    _safetyCodeController.clear();
-    print('🐛 Controller cleared');
-  }
-
   @override
   void dispose() {
-    // Don't dispose the static controller as it's shared across instances
+    _safetyCodeController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
-  String _generateSafetyCodeFromPassphrase(String? passphrase) {
-    if (passphrase == null || passphrase.isEmpty) {
-      return 'No passphrase set';
-    }
-    
-    // Use the same logic as the onboarding provider
-    final hash = passphrase.hashCode.toString();
-    final journalCode = (hash.length >= 8) ? hash.substring(0, 8) : hash.padRight(8, '0');
-    
-    return journalCode;
+  String _getStoredSafetyCodes() {
+    // This would need to be async in a real implementation
+    // For now, return a placeholder
+    return 'No safety codes stored';
   }
 
   @override
   Widget build(BuildContext context) {
-    // Use listen instead of watch to prevent unnecessary rebuilds
-    ref.listen(safetyCodeVerifiedProvider, (previous, next) {
-      print('🐛 Safety code state changed: ${next.isVerified}');
-    });
+    final appState = ref.watch(appStateProvider);
     
-    final safetyCodeState = ref.read(safetyCodeVerifiedProvider);
-    final safetyCodeNotifier = ref.read(safetyCodeNotifierProvider.notifier);
+    // Listen for safety code verification changes
+    ref.listen<AppState>(appStateProvider, (previous, next) {
+      if (next.isSafetyCodeVerified != previous?.isSafetyCodeVerified) {
+        print('🐛 Safety code verification changed: ${next.isSafetyCodeVerified}');
+      }
+    });
     return Scaffold(
       appBar: AppBar(title: const Text('Safety Code')),
       body: Padding(
@@ -107,10 +91,13 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
             ),
             if (DebugConfig.isDebugMode) ...[
               SizedBox(height: 8),
-              Builder(
-                builder: (context) {
-                  final onboardingState = ref.watch(onboardingStateProvider);
-                  final generatedCode = _generateSafetyCodeFromPassphrase(onboardingState.passphrase);
+              FutureBuilder<Map<String, String>?>(
+                future: EncryptionService.getSafetyCodes(),
+                builder: (context, snapshot) {
+                  final storedCodes = snapshot.data;
+                  final codesText = storedCodes != null && storedCodes.isNotEmpty
+                      ? 'Stored codes: ${storedCodes.values.join(', ')}'
+                      : 'No safety codes stored';
                   
                   return Container(
                     padding: EdgeInsets.all(8),
@@ -123,7 +110,7 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '🐛 Debug: Generated safety code is "$generatedCode"',
+                          '🐛 Debug: $codesText',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.orange[700],
@@ -175,7 +162,7 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
               },
             ),
             SizedBox(height: 24),
-            if (safetyCodeState.error != null)
+            if (appState.error != null)
               Container(
                 padding: EdgeInsets.all(12),
                 margin: EdgeInsets.only(bottom: 16),
@@ -185,53 +172,58 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
                   border: Border.all(color: Colors.red[200]!),
                 ),
                 child: Text(
-                  safetyCodeState.error!,
+                  appState.error!,
                   style: TextStyle(color: Colors.red[700]),
                 ),
               ),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: safetyCodeState.isLoading
+                onPressed: appState.isLoading
                     ? null
                     : () {
                         print('🐛 Verify button pressed with text: "${_safetyCodeController.text}"');
-                        safetyCodeNotifier.verifySafetyCode(_safetyCodeController.text);
+                        final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
+                        appStateNotifier.verifySafetyCode(_safetyCodeController.text);
                       },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFF6750A4),
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: safetyCodeState.isLoading
+                child: appState.isLoading
                     ? CircularProgressIndicator(color: Colors.white)
                     : Text('Verify Safety Code'),
               ),
             ),
             if (DebugConfig.isDebugMode) ...[
               SizedBox(height: 16),
-              Builder(
-                builder: (context) {
-                  final onboardingState = ref.watch(onboardingStateProvider);
-                  final generatedCode = _generateSafetyCodeFromPassphrase(onboardingState.passphrase);
+              FutureBuilder<Map<String, String>?>(
+                future: EncryptionService.getSafetyCodes(),
+                builder: (context, snapshot) {
+                  final storedCodes = snapshot.data;
                   
                   return Column(
                     children: [
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            _safetyCodeController.text = generatedCode;
-                            print('🐛 Debug: Set safety code to $generatedCode');
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(vertical: 12),
+                      if (storedCodes != null && storedCodes.isNotEmpty) ...[
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              final firstCode = storedCodes.values.first;
+                              _safetyCodeController.text = firstCode;
+                              print('🐛 Debug: Set safety code to $firstCode');
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                              foregroundColor: Colors.white,
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            child: Text('🐛 Debug: Fill First Stored Code'),
                           ),
-                          child: Text('🐛 Debug: Fill Generated Code'),
                         ),
-                      ),
+                        SizedBox(height: 8),
+                      ],
                       SizedBox(height: 8),
                       SizedBox(
                         width: double.infinity,
@@ -257,23 +249,46 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
                             );
                             
                             if (confirmed == true) {
-                              print('🐛 Debug: Resetting onboarding flow');
+                              print('🐛 Debug: Resetting onboarding flow from safety code page');
                               
-                              // Get the auth notifier
-                              final authNotifier = ref.read(authNotifierProvider.notifier);
-                              final safetyCodeNotifier = ref.read(safetyCodeNotifierProvider.notifier);
-                              final onboardingNotifier = ref.read(onboardingNotifierProvider.notifier);
-                              
-                              // Reset onboarding status in backend
-                              await authNotifier.updateOnboardingStatus(false);
-                              
-                              // Clear local state
-                              safetyCodeNotifier.reset();
-                              onboardingNotifier.reset();
-                              
-                              // Logout and navigate to login
-                              authNotifier.logout();
-                              context.go('/login');
+                              try {
+                                // Show loading indicator
+                                showDialog<void>(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (BuildContext context) {
+                                    return const AlertDialog(
+                                      content: Row(
+                                        children: [
+                                          CircularProgressIndicator(),
+                                          SizedBox(width: 16),
+                                          Text('Resetting onboarding flow...'),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+
+                                // Use unified app state notifier for reset
+                                print('🐛 Debug: Using unified app state for reset...');
+                                final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
+                                await appStateNotifier.resetOnboarding();
+
+                                // Close loading dialog and show success message
+                                print('🐛 Debug: Onboarding reset completed successfully');
+                                if (context.mounted) {
+                                  Navigator.of(context).pop(); // Close loading dialog
+                                  _showSuccessDialog(context, 'Onboarding flow has been reset. You will be redirected to login.');
+                                }
+
+                              } catch (e) {
+                                // Close loading dialog
+                                print('🐛 Debug: Error during onboarding reset: $e');
+                                if (context.mounted) {
+                                  Navigator.of(context).pop();
+                                  _showErrorDialog(context, 'An error occurred while resetting the onboarding flow: $e');
+                                }
+                              }
                             }
                           },
                           style: ElevatedButton.styleFrom(
@@ -294,6 +309,48 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showSuccessDialog(BuildContext context, String message) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Success'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Navigate to login screen
+                context.go('/login');
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

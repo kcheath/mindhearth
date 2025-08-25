@@ -271,4 +271,16 @@ class ApiService {
       );
     }
   }
+
+  Future<ApiResponse<Map<String, dynamic>>> clearSafetyCodes() async {
+    try {
+      final response = await _dio.delete('/users/safety-codes');
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to clear safety codes',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
 }

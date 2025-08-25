@@ -87,6 +87,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final apiService = ref.read(apiServiceProvider);
     await apiService.clearToken();
     
+    // Reset safety code verification state when logging out
+    final safetyCodeNotifier = ref.read(safetyCodeNotifierProvider.notifier);
+    safetyCodeNotifier.reset();
+    
     state = const AuthState();
   }
 

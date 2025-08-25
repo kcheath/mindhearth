@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/app/providers/providers.dart';
+import 'package:mindhearth/core/providers/app_state_provider.dart';
 import 'package:mindhearth/features/auth/presentation/pages/login_page.dart';
 import 'package:mindhearth/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:mindhearth/features/safetycode/presentation/pages/safety_code_page.dart';
@@ -11,51 +12,38 @@ import 'package:mindhearth/features/documents/presentation/pages/documents_page.
 import 'package:mindhearth/features/reports/presentation/pages/reports_page.dart';
 import 'package:mindhearth/features/settings/presentation/pages/settings_page.dart';
 import 'package:mindhearth/features/settings/presentation/pages/privacy_security_settings_page.dart';
-import 'package:mindhearth/features/safetycode/domain/providers/safety_code_providers.dart';
-import 'package:mindhearth/features/onboarding/domain/providers/onboarding_providers.dart';
-import 'package:mindhearth/core/models/auth_state.dart';
 import 'package:flutter/foundation.dart';
 
 // GoRouter Refresh Stream for Riverpod integration
 class GoRouterRefreshStream extends ChangeNotifier {
-  late final ProviderSubscription<AuthState> _authSubscription;
-  late final ProviderSubscription<SafetyCodeState> _safetySubscription;
-  late final ProviderSubscription<OnboardingState> _onboardingSubscription;
+  late final ProviderSubscription<AppState> _appStateSubscription;
 
   GoRouterRefreshStream(Ref ref) {
-    _authSubscription = ref.listen(authStateProvider, (previous, next) {
-      notifyListeners();
-    });
-    
-    _safetySubscription = ref.listen(safetyCodeVerifiedProvider, (previous, next) {
-      notifyListeners();
-    });
-    
-    _onboardingSubscription = ref.listen(onboardingStateProvider, (previous, next) {
+    _appStateSubscription = ref.listen(appStateProvider, (previous, next) {
       notifyListeners();
     });
   }
 
   @override
   void dispose() {
-    _authSubscription.close();
-    _safetySubscription.close();
-    _onboardingSubscription.close();
+    _appStateSubscription.close();
     super.dispose();
   }
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
-  final safetyCodeState = ref.watch(safetyCodeVerifiedProvider);
+  final appState = ref.watch(appStateProvider);
   
   return GoRouter(
     initialLocation: '/',
     refreshListenable: GoRouterRefreshStream(ref),
     redirect: (context, state) {
-      final isAuthenticated = authState.isAuthenticated;
-      final isOnboarded = authState.user?.isOnboarded ?? false;
-      final isSafetyVerified = safetyCodeState.isVerified;
+      final isAuthenticated = appState.isAuthenticated;
+      final isOnboarded = appState.isOnboardingCompleted;
+      final isSafetyVerified = appState.isSafetyCodeVerified;
+      final hasSafetyCodes = appState.hasSafetyCodes;
+      
+      print('🐛 Debug: Router redirect - authenticated: $isAuthenticated, onboarded: $isOnboarded, safetyVerified: $isSafetyVerified, hasSafetyCodes: $hasSafetyCodes, location: ${state.matchedLocation}');
       
       final isLoginRoute = state.matchedLocation == '/login';
       final isOnboardingRoute = state.matchedLocation == '/onboarding';
@@ -71,14 +59,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/onboarding';
       }
       
-      // If authenticated and onboarded but safety code not verified, redirect to safety
-      if (isAuthenticated && isOnboarded && !isSafetyVerified && !isSafetyRoute) {
-        return '/safety';
-      }
-      
-      // If authenticated, onboarded, and safety verified, redirect to chat (main app)
-      if (isAuthenticated && isOnboarded && isSafetyVerified && state.matchedLocation == '/') {
-        return '/chat';
+      // If authenticated and onboarded, check safety code requirements
+      if (isAuthenticated && isOnboarded) {
+        // Only require safety code verification if safety codes are configured
+        if (hasSafetyCodes && !isSafetyVerified && !isSafetyRoute) {
+          return '/safety';
+        }
+        
+        // If no safety codes configured or safety code is verified, redirect to chat
+        if ((!hasSafetyCodes || isSafetyVerified) && state.matchedLocation == '/') {
+          return '/chat';
+        }
       }
       
       return null;

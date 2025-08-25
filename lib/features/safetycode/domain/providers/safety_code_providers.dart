@@ -1,8 +1,6 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mindhearth/core/config/debug_config.dart';
-import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
-import 'package:mindhearth/features/onboarding/domain/providers/onboarding_providers.dart';
+import 'package:mindhearth/core/services/encryption_service.dart';
 
 // Safety Code State
 class SafetyCodeState {
@@ -43,11 +41,30 @@ class SafetyCodeNotifier extends StateNotifier<SafetyCodeState> {
     state = state.copyWith(isLoading: true, error: null);
     
     try {
+      // First try to validate locally using the encryption service
+      final isValid = await EncryptionService.validateSafetyCode(code);
+      
+      if (isValid) {
+        state = state.copyWith(
+          isVerified: true,
+          isLoading: false,
+          safetyCode: code,
+        );
+        return;
+      }
+      
+      // If local validation fails, try the backend API
       final apiService = ref.read(apiServiceProvider);
       
-      // Get the passphrase from onboarding state, or use default for existing users
-      final onboardingState = ref.read(onboardingStateProvider);
-      final passphrase = onboardingState.passphrase ?? 'default_passphrase';
+      // Get the passphrase from secure storage
+      final passphrase = await EncryptionService.getPassphrase();
+      if (passphrase == null) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'No passphrase found. Please complete onboarding first.',
+        );
+        return;
+      }
       
       print('🐛 Verifying safety code with passphrase: $passphrase');
       

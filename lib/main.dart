@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/app/themes/app_theme.dart';
 import 'package:mindhearth/app/router/app_router.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
+import 'package:mindhearth/core/providers/app_state_provider.dart';
 
 void main() {
   runApp(
@@ -12,11 +13,40 @@ void main() {
   );
 }
 
-class MindhearthApp extends ConsumerWidget {
+class MindhearthApp extends ConsumerStatefulWidget {
   const MindhearthApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MindhearthApp> createState() => _MindhearthAppState();
+}
+
+class _MindhearthAppState extends ConsumerState<MindhearthApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    // Reset safety code verification when app is paused or terminated
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+      final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
+      appStateNotifier.resetSafetyCodeVerification();
+      print('🐛 Safety code verification reset due to app lifecycle change: $state');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     
     return MaterialApp.router(
