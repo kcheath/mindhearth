@@ -119,9 +119,9 @@ class _OnboardingStepPassphraseState extends ConsumerState<OnboardingStepPassphr
                 inputFormatters: [
                   FilteringTextInputFormatter.deny(RegExp(r'\s')),
                 ],
-                              ),
-                SizedBox(height: 8),
-                TextFormField(
+              ),
+              SizedBox(height: 8),
+              TextFormField(
                 controller: _confirmPassphraseController,
                 obscureText: _obscureConfirmPassphrase,
                 decoration: InputDecoration(
