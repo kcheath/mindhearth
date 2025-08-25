@@ -313,4 +313,59 @@ class ApiService {
       );
     }
   }
+
+  // Onboarding Data Management
+  Future<ApiResponse<Map<String, dynamic>>> getOnboardingData() async {
+    try {
+      final response = await _dio.get('/onboarding/data');
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to get onboarding data',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> saveCurrentSituation(String situationId) async {
+    try {
+      final response = await _dio.post('/onboarding/current-situation', data: {
+        'situation_id': situationId,
+      });
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to save current situation',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> saveRedactionProfile(String profileId) async {
+    try {
+      final response = await _dio.post('/onboarding/redaction-profile', data: {
+        'profile_id': profileId,
+      });
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to save redaction profile',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> saveConsentForm(bool accepted) async {
+    try {
+      final response = await _dio.post('/onboarding/consent', data: {
+        'accepted': accepted,
+      });
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to save consent form',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
 }

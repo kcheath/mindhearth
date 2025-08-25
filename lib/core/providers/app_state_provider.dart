@@ -3,6 +3,8 @@ import 'package:mindhearth/core/services/encryption_service.dart';
 import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/core/models/auth_state.dart';
 import 'package:mindhearth/core/models/user.dart';
+import 'package:mindhearth/core/models/onboarding_data.dart';
+import 'package:mindhearth/core/data/mock_onboarding_data.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
 import 'package:mindhearth/core/config/logging_config.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
@@ -28,6 +30,12 @@ class AppState {
   
   // Passphrase state
   final bool hasPassphrase;
+  
+  // Additional onboarding data
+  final OnboardingData? onboardingData;
+  final String? selectedSituationId;
+  final String? selectedRedactionProfileId;
+  final bool? consentAccepted;
 
   const AppState({
     this.isAuthenticated = false,
@@ -42,6 +50,10 @@ class AppState {
     this.isSafetyCodeVerified = false,
     this.currentSafetyCode,
     this.hasPassphrase = false,
+    this.onboardingData,
+    this.selectedSituationId,
+    this.selectedRedactionProfileId,
+    this.consentAccepted,
   });
 
   AppState copyWith({
@@ -57,6 +69,10 @@ class AppState {
     bool? isSafetyCodeVerified,
     String? currentSafetyCode,
     bool? hasPassphrase,
+    OnboardingData? onboardingData,
+    String? selectedSituationId,
+    String? selectedRedactionProfileId,
+    bool? consentAccepted,
   }) {
     return AppState(
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
@@ -71,6 +87,10 @@ class AppState {
       isSafetyCodeVerified: isSafetyCodeVerified ?? this.isSafetyCodeVerified,
       currentSafetyCode: currentSafetyCode ?? this.currentSafetyCode,
       hasPassphrase: hasPassphrase ?? this.hasPassphrase,
+      onboardingData: onboardingData ?? this.onboardingData,
+      selectedSituationId: selectedSituationId ?? this.selectedSituationId,
+      selectedRedactionProfileId: selectedRedactionProfileId ?? this.selectedRedactionProfileId,
+      consentAccepted: consentAccepted ?? this.consentAccepted,
     );
   }
 }
@@ -207,12 +227,14 @@ class AppStateNotifier extends StateNotifier<AppState> {
   }
 
   // Onboarding methods
-  void startOnboarding() {
+  void startOnboarding() async {
     state = state.copyWith(isOnboarding: true, currentStep: 0);
+    // Load onboarding data when starting
+    await loadOnboardingData();
   }
 
   void nextStep() {
-    if (state.currentStep < 4) {
+    if (state.currentStep < 7) { // 8 steps (0-7): Welcome, Privacy, Passphrase, Safety Code, Current Situation, Redaction Profile, Consent, Complete
       state = state.copyWith(currentStep: state.currentStep + 1);
     } else {
       completeOnboarding();
@@ -448,17 +470,114 @@ class AppStateNotifier extends StateNotifier<AppState> {
     state = state.copyWith(error: null);
   }
 
-  void setPassphrase(String passphrase) async {
-    try {
-      await EncryptionService.storePassphrase(passphrase);
-      state = state.copyWith(hasPassphrase: true);
-      if (LoggingConfig.enableStateLogs) {
-        appLogger.stateChange('AppState', 'passphrase_stored', null);
+      void setPassphrase(String passphrase) async {
+      try {
+        await EncryptionService.storePassphrase(passphrase);
+        state = state.copyWith(hasPassphrase: true);
+        if (LoggingConfig.enableStateLogs) {
+          appLogger.stateChange('AppState', 'passphrase_stored', null);
+        }
+      } catch (e) {
+        appLogger.error('Error storing passphrase', {'error': e.toString()});
       }
-    } catch (e) {
-      appLogger.error('Error storing passphrase', {'error': e.toString()});
     }
-  }
+
+    Future<void> loadOnboardingData() async {
+      try {
+        final apiService = ref.read(apiServiceProvider);
+        final response = await apiService.getOnboardingData();
+        
+        response.when(
+          success: (data, message) {
+            final onboardingData = OnboardingData.fromJson(data);
+            state = state.copyWith(onboardingData: onboardingData);
+            if (LoggingConfig.enableOnboardingLogs) {
+              appLogger.onboarding('data_loaded', null);
+            }
+          },
+          error: (message, statusCode, errors) {
+            // Use mock data if API fails
+            final mockData = MockOnboardingData.getSampleData();
+            state = state.copyWith(onboardingData: mockData);
+            if (LoggingConfig.enableOnboardingLogs) {
+              appLogger.onboarding('data_loaded_mock', null);
+            }
+            appLogger.warning('Using mock onboarding data', {'message': message});
+          },
+        );
+      } catch (e) {
+        // Use mock data if API throws exception
+        final mockData = MockOnboardingData.getSampleData();
+        state = state.copyWith(onboardingData: mockData);
+        if (LoggingConfig.enableOnboardingLogs) {
+          appLogger.onboarding('data_loaded_mock', null);
+        }
+        appLogger.error('Error loading onboarding data, using mock data', {'error': e.toString()});
+      }
+    }
+
+    Future<void> setCurrentSituation(String situationId) async {
+      try {
+        final apiService = ref.read(apiServiceProvider);
+        final response = await apiService.saveCurrentSituation(situationId);
+        
+        response.when(
+          success: (data, message) {
+            state = state.copyWith(selectedSituationId: situationId);
+            if (LoggingConfig.enableOnboardingLogs) {
+              appLogger.onboarding('situation_selected', {'situationId': situationId});
+            }
+          },
+          error: (message, statusCode, errors) {
+            appLogger.error('Failed to save current situation', {'message': message});
+          },
+        );
+      } catch (e) {
+        appLogger.error('Error saving current situation', {'error': e.toString()});
+      }
+    }
+
+    Future<void> setRedactionProfile(String profileId) async {
+      try {
+        final apiService = ref.read(apiServiceProvider);
+        final response = await apiService.saveRedactionProfile(profileId);
+        
+        response.when(
+          success: (data, message) {
+            state = state.copyWith(selectedRedactionProfileId: profileId);
+            if (LoggingConfig.enableOnboardingLogs) {
+              appLogger.onboarding('redaction_profile_selected', {'profileId': profileId});
+            }
+          },
+          error: (message, statusCode, errors) {
+            appLogger.error('Failed to save redaction profile', {'message': message});
+          },
+        );
+      } catch (e) {
+        appLogger.error('Error saving redaction profile', {'error': e.toString()});
+      }
+    }
+
+    Future<void> setConsentForm(bool accepted) async {
+      try {
+        final apiService = ref.read(apiServiceProvider);
+        final response = await apiService.saveConsentForm(accepted);
+        
+        response.when(
+          success: (data, message) {
+            state = state.copyWith(consentAccepted: accepted);
+            if (LoggingConfig.enableOnboardingLogs) {
+              appLogger.onboarding('consent_updated', {'accepted': accepted});
+            }
+          },
+          error: (message, statusCode, errors) {
+            appLogger.error('Failed to save consent form', {'message': message});
+          },
+        );
+      } catch (e) {
+        appLogger.error('Error saving consent form', {'error': e.toString()});
+      }
+    }
 }
 
 // Provider

@@ -6,6 +6,9 @@ import 'package:mindhearth/features/onboarding/presentation/widgets/onboarding_s
 import 'package:mindhearth/features/onboarding/presentation/widgets/onboarding_step_privacy.dart';
 import 'package:mindhearth/features/onboarding/presentation/widgets/onboarding_step_passphrase.dart';
 import 'package:mindhearth/features/onboarding/presentation/widgets/onboarding_step_safety_code.dart';
+import 'package:mindhearth/features/onboarding/presentation/widgets/onboarding_step_current_situation.dart';
+import 'package:mindhearth/features/onboarding/presentation/widgets/onboarding_step_redaction_profile.dart';
+import 'package:mindhearth/features/onboarding/presentation/widgets/onboarding_step_consent.dart';
 import 'package:mindhearth/features/onboarding/presentation/widgets/onboarding_step_complete.dart';
 
 class OnboardingPage extends ConsumerStatefulWidget {
@@ -18,6 +21,9 @@ class OnboardingPage extends ConsumerStatefulWidget {
 class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   VoidCallback? _savePassphraseCallback;
   VoidCallback? _saveSafetyCodesCallback;
+  VoidCallback? _saveCurrentSituationCallback;
+  VoidCallback? _saveRedactionProfileCallback;
+  VoidCallback? _saveConsentCallback;
 
   @override
   Widget build(BuildContext context) {
@@ -37,13 +43,13 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
             child: Column(
               children: [
                 LinearProgressIndicator(
-                  value: (appState.currentStep + 1) / 5,
+                  value: (appState.currentStep + 1) / 8,
                   backgroundColor: Colors.grey[300],
                   valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6750A4)),
                 ),
                 SizedBox(height: 16),
                 Text(
-                  'Step ${appState.currentStep + 1} of 5',
+                  'Step ${appState.currentStep + 1} of 8',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
@@ -95,7 +101,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     foregroundColor: Colors.white,
                   ),
                   child: Text(
-                    appState.currentStep == 4 ? 'Complete' : 'Next',
+                    appState.currentStep == 7 ? 'Complete' : 'Next',
                   ),
                 ),
               ],
@@ -121,6 +127,18 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           onSave: (callback) => _saveSafetyCodesCallback = callback,
         );
       case 4:
+        return OnboardingStepCurrentSituation(
+          onSave: (callback) => _saveCurrentSituationCallback = callback,
+        );
+      case 5:
+        return OnboardingStepRedactionProfile(
+          onSave: (callback) => _saveRedactionProfileCallback = callback,
+        );
+      case 6:
+        return OnboardingStepConsent(
+          onSave: (callback) => _saveConsentCallback = callback,
+        );
+      case 7:
         return OnboardingStepComplete();
       default:
         return OnboardingStepWelcome();
@@ -137,6 +155,18 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       _saveSafetyCodesCallback?.call();
       appStateNotifier.nextStep();
     } else if (state.currentStep == 4) {
+      // On current situation step, save selection before proceeding
+      _saveCurrentSituationCallback?.call();
+      appStateNotifier.nextStep();
+    } else if (state.currentStep == 5) {
+      // On redaction profile step, save selection before proceeding
+      _saveRedactionProfileCallback?.call();
+      appStateNotifier.nextStep();
+    } else if (state.currentStep == 6) {
+      // On consent step, save consent before proceeding
+      _saveConsentCallback?.call();
+      appStateNotifier.nextStep();
+    } else if (state.currentStep == 7) {
       // Complete onboarding
       appStateNotifier.completeOnboarding();
     } else {
