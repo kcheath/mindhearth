@@ -209,18 +209,22 @@ class _OnboardingStepRedactionProfileState extends ConsumerState<OnboardingStepR
 
   String _formatRedactionRule(String rule) {
     switch (rule) {
-      case 'personal_names':
+      case 'names':
         return 'Personal names and identifiers';
+      case 'addresses':
+        return 'Addresses and location details';
+      case 'phone_numbers':
+        return 'Phone numbers and contact info';
+      case 'email_addresses':
+        return 'Email addresses';
+      case 'specific_dates':
+        return 'Specific dates and timestamps';
       case 'locations':
-        return 'Specific locations and addresses';
-      case 'dates':
-        return 'Exact dates and timestamps';
-      case 'financial_info':
-        return 'Financial information';
-      case 'medical_info':
-        return 'Medical and health information';
-      case 'relationships':
-        return 'Relationship details';
+        return 'General locations and places';
+      case 'workplace':
+        return 'Workplace and job information';
+      case 'family_details':
+        return 'Family and relationship details';
       default:
         return rule.replaceAll('_', ' ').toUpperCase();
     }

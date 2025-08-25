@@ -99,13 +99,13 @@ class _OnboardingStepConsentState extends ConsumerState<OnboardingStepConsent> {
       children: [
         // Header
         Icon(
-          Icons.description,
+          Icons.psychology,
           size: 80,
           color: Color(0xFF6750A4),
         ),
         SizedBox(height: 24),
         Text(
-          'Consent & Privacy Agreement',
+          'AI Training Consent',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -115,7 +115,7 @@ class _OnboardingStepConsentState extends ConsumerState<OnboardingStepConsent> {
         ),
         SizedBox(height: 16),
         Text(
-          'Please review and accept our privacy policy and terms of service to continue.',
+          'Help us improve mental health support by allowing your redacted conversations to train our AI assistant.',
           style: TextStyle(
             fontSize: 16,
             color: Colors.grey[600],
