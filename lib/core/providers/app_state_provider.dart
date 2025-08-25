@@ -4,7 +4,6 @@ import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/core/models/auth_state.dart';
 import 'package:mindhearth/core/models/user.dart';
 import 'package:mindhearth/core/models/onboarding_data.dart';
-import 'package:mindhearth/core/data/mock_onboarding_data.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
 import 'package:mindhearth/core/config/logging_config.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
@@ -496,23 +495,13 @@ class AppStateNotifier extends StateNotifier<AppState> {
             }
           },
           error: (message, statusCode, errors) {
-            // Use mock data if API fails
-            final mockData = MockOnboardingData.getSampleData();
-            state = state.copyWith(onboardingData: mockData);
-            if (LoggingConfig.enableOnboardingLogs) {
-              appLogger.onboarding('data_loaded_mock', null);
-            }
-            appLogger.warning('Using mock onboarding data', {'message': message});
+            appLogger.error('Failed to load onboarding data', {'message': message, 'statusCode': statusCode});
+            // Don't use mock data - let the UI handle the error state
           },
         );
       } catch (e) {
-        // Use mock data if API throws exception
-        final mockData = MockOnboardingData.getSampleData();
-        state = state.copyWith(onboardingData: mockData);
-        if (LoggingConfig.enableOnboardingLogs) {
-          appLogger.onboarding('data_loaded_mock', null);
-        }
-        appLogger.error('Error loading onboarding data, using mock data', {'error': e.toString()});
+        appLogger.error('Error loading onboarding data', {'error': e.toString()});
+        // Don't use mock data - let the UI handle the error state
       }
     }
 

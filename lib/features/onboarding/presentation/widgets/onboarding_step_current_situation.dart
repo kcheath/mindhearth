@@ -46,8 +46,35 @@ class _OnboardingStepCurrentSituationState extends ConsumerState<OnboardingStepC
     final onboardingData = appState.onboardingData;
 
     if (onboardingData == null) {
-      return const Center(
-        child: CircularProgressIndicator(),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Unable to load onboarding data',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[600],
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Please check your connection and try again',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       );
     }
 
