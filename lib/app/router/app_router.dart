@@ -2,6 +2,8 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/app/providers/providers.dart';
 import 'package:mindhearth/core/providers/app_state_provider.dart';
+import 'package:mindhearth/core/config/logging_config.dart';
+import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/features/auth/presentation/pages/login_page.dart';
 import 'package:mindhearth/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:mindhearth/features/safetycode/presentation/pages/safety_code_page.dart';
@@ -43,7 +45,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isSafetyVerified = appState.isSafetyCodeVerified;
       final hasSafetyCodes = appState.hasSafetyCodes;
       
-      print('🐛 Debug: Router redirect - authenticated: $isAuthenticated, onboarded: $isOnboarded, safetyVerified: $isSafetyVerified, hasSafetyCodes: $hasSafetyCodes, location: ${state.matchedLocation}');
+      if (LoggingConfig.enableNavigationLogs) {
+        appLogger.navigation(state.matchedLocation, 'redirect', {
+          'isAuthenticated': isAuthenticated,
+          'isOnboarded': isOnboarded,
+          'isSafetyVerified': isSafetyVerified,
+          'hasSafetyCodes': hasSafetyCodes,
+        });
+      }
       
       final isLoginRoute = state.matchedLocation == '/login';
       final isOnboardingRoute = state.matchedLocation == '/onboarding';

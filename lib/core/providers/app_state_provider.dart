@@ -4,7 +4,9 @@ import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/core/models/auth_state.dart';
 import 'package:mindhearth/core/models/user.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
+import 'package:mindhearth/core/config/logging_config.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
+import 'package:mindhearth/core/utils/logger.dart';
 
 // Unified App State
 class AppState {
@@ -97,9 +99,14 @@ class AppStateNotifier extends StateNotifier<AppState> {
         hasSafetyCodes: hasSafetyCodes,
       );
       
-      print('🐛 Debug: App state initialized - hasPassphrase: $hasPassphrase, hasSafetyCodes: $hasSafetyCodes');
+      if (LoggingConfig.enableStateLogs) {
+        appLogger.stateChange('AppState', 'initialized', {
+          'hasPassphrase': hasPassphrase,
+          'hasSafetyCodes': hasSafetyCodes,
+        });
+      }
     } catch (e) {
-      print('🐛 Debug: Error initializing app state: $e');
+      appLogger.error('Error initializing app state', null, e is StackTrace ? e : null);
     }
   }
 
@@ -111,24 +118,26 @@ class AppStateNotifier extends StateNotifier<AppState> {
       final apiService = ref.read(apiServiceProvider);
       final response = await apiService.login(email: email, password: password);
       
-      response.when(
-        success: (data, message) async {
-          print('🐛 Debug: Login response data: $data');
+              response.when(
+          success: (data, message) async {
+            if (LoggingConfig.enableAuthLogs) {
+              appLogger.auth('Login response received', {'data': data});
+            }
           
           // Validate required fields with proper null checks
           final token = data['access_token'] as String?;
           final userId = data['user_id'] as String?;
           final tenantId = data['tenant_id'] as String?;
           
-          // Check for required fields
-          if (token == null || userId == null || tenantId == null) {
-            state = state.copyWith(
-              isLoading: false,
-              error: 'Invalid response from server: missing required fields',
-            );
-            print('🐛 Debug: Login failed - missing required fields in response: $data');
-            return;
-          }
+                      // Check for required fields
+            if (token == null || userId == null || tenantId == null) {
+              state = state.copyWith(
+                isLoading: false,
+                error: 'Invalid response from server: missing required fields',
+              );
+              appLogger.error('Login failed - missing required fields in response', {'data': data});
+              return;
+            }
           
           // Use the email from the login request since it's not in the response
           // The email parameter is available in the method scope
@@ -144,23 +153,31 @@ class AppStateNotifier extends StateNotifier<AppState> {
           // Store token in secure storage
           await apiService.setToken(token);
           
-          state = state.copyWith(
-            isAuthenticated: true,
-            isLoading: false,
-            user: user,
-            accessToken: token,
-            isOnboardingCompleted: isOnboarded,
-          );
-          
-          print('🐛 Debug: Login successful - user: ${user.email}, onboarded: $isOnboarded, token stored');
+                      state = state.copyWith(
+              isAuthenticated: true,
+              isLoading: false,
+              user: user,
+              accessToken: token,
+              isOnboardingCompleted: isOnboarded,
+            );
+            
+            if (LoggingConfig.enableAuthLogs) {
+              appLogger.auth('Login successful', {
+                'email': user.email,
+                'onboarded': isOnboarded,
+              });
+            }
         },
-        error: (message, statusCode, errors) {
-          state = state.copyWith(
-            isLoading: false,
-            error: message,
-          );
-          print('🐛 Debug: Login failed with error: $message (status: $statusCode)');
-        },
+                  error: (message, statusCode, errors) {
+            state = state.copyWith(
+              isLoading: false,
+              error: message,
+            );
+            appLogger.error('Login failed', {
+              'message': message,
+              'statusCode': statusCode,
+            });
+          },
       );
     } catch (e) {
       state = state.copyWith(
@@ -181,9 +198,11 @@ class AppStateNotifier extends StateNotifier<AppState> {
       // Re-initialize state from storage
       await _initializeState();
       
-      print('🐛 Debug: Logout completed, state reset');
+      if (LoggingConfig.enableStateLogs) {
+        appLogger.stateChange('AppState', 'logout_completed', null);
+      }
     } catch (e) {
-      print('🐛 Debug: Error during logout: $e');
+      appLogger.error('Error during logout', {'error': e.toString()});
     }
   }
 
@@ -211,7 +230,9 @@ class AppStateNotifier extends StateNotifier<AppState> {
       // Store passphrase if we have one
       if (state.hasPassphrase) {
         // Passphrase should already be stored during onboarding
-        print('🐛 Debug: Passphrase already stored');
+        if (LoggingConfig.enableStateLogs) {
+        appLogger.stateChange('AppState', 'passphrase_already_stored', null);
+      }
       }
       
       // Update backend onboarding status
@@ -227,10 +248,12 @@ class AppStateNotifier extends StateNotifier<AppState> {
             currentStep: 0,
             user: updatedUser,
           );
-          print('🐛 Debug: Onboarding completed successfully');
+          if (LoggingConfig.enableOnboardingLogs) {
+        appLogger.onboarding('completed_successfully', null);
+      }
         },
         error: (message, statusCode, errors) {
-          print('🐛 Debug: Failed to update onboarding status: $message');
+                      appLogger.error('Failed to update onboarding status', {'message': message});
           // Still update local state for UI consistency
           final updatedUser = state.user?.copyWith(isOnboarded: true);
           state = state.copyWith(
@@ -242,7 +265,7 @@ class AppStateNotifier extends StateNotifier<AppState> {
         },
       );
     } catch (e) {
-      print('🐛 Debug: Error completing onboarding: $e');
+      appLogger.error('Error completing onboarding', {'error': e.toString()});
     }
   }
 
@@ -251,9 +274,11 @@ class AppStateNotifier extends StateNotifier<AppState> {
     try {
       await EncryptionService.storeSafetyCodes(safetyCodes);
       state = state.copyWith(hasSafetyCodes: true);
-      print('🐛 Debug: Safety codes stored and state updated');
+      if (LoggingConfig.enableStateLogs) {
+        appLogger.stateChange('AppState', 'safety_codes_stored', null);
+      }
     } catch (e) {
-      print('🐛 Debug: Error storing safety codes: $e');
+      appLogger.error('Error storing safety codes', {'error': e.toString()});
     }
   }
 
@@ -265,10 +290,12 @@ class AppStateNotifier extends StateNotifier<AppState> {
       
       response.when(
         success: (data, message) {
-          print('🐛 Debug: Safety codes cleared from backend');
+          if (LoggingConfig.enableStateLogs) {
+        appLogger.stateChange('AppState', 'safety_codes_cleared_backend', null);
+      }
         },
         error: (message, statusCode, errors) {
-          print('🐛 Debug: Warning - Failed to clear safety codes from backend: $message');
+                      appLogger.warning('Failed to clear safety codes from backend', {'message': message});
         },
       );
       
@@ -282,9 +309,11 @@ class AppStateNotifier extends StateNotifier<AppState> {
         currentSafetyCode: null,
       );
       
-      print('🐛 Debug: Safety codes cleared from storage and state updated');
+      if (LoggingConfig.enableStateLogs) {
+        appLogger.stateChange('AppState', 'safety_codes_cleared_storage', null);
+      }
     } catch (e) {
-      print('🐛 Debug: Error clearing safety codes: $e');
+      appLogger.error('Error clearing safety codes', {'error': e.toString()});
     }
   }
 
@@ -301,7 +330,9 @@ class AppStateNotifier extends StateNotifier<AppState> {
           isLoading: false,
           currentSafetyCode: code,
         );
-        print('🐛 Debug: Safety code verified locally');
+        if (LoggingConfig.enableSafetyCodeLogs) {
+        appLogger.safetyCode('verified_locally', null);
+      }
         return;
       }
       
@@ -329,7 +360,9 @@ class AppStateNotifier extends StateNotifier<AppState> {
               isLoading: false,
               currentSafetyCode: code,
             );
-            print('🐛 Debug: Safety code verified via backend');
+            if (LoggingConfig.enableSafetyCodeLogs) {
+        appLogger.safetyCode('verified_via_backend', null);
+      }
           } else {
             state = state.copyWith(
               isLoading: false,
@@ -357,13 +390,17 @@ class AppStateNotifier extends StateNotifier<AppState> {
       isSafetyCodeVerified: false,
       currentSafetyCode: null,
     );
-    print('🐛 Debug: Safety code verification reset');
+          if (LoggingConfig.enableSafetyCodeLogs) {
+        appLogger.safetyCode('verification_reset', null);
+      }
   }
 
   // Reset methods
   Future<void> resetOnboarding() async {
     try {
-      print('🐛 Debug: Starting complete onboarding reset...');
+      if (LoggingConfig.enableOnboardingLogs) {
+        appLogger.onboarding('starting_complete_reset', null);
+      }
       
       // Update backend onboarding status
       final apiService = ref.read(apiServiceProvider);
@@ -371,10 +408,12 @@ class AppStateNotifier extends StateNotifier<AppState> {
       
       response.when(
         success: (data, message) {
-          print('🐛 Debug: Backend onboarding status reset');
+          if (LoggingConfig.enableOnboardingLogs) {
+        appLogger.onboarding('backend_status_reset', null);
+      }
         },
         error: (message, statusCode, errors) {
-          print('🐛 Debug: Warning - Failed to reset backend onboarding status: $message');
+                      appLogger.warning('Failed to reset backend onboarding status', {'message': message});
         },
       );
       
@@ -396,9 +435,11 @@ class AppStateNotifier extends StateNotifier<AppState> {
       // Re-initialize state from storage
       await _initializeState();
       
-      print('🐛 Debug: Complete onboarding reset finished');
+      if (LoggingConfig.enableOnboardingLogs) {
+        appLogger.onboarding('complete_reset_finished', null);
+      }
     } catch (e) {
-      print('🐛 Debug: Error during onboarding reset: $e');
+      appLogger.error('Error during onboarding reset', {'error': e.toString()});
     }
   }
 
@@ -411,9 +452,11 @@ class AppStateNotifier extends StateNotifier<AppState> {
     try {
       await EncryptionService.storePassphrase(passphrase);
       state = state.copyWith(hasPassphrase: true);
-      print('🐛 Debug: Passphrase stored and state updated');
+      if (LoggingConfig.enableStateLogs) {
+        appLogger.stateChange('AppState', 'passphrase_stored', null);
+      }
     } catch (e) {
-      print('🐛 Debug: Error storing passphrase: $e');
+      appLogger.error('Error storing passphrase', {'error': e.toString()});
     }
   }
 }

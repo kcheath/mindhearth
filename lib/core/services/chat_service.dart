@@ -3,6 +3,8 @@ import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/features/chat/widgets/chat_message_bubble.dart';
 import 'package:mindhearth/core/models/api_response.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
+import 'package:mindhearth/core/config/logging_config.dart';
+import 'package:mindhearth/core/utils/logger.dart';
 
 class ChatService {
   final ApiService _apiService;
@@ -29,12 +31,12 @@ class ChatService {
           return _currentSessionId;
         },
         error: (message, statusCode, errors) {
-          print('Failed to create session: $message');
+          appLogger.error('Failed to create session', {'message': message});
           return null;
         },
       );
     } catch (e) {
-      print('Error creating session: $e');
+      appLogger.error('Error creating session', {'error': e.toString()});
       return null;
     }
   }
@@ -68,12 +70,12 @@ class ChatService {
           }).toList();
         },
         error: (message, statusCode, errors) {
-          print('Failed to load chat history: $message');
+          appLogger.error('Failed to load chat history', {'message': message});
           return [];
         },
       );
     } catch (e) {
-      print('Error loading chat history: $e');
+      appLogger.error('Error loading chat history', {'error': e.toString()});
       return [];
     }
   }
@@ -109,12 +111,12 @@ class ChatService {
           );
         },
         error: (errorMessage, statusCode, errors) {
-          print('Failed to send user message: $errorMessage');
+          appLogger.error('Failed to send user message', {'errorMessage': errorMessage});
           return null;
         },
       );
     } catch (e) {
-      print('Error sending user message: $e');
+      appLogger.error('Error sending user message', {'error': e.toString()});
       return null;
     }
   }
@@ -143,12 +145,12 @@ class ChatService {
         );
         },
         error: (errorMessage, statusCode, errors) {
-          print('Failed to get AI response: $errorMessage');
+          appLogger.error('Failed to get AI response', {'errorMessage': errorMessage});
           return null;
         },
       );
     } catch (e) {
-      print('Error getting AI response: $e');
+      appLogger.error('Error getting AI response', {'error': e.toString()});
       return null;
     }
   }

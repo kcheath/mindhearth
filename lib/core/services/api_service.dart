@@ -1,15 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:logger/logger.dart';
 import 'package:mindhearth/core/models/api_response.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
+import 'package:mindhearth/core/config/logging_config.dart';
+import 'package:mindhearth/core/utils/logger.dart';
 
 class ApiService {
   static const String _tokenKey = 'access_token';
   
   late final Dio _dio;
   late final FlutterSecureStorage _storage;
-  late final Logger _logger;
 
   ApiService() {
     _dio = Dio(BaseOptions(
@@ -23,7 +23,6 @@ class ApiService {
     ));
     
     _storage = const FlutterSecureStorage();
-    _logger = Logger();
     
     _setupInterceptors();
   }
@@ -36,15 +35,34 @@ class ApiService {
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
-          _logger.d('Request: ${options.method} ${options.path}');
+          
+          if (LoggingConfig.enableApiLogs && LoggingConfig.shouldLogEndpoint(options.path)) {
+            appLogger.apiRequest(options.method, options.path, options.headers);
+          }
+          
           handler.next(options);
         },
         onResponse: (response, handler) {
-          _logger.d('Response: ${response.statusCode} ${response.requestOptions.path}');
+          if (LoggingConfig.enableApiLogs && LoggingConfig.shouldLogEndpoint(response.requestOptions.path)) {
+            appLogger.apiResponse(
+              response.requestOptions.method,
+              response.requestOptions.path,
+              response.statusCode ?? 0,
+              response.data,
+            );
+          }
           handler.next(response);
         },
         onError: (error, handler) {
-          _logger.e('API Error: ${error.message}');
+          if (LoggingConfig.enableApiLogs && LoggingConfig.shouldLogEndpoint(error.requestOptions.path)) {
+            appLogger.apiError(
+              error.requestOptions.method,
+              error.requestOptions.path,
+              error.response?.statusCode ?? 0,
+              error.message ?? 'Unknown error',
+              error.response?.data,
+            );
+          }
           handler.next(error);
         },
       ),
@@ -69,17 +87,29 @@ class ApiService {
     required String password,
   }) async {
     try {
-      _logger.d('Attempting login with real backend: $email');
+      if (LoggingConfig.enableAuthLogs) {
+        appLogger.auth('Login attempt', {'email': email});
+      }
       
       final response = await _dio.post('/auth/login', data: {
         'email': email,
         'password': password,
       });
       
-      _logger.d('Login successful');
+      if (LoggingConfig.enableAuthLogs) {
+        appLogger.auth('Login successful', {'email': email});
+      }
+      
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
-      _logger.e('Login failed: ${e.message}');
+      if (LoggingConfig.enableAuthLogs) {
+        appLogger.auth('Login failed', {
+          'email': email,
+          'error': e.message,
+          'statusCode': e.response?.statusCode,
+        });
+      }
+      
       return ApiError(
         message: e.response?.data?['detail'] ?? 'Login failed',
         statusCode: e.response?.statusCode,

@@ -3,7 +3,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mindhearth/core/providers/app_state_provider.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
+import 'package:mindhearth/core/config/logging_config.dart';
 import 'package:mindhearth/core/services/encryption_service.dart';
+import 'package:mindhearth/core/utils/logger.dart';
 
 class PrivacySecuritySettingsPage extends ConsumerWidget {
   const PrivacySecuritySettingsPage({super.key});
@@ -174,7 +176,9 @@ class PrivacySecuritySettingsPage extends ConsumerWidget {
 
   Future<void> _resetOnboardingFlow(BuildContext context, WidgetRef ref) async {
     try {
-      print('🐛 Debug: Starting onboarding reset...');
+      if (LoggingConfig.enableOnboardingLogs) {
+        appLogger.onboarding('starting_reset', null);
+      }
       
       // Show loading indicator
       showDialog<void>(
@@ -194,12 +198,16 @@ class PrivacySecuritySettingsPage extends ConsumerWidget {
       );
 
       // Use unified app state notifier for reset
-      print('🐛 Debug: Using unified app state for reset...');
+      if (LoggingConfig.enableOnboardingLogs) {
+        appLogger.onboarding('using_unified_app_state', null);
+      }
       final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
       await appStateNotifier.resetOnboarding();
 
       // Close loading dialog and show success message
-      print('🐛 Debug: Onboarding reset completed successfully');
+      if (LoggingConfig.enableOnboardingLogs) {
+        appLogger.onboarding('reset_completed_successfully', null);
+      }
       if (context.mounted) {
         Navigator.of(context).pop(); // Close loading dialog
         _showSuccessDialog(context, 'Onboarding flow has been reset. You will be redirected to login.');
@@ -207,7 +215,7 @@ class PrivacySecuritySettingsPage extends ConsumerWidget {
 
     } catch (e) {
       // Close loading dialog
-      print('🐛 Debug: Error during onboarding reset: $e');
+      appLogger.error('Error during onboarding reset', {'error': e.toString()});
       if (context.mounted) {
         Navigator.of(context).pop();
         _showErrorDialog(context, 'An error occurred while resetting the onboarding flow: $e');

@@ -2,6 +2,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/app/providers/providers.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
 import 'package:mindhearth/core/services/encryption_service.dart';
+import 'package:mindhearth/core/config/logging_config.dart';
+import 'package:mindhearth/core/utils/logger.dart';
 
 
 // Onboarding State
@@ -78,16 +80,22 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
       // Store the passphrase securely if we have one
       if (state.passphrase != null) {
         await EncryptionService.storePassphrase(state.passphrase!);
-        print('🐛 Passphrase stored securely');
+        if (LoggingConfig.enableEncryptionLogs) {
+          appLogger.encryption('passphrase_stored', null);
+        }
       }
       
       // Store safety codes if user entered them
       if (state.safetyCodes != null && state.safetyCodes!.isNotEmpty) {
         await EncryptionService.storeSafetyCodes(state.safetyCodes!);
-        print('🐛 Safety codes stored securely');
+        if (LoggingConfig.enableEncryptionLogs) {
+          appLogger.encryption('safety_codes_stored', null);
+        }
         
         // Safety codes are now managed by the unified app state
-        print('🐛 Debug: Safety codes stored successfully');
+        if (LoggingConfig.enableOnboardingLogs) {
+          appLogger.onboarding('safety_codes_stored_successfully', null);
+        }
       }
       
       // Update onboarding status in auth notifier
@@ -111,9 +119,11 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
       final passphrase = state.passphrase ?? '';
       await apiService.saveSafetyCodes(safetyCodes, passphrase);
       
-      print('🐛 Safety codes saved to backend successfully');
+      if (LoggingConfig.enableOnboardingLogs) {
+        appLogger.onboarding('safety_codes_saved_backend', null);
+      }
     } catch (e) {
-      print('🐛 Error saving safety codes to backend: $e');
+      appLogger.error('Error saving safety codes to backend', {'error': e.toString()});
       // Don't fail onboarding if backend save fails
     }
   }

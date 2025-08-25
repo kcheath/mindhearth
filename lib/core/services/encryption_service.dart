@@ -1,20 +1,22 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:logger/logger.dart';
+import 'package:mindhearth/core/config/logging_config.dart';
+import 'package:mindhearth/core/utils/logger.dart';
 
 class EncryptionService {
   static const String _passphraseKey = 'user_passphrase';
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
-  static final Logger _logger = Logger();
 
   /// Store the passphrase securely
   static Future<void> storePassphrase(String passphrase) async {
     try {
       await _storage.write(key: _passphraseKey, value: passphrase);
-      _logger.d('Passphrase stored securely');
+      if (LoggingConfig.enableEncryptionLogs) {
+        appLogger.encryption('passphrase_stored', null);
+      }
     } catch (e) {
-      _logger.e('Failed to store passphrase: $e');
+      appLogger.error('Failed to store passphrase', {'error': e.toString()});
       rethrow;
     }
   }
@@ -24,7 +26,7 @@ class EncryptionService {
     try {
       return await _storage.read(key: _passphraseKey);
     } catch (e) {
-      _logger.e('Failed to retrieve passphrase: $e');
+      appLogger.error('Failed to retrieve passphrase', {'error': e.toString()});
       return null;
     }
   }
@@ -33,9 +35,11 @@ class EncryptionService {
   static Future<void> clearPassphrase() async {
     try {
       await _storage.delete(key: _passphraseKey);
-      _logger.d('Passphrase cleared');
+      if (LoggingConfig.enableEncryptionLogs) {
+        appLogger.encryption('passphrase_cleared', null);
+      }
     } catch (e) {
-      _logger.e('Failed to clear passphrase: $e');
+      appLogger.error('Failed to clear passphrase', {'error': e.toString()});
     }
   }
 
@@ -58,7 +62,7 @@ class EncryptionService {
       
       return base64.encode(encryptedBytes);
     } catch (e) {
-      _logger.e('Encryption failed: $e');
+      appLogger.error('Encryption failed', {'error': e.toString()});
       rethrow;
     }
   }
@@ -79,7 +83,7 @@ class EncryptionService {
       
       return utf8.decode(decryptedBytes);
     } catch (e) {
-      _logger.e('Decryption failed: $e');
+      appLogger.error('Decryption failed', {'error': e.toString()});
       rethrow;
     }
   }
@@ -95,9 +99,11 @@ class EncryptionService {
   static Future<void> storeSafetyCodes(Map<String, String> codes) async {
     try {
       await _storage.write(key: 'safety_codes', value: jsonEncode(codes));
-      _logger.d('Safety codes stored securely');
+      if (LoggingConfig.enableEncryptionLogs) {
+        appLogger.encryption('safety_codes_stored', null);
+      }
     } catch (e) {
-      _logger.e('Failed to store safety codes: $e');
+      appLogger.error('Failed to store safety codes', {'error': e.toString()});
       rethrow;
     }
   }
@@ -112,7 +118,7 @@ class EncryptionService {
       }
       return null;
     } catch (e) {
-      _logger.e('Failed to retrieve safety codes: $e');
+      appLogger.error('Failed to retrieve safety codes', {'error': e.toString()});
       return null;
     }
   }
@@ -122,16 +128,22 @@ class EncryptionService {
     try {
       // Check what's stored before clearing
       final beforeClear = await _storage.read(key: 'safety_codes');
-      print('🐛 Debug: Safety codes before clear: $beforeClear');
+      if (LoggingConfig.enableEncryptionLogs) {
+        appLogger.encryption('safety_codes_before_clear', null);
+      }
       
       await _storage.delete(key: 'safety_codes');
-      _logger.d('Safety codes cleared');
+      if (LoggingConfig.enableEncryptionLogs) {
+        appLogger.encryption('safety_codes_cleared', null);
+      }
       
       // Verify clearing worked
       final afterClear = await _storage.read(key: 'safety_codes');
-      print('🐛 Debug: Safety codes after clear: $afterClear');
+      if (LoggingConfig.enableEncryptionLogs) {
+        appLogger.encryption('safety_codes_after_clear', null);
+      }
     } catch (e) {
-      _logger.e('Failed to clear safety codes: $e');
+      appLogger.error('Failed to clear safety codes', {'error': e.toString()});
     }
   }
 
@@ -140,15 +152,19 @@ class EncryptionService {
     try {
       final storedCodes = await getSafetyCodes();
       if (storedCodes == null || storedCodes.isEmpty) {
-        _logger.w('No safety codes found for validation');
+        if (LoggingConfig.enableEncryptionLogs) {
+          appLogger.encryption('no_safety_codes_found', null);
+        }
         return false;
       }
       
       final isValid = storedCodes.values.contains(code);
-      _logger.d('Safety code validation: $isValid (code: $code, stored codes: ${storedCodes.values})');
+      if (LoggingConfig.enableEncryptionLogs) {
+        appLogger.encryption('safety_code_validation', {'isValid': isValid});
+      }
       return isValid;
     } catch (e) {
-      _logger.e('Safety code validation failed: $e');
+      appLogger.error('Safety code validation failed', {'error': e.toString()});
       return false;
     }
   }
@@ -159,7 +175,7 @@ class EncryptionService {
       final passphrase = await getPassphrase();
       return passphrase != null && passphrase.isNotEmpty;
     } catch (e) {
-      _logger.e('Failed to check encryption readiness: $e');
+      appLogger.error('Failed to check encryption readiness', {'error': e.toString()});
       return false;
     }
   }

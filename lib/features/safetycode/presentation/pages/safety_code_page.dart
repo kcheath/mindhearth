@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/providers/app_state_provider.dart';
+import 'package:mindhearth/core/config/logging_config.dart';
+import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
 import 'package:mindhearth/core/services/encryption_service.dart';
 import 'package:go_router/go_router.dart';
@@ -24,20 +26,24 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
     _safetyCodeController = TextEditingController();
     _focusNode = FocusNode();
     
-    print('🐛 Safety code page initialized');
-    print('🐛 Controller text: "${_safetyCodeController.text}"');
+    if (LoggingConfig.enableSafetyCodeLogs) {
+      appLogger.safetyCode('page_initialized', null);
+    }
     
     // Add listener to track controller changes
     _safetyCodeController.addListener(() {
-      print('🐛 Controller listener triggered: "${_safetyCodeController.text}"');
+      if (LoggingConfig.enableSafetyCodeLogs) {
+        appLogger.safetyCode('controller_text_changed', null);
+      }
     });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    print('🐛 Safety code page dependencies changed');
-    print('🐛 Controller text after dependencies: "${_safetyCodeController.text}"');
+    if (LoggingConfig.enableSafetyCodeLogs) {
+      appLogger.safetyCode('dependencies_changed', null);
+    }
   }
 
   @override
@@ -60,7 +66,9 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
     // Listen for safety code verification changes
     ref.listen<AppState>(appStateProvider, (previous, next) {
       if (next.isSafetyCodeVerified != previous?.isSafetyCodeVerified) {
-        print('🐛 Safety code verification changed: ${next.isSafetyCodeVerified}');
+        if (LoggingConfig.enableSafetyCodeLogs) {
+          appLogger.safetyCode('verification_state_changed', {'isVerified': next.isSafetyCodeVerified});
+        }
       }
     });
     return Scaffold(
@@ -148,17 +156,20 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
               keyboardType: TextInputType.number,
               autofocus: false,
               onChanged: (value) {
-                print('🐛 Safety code input changed: $value');
-                print('🐛 Controller text after change: "${_safetyCodeController.text}"');
+                if (LoggingConfig.enableSafetyCodeLogs) {
+                  appLogger.safetyCode('input_changed', null);
+                }
                 // Don't update state on every keystroke - only when verify button is pressed
               },
               onTap: () {
-                print('🐛 Safety code field tapped');
-                print('🐛 Controller text on tap: "${_safetyCodeController.text}"');
+                if (LoggingConfig.enableSafetyCodeLogs) {
+                  appLogger.safetyCode('field_tapped', null);
+                }
               },
               onEditingComplete: () {
-                print('🐛 Safety code editing completed');
-                print('🐛 Final controller text: "${_safetyCodeController.text}"');
+                if (LoggingConfig.enableSafetyCodeLogs) {
+                  appLogger.safetyCode('editing_completed', null);
+                }
               },
             ),
             SizedBox(height: 24),
@@ -182,7 +193,9 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
                 onPressed: appState.isLoading
                     ? null
                     : () {
-                        print('🐛 Verify button pressed with text: "${_safetyCodeController.text}"');
+                        if (LoggingConfig.enableSafetyCodeLogs) {
+                          appLogger.safetyCode('verify_button_pressed', null);
+                        }
                         final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
                         appStateNotifier.verifySafetyCode(_safetyCodeController.text);
                       },
@@ -212,7 +225,9 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
                             onPressed: () {
                               final firstCode = storedCodes.values.first;
                               _safetyCodeController.text = firstCode;
-                              print('🐛 Debug: Set safety code to $firstCode');
+                              if (LoggingConfig.enableSafetyCodeLogs) {
+                                appLogger.safetyCode('debug_fill_first_code', null);
+                              }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.orange,
@@ -249,7 +264,9 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
                             );
                             
                             if (confirmed == true) {
-                              print('🐛 Debug: Resetting onboarding flow from safety code page');
+                              if (LoggingConfig.enableOnboardingLogs) {
+                                appLogger.onboarding('reset_from_safety_page', null);
+                              }
                               
                               try {
                                 // Show loading indicator
@@ -270,12 +287,16 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
                                 );
 
                                 // Use unified app state notifier for reset
-                                print('🐛 Debug: Using unified app state for reset...');
+                                if (LoggingConfig.enableOnboardingLogs) {
+                                  appLogger.onboarding('using_unified_app_state', null);
+                                }
                                 final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
                                 await appStateNotifier.resetOnboarding();
 
                                 // Close loading dialog and show success message
-                                print('🐛 Debug: Onboarding reset completed successfully');
+                                if (LoggingConfig.enableOnboardingLogs) {
+                                  appLogger.onboarding('reset_completed_successfully', null);
+                                }
                                 if (context.mounted) {
                                   Navigator.of(context).pop(); // Close loading dialog
                                   _showSuccessDialog(context, 'Onboarding flow has been reset. You will be redirected to login.');
@@ -283,7 +304,7 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
 
                               } catch (e) {
                                 // Close loading dialog
-                                print('🐛 Debug: Error during onboarding reset: $e');
+                                appLogger.error('Error during onboarding reset', {'error': e.toString()});
                                 if (context.mounted) {
                                   Navigator.of(context).pop();
                                   _showErrorDialog(context, 'An error occurred while resetting the onboarding flow: $e');

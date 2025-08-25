@@ -1,6 +1,8 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
 import 'package:mindhearth/core/services/encryption_service.dart';
+import 'package:mindhearth/core/config/logging_config.dart';
+import 'package:mindhearth/core/utils/logger.dart';
 
 // Safety Code State
 class SafetyCodeState {
@@ -66,7 +68,9 @@ class SafetyCodeNotifier extends StateNotifier<SafetyCodeState> {
         return;
       }
       
-      print('🐛 Verifying safety code with passphrase: $passphrase');
+      if (LoggingConfig.enableSafetyCodeLogs) {
+        appLogger.safetyCode('verifying_with_passphrase', null);
+      }
       
       final response = await apiService.validateSafetyCode(code, passphrase);
       

@@ -3,9 +3,14 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/app/themes/app_theme.dart';
 import 'package:mindhearth/app/router/app_router.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
+import 'package:mindhearth/core/config/logging_config.dart';
 import 'package:mindhearth/core/providers/app_state_provider.dart';
+import 'package:mindhearth/core/utils/logger.dart';
 
 void main() {
+  // Initialize logging system
+  appLogger.initialize(enableDebugLogs: LoggingConfig.enableDebugLogs);
+  
   runApp(
     const ProviderScope(
       child: MindhearthApp(),
@@ -41,7 +46,9 @@ class _MindhearthAppState extends ConsumerState<MindhearthApp> with WidgetsBindi
     if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
       final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
       appStateNotifier.resetSafetyCodeVerification();
-      print('🐛 Safety code verification reset due to app lifecycle change: $state');
+      appLogger.info('Safety code verification reset due to app lifecycle change', {
+        'state': state.toString(),
+      });
     }
   }
 

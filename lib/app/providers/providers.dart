@@ -7,6 +7,8 @@ import 'package:mindhearth/core/services/chat_service.dart';
 import 'package:mindhearth/features/onboarding/domain/providers/onboarding_providers.dart';
 import 'package:mindhearth/features/safetycode/domain/providers/safety_code_providers.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
+import 'package:mindhearth/core/config/logging_config.dart';
+import 'package:mindhearth/core/utils/logger.dart';
 
 // Auth State Provider
 class AuthNotifier extends StateNotifier<AuthState> {
@@ -109,7 +111,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           },
           error: (message, statusCode, errors) {
             // Log error but still update local state for UI consistency
-            print('Failed to update onboarding status on backend: $message');
+            appLogger.error('Failed to update onboarding status on backend', {'message': message});
             final updatedUser = state.user!.copyWith(isOnboarded: isOnboarded);
             state = state.copyWith(user: updatedUser);
             return false;
@@ -117,7 +119,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         );
       } catch (e) {
         // Log error but still update local state for UI consistency
-        print('Error updating onboarding status: $e');
+        appLogger.error('Error updating onboarding status', {'error': e.toString()});
         final updatedUser = state.user!.copyWith(isOnboarded: isOnboarded);
         state = state.copyWith(user: updatedUser);
         return false;
