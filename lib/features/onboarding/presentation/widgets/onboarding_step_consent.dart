@@ -104,65 +104,68 @@ class _OnboardingStepConsentState extends ConsumerState<OnboardingStepConsent> {
         Expanded(
           child: Column(
             children: [
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.psychology,
-                        size: 40,
-                        color: Color(0xFF6750A4),
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        'Help Improve Mental Health AI',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey[800],
+              Flexible(
+                child: Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.psychology,
+                          size: 32,
+                          color: Color(0xFF6750A4),
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Your redacted conversations help us train our AI to better understand mental health challenges and provide more empathetic support.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey[600],
-                          height: 1.4,
+                        SizedBox(height: 8),
+                        Text(
+                          'Help Improve Mental Health AI',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[800],
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        '• All personal information is automatically removed\n• Only emotional content and insights remain\n• You can change this setting anytime\n• Your privacy and security are our top priority',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                          height: 1.3,
+                        SizedBox(height: 6),
+                        Text(
+                          'Your redacted conversations help us train our AI to better understand mental health challenges and provide more empathetic support.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                            height: 1.3,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                      ),
-                    ],
+                        SizedBox(height: 8),
+                        Text(
+                          '• All personal information is automatically removed\n• Only emotional content and insights remain\n• You can change this setting anytime\n• Your privacy and security are our top priority',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[600],
+                            height: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              SizedBox(height: 16),
+              SizedBox(height: 12),
               SwitchListTile(
                 title: Text(
                   'Allow AI training with my redacted conversations',
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 subtitle: Text(
                   'This helps improve mental health support for everyone',
-                  style: TextStyle(fontSize: 13),
+                  style: TextStyle(fontSize: 12),
                 ),
                 value: _analysisConsent,
                 onChanged: (value) {
@@ -172,6 +175,7 @@ class _OnboardingStepConsentState extends ConsumerState<OnboardingStepConsent> {
                 },
                 activeColor: Color(0xFF6750A4),
                 contentPadding: EdgeInsets.zero,
+                dense: true,
               ),
             ],
           ),
