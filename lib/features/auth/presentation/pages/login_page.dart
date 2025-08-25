@@ -81,96 +81,89 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           child: Column(
             children: [
               // Add top spacing to move content higher
-              SizedBox(height: MediaQuery.of(context).size.height * 0.1),
-              // Center the content in the remaining space
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.psychology,
-                      size: 100,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    const SizedBox(height: 32),
-                    Text(
-                      'Welcome to Mindhearth',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Sign in to access your mental health support',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 32),
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.email),
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
-                        }
-                        if (!value.contains('@')) {
-                          return 'Please enter a valid email';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _passwordController,
-                      decoration: const InputDecoration(
-                        labelText: 'Password',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.lock),
-                      ),
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your password';
-                        }
-                        if (value.length < 6) {
-                          return 'Password must be at least 6 characters';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _isLoading || appState.isLoading ? null : _login,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: _isLoading || appState.isLoading
-                            ? const CircularProgressIndicator()
-                            : const Text('Sign In'),
-                      ),
-                    ),
-                    if (DebugConfig.isDebugMode) ...[
-                      const SizedBox(height: 16),
-                      Text(
-                        'Debug Mode: Using test credentials',
-                        style: TextStyle(
-                          color: Colors.orange[700],
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ],
+              SizedBox(height: MediaQuery.of(context).size.height * 0.15),
+              // Content positioned higher without Expanded
+              Icon(
+                Icons.psychology,
+                size: 100,
+                color: Theme.of(context).primaryColor,
+              ),
+              const SizedBox(height: 32),
+              Text(
+                'Welcome to Mindhearth',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
               ),
+              const SizedBox(height: 16),
+              Text(
+                'Sign in to access your mental health support',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.email),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email';
+                  }
+                  if (!value.contains('@')) {
+                    return 'Please enter a valid email';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _passwordController,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock),
+                ),
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your password';
+                  }
+                  if (value.length < 6) {
+                    return 'Password must be at least 6 characters';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading || appState.isLoading ? null : _login,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: _isLoading || appState.isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text('Sign In'),
+                ),
+              ),
+              if (DebugConfig.isDebugMode) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'Debug Mode: Using test credentials',
+                  style: TextStyle(
+                    color: Colors.orange[700],
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
