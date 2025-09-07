@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mindhearth/app/providers/providers.dart';
 import 'package:mindhearth/app/widgets/adaptive_navigation.dart';
 import 'package:mindhearth/features/chat/widgets/chat_input_bar.dart';
 import 'package:mindhearth/features/chat/widgets/chat_message_bubble.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
 import 'package:mindhearth/core/services/chat_service.dart';
+import 'package:mindhearth/core/providers/session_provider.dart';
+import 'package:mindhearth/core/models/session_state.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
   const ChatPage({super.key});
@@ -27,17 +28,35 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     super.initState();
     _chatService = ref.read(chatServiceProvider);
     _initializeChat();
+    
+    // Listen for session state changes
+    ref.listen<SessionState>(sessionStateProvider, (previous, next) {
+      if (next.currentSession != previous?.currentSession) {
+        // Session changed, reload chat
+        _messages.clear();
+        _initializeChat();
+      }
+    });
   }
 
   Future<void> _initializeChat() async {
-    // Load existing chat history from backend
-    final history = await _chatService.loadChatHistory();
-    if (history.isNotEmpty) {
-      setState(() {
-        _messages.addAll(history);
-      });
+    // Get the current session from session state
+    final sessionState = ref.read(sessionStateProvider);
+    final currentSession = sessionState.currentSession;
+    
+    if (currentSession != null) {
+      // Load chat history for the selected session
+      final history = await _chatService.loadChatHistory(sessionId: currentSession.id);
+      if (history.isNotEmpty) {
+        setState(() {
+          _messages.addAll(history);
+        });
+      } else {
+        // Add welcome message for the session
+        _addWelcomeMessage();
+      }
     } else {
-      // Add welcome message if no history
+      // No session selected, add welcome message
       _addWelcomeMessage();
     }
   }
@@ -201,13 +220,26 @@ How can I help you today?''';
 
   @override
   Widget build(BuildContext context) {
-    final isLargeScreen = MediaQuery.of(context).size.width > 600;
-    final safeArea = MediaQuery.of(context).padding;
+    final sessionState = ref.watch(sessionStateProvider);
+    final currentSession = sessionState.currentSession;
     
     return AdaptiveNavigation(
       selectedIndex: _selectedIndex,
       onDestinationSelected: _onDestinationSelected,
       child: Scaffold(
+        appBar: AppBar(
+          title: Text(currentSession?.name ?? 'Chat'),
+          actions: [
+            if (currentSession != null)
+              IconButton(
+                icon: const Icon(Icons.info_outline),
+                onPressed: () {
+                  // Show session info dialog
+                  _showSessionInfo(currentSession);
+                },
+              ),
+          ],
+        ),
         body: SafeArea(
           child: Column(
             children: [
@@ -336,5 +368,36 @@ How can I help you today?''';
         );
       },
     );
+  }
+
+  void _showSessionInfo(Session session) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(session.name),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Type: ${session.sessionType}'),
+            Text('Created: ${_formatDate(session.createdAt)}'),
+            if (session.updatedAt != null)
+              Text('Updated: ${_formatDate(session.updatedAt!)}'),
+            if (session.purpose != null)
+              Text('Purpose: ${session.purpose}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
   }
 }
