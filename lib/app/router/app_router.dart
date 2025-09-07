@@ -1,7 +1,11 @@
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mindhearth/app/providers/providers.dart';
-import 'package:mindhearth/core/providers/app_state_provider.dart';
+import 'package:mindhearth/core/providers/auth_provider.dart';
+import 'package:mindhearth/core/models/auth_state.dart';
+import 'package:mindhearth/core/providers/onboarding_provider.dart';
+import 'package:mindhearth/core/models/onboarding_state.dart';
+import 'package:mindhearth/core/providers/safety_code_provider.dart';
+import 'package:mindhearth/core/models/safety_code_state.dart';
 import 'package:mindhearth/core/config/logging_config.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/features/auth/presentation/pages/login_page.dart';
@@ -18,32 +22,44 @@ import 'package:flutter/foundation.dart';
 
 // GoRouter Refresh Stream for Riverpod integration
 class GoRouterRefreshStream extends ChangeNotifier {
-  late final ProviderSubscription<AppState> _appStateSubscription;
+  late final ProviderSubscription<AuthState> _authStateSubscription;
+  late final ProviderSubscription<OnboardingState> _onboardingStateSubscription;
+  late final ProviderSubscription<SafetyCodeState> _safetyCodeStateSubscription;
 
   GoRouterRefreshStream(Ref ref) {
-    _appStateSubscription = ref.listen(appStateProvider, (previous, next) {
+    _authStateSubscription = ref.listen(authStateProvider, (previous, next) {
+      notifyListeners();
+    });
+    _onboardingStateSubscription = ref.listen(onboardingStateProvider, (previous, next) {
+      notifyListeners();
+    });
+    _safetyCodeStateSubscription = ref.listen(safetyCodeStateProvider, (previous, next) {
       notifyListeners();
     });
   }
 
   @override
   void dispose() {
-    _appStateSubscription.close();
+    _authStateSubscription.close();
+    _onboardingStateSubscription.close();
+    _safetyCodeStateSubscription.close();
     super.dispose();
   }
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final appState = ref.watch(appStateProvider);
+  final authState = ref.watch(authStateProvider);
+  final onboardingState = ref.watch(onboardingStateProvider);
+  final safetyCodeState = ref.watch(safetyCodeStateProvider);
   
   return GoRouter(
     initialLocation: '/',
     refreshListenable: GoRouterRefreshStream(ref),
     redirect: (context, state) {
-      final isAuthenticated = appState.isAuthenticated;
-      final isOnboarded = appState.isOnboardingCompleted;
-      final isSafetyVerified = appState.isSafetyCodeVerified;
-      final hasSafetyCodes = appState.hasSafetyCodes;
+      final isAuthenticated = authState.isAuthenticated;
+      final isOnboarded = onboardingState.isCompleted;
+      final isSafetyVerified = safetyCodeState.isSafetyCodeVerified;
+      final hasSafetyCodes = safetyCodeState.hasSafetyCodes;
       
       if (LoggingConfig.enableNavigationLogs) {
         appLogger.navigation(state.matchedLocation, 'redirect', {

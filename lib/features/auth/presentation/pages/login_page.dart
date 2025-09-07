@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mindhearth/core/providers/app_state_provider.dart';
+import 'package:mindhearth/core/providers/auth_provider.dart';
+import 'package:mindhearth/core/models/auth_state.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -42,8 +43,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     });
 
     try {
-      final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
-      await appStateNotifier.login(_emailController.text, _passwordController.text);
+      final authNotifier = ref.read(authNotifierProvider.notifier);
+      await authNotifier.login(_emailController.text, _passwordController.text);
     } finally {
       if (mounted) {
         setState(() {
@@ -55,10 +56,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final appState = ref.watch(appStateProvider);
+    final authState = ref.watch(authStateProvider);
     
     // Listen for authentication state changes
-    ref.listen<AppState>(appStateProvider, (previous, next) {
+    ref.listen<AuthState>(authStateProvider, (previous, next) {
       if (next.error != null && next.error != previous?.error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -145,11 +146,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _isLoading || appState.isLoading ? null : _login,
+                  onPressed: _isLoading || authState.isLoading ? null : _login,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: _isLoading || appState.isLoading
+                  child: _isLoading || authState.isLoading
                       ? const CircularProgressIndicator()
                       : const Text('Sign In'),
                 ),
