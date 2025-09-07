@@ -71,8 +71,9 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
       final authNotifier = ref.read(authNotifierProvider.notifier);
       await authNotifier.updateOnboardingStatus(true);
       
-      // Update local onboarding state
-      state = state.completeOnboarding();
+      // Don't update local onboarding state - let the router handle navigation
+      // based on the auth state change
+      state = state.setLoading(false);
       
       if (LoggingConfig.enableOnboardingLogs) {
         appLogger.onboarding('onboarding_completed', {
