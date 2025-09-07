@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mindhearth/core/providers/journal_provider.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
 import 'package:mindhearth/core/models/journal_state.dart';
+import 'package:mindhearth/core/services/chat_service.dart';
 
 class JournalEntryPage extends ConsumerStatefulWidget {
   final String entryId;
