@@ -200,7 +200,8 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
         "Provide a concise summary of the key points and emotions discussed. "
         "Also suggest a brief title (header) and relevant tags. "
         "Format your response as: TITLE: [suggested title] CONTENT: [summary content] TAGS: [comma-separated tags]\n\n"
-        "Conversation:\n$conversationText"
+        "Conversation:\n$conversationText",
+        sessionId: _entry!.sessionId!,
       );
       
       final response = aiMessage?.message ?? "";

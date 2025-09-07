@@ -124,12 +124,18 @@ class ChatService {
   }
 
   // Get AI response (this would integrate with the actual AI service)
-  Future<ChatMessage?> getAIResponse(String userMessage) async {
+  Future<ChatMessage?> getAIResponse(String userMessage, {String? sessionId}) async {
     try {
+      final targetSessionId = sessionId ?? _currentSessionId;
+      if (targetSessionId == null) {
+        appLogger.error('No session ID available for AI response');
+        return null;
+      }
+      
       // For now, we'll create a placeholder AI response
       // In a real implementation, this would call the AI service
       final aiResponse = await _apiService.createCommunication(
-        sessionId: _currentSessionId!,
+        sessionId: targetSessionId,
         itemType: 'message',
         role: 'assistant',
         originalContent: _generateAIResponse(userMessage),
