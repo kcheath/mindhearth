@@ -11,6 +11,8 @@ class ApiService {
   
   late final Dio _dio;
   late final FlutterSecureStorage _storage;
+  
+  Dio get dio => _dio;
 
   ApiService() {
     _dio = Dio(BaseOptions(
@@ -452,11 +454,23 @@ class ApiService {
         queryParams['entry_type'] = entryType;
       }
       
-      final response = await _dio.get('/journal-entries/', queryParameters: queryParams);
+      final response = await _dio.get('/journals/', queryParameters: queryParams);
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
       return ApiError(
         message: e.response?.data?['detail'] ?? 'Failed to get journal entries',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> getJournalEntry(String entryId) async {
+    try {
+      final response = await _dio.get('/journals/$entryId');
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to get journal entry',
         statusCode: e.response?.statusCode,
       );
     }
@@ -467,14 +481,16 @@ class ApiService {
     required String entryType,
     String? sessionId,
     Map<String, dynamic>? metaData,
+    String? originalContent,
     bool consent = false,
   }) async {
     try {
-      final response = await _dio.post('/journal-entries/', data: {
+      final response = await _dio.post('/journals/', data: {
         'header': header,
         'entry_type': entryType,
         if (sessionId != null) 'session_id': sessionId,
         if (metaData != null) 'meta_data': metaData,
+        if (originalContent != null) 'original_content': originalContent,
         'consent': consent,
       });
       
@@ -491,6 +507,7 @@ class ApiService {
     required String entryId,
     String? header,
     String? entryType,
+    String? originalContent,
     Map<String, dynamic>? metaData,
     bool? consent,
   }) async {
@@ -498,10 +515,11 @@ class ApiService {
       final data = <String, dynamic>{};
       if (header != null) data['header'] = header;
       if (entryType != null) data['entry_type'] = entryType;
+      if (originalContent != null) data['original_content'] = originalContent;
       if (metaData != null) data['meta_data'] = metaData;
       if (consent != null) data['consent'] = consent;
       
-      final response = await _dio.put('/journal-entries/$entryId', data: data);
+      final response = await _dio.put('/journals/$entryId', data: data);
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
       return ApiError(
@@ -513,7 +531,7 @@ class ApiService {
 
   Future<ApiResponse<Map<String, dynamic>>> deleteJournalEntry(String entryId) async {
     try {
-      final response = await _dio.delete('/journal-entries/$entryId');
+      final response = await _dio.delete('/journals/$entryId');
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
       return ApiError(

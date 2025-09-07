@@ -1,9 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/providers/auth_provider.dart';
-import 'package:mindhearth/core/models/auth_state.dart';
 import 'package:mindhearth/core/providers/safety_code_provider.dart';
-import 'package:mindhearth/core/models/safety_code_state.dart';
 import 'package:mindhearth/core/config/logging_config.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/features/auth/presentation/pages/login_page.dart';
@@ -12,33 +10,11 @@ import 'package:mindhearth/features/safetycode/presentation/pages/safety_code_pa
 import 'package:mindhearth/features/chat/presentation/pages/chat_page.dart';
 import 'package:mindhearth/features/sessions/presentation/pages/sessions_page.dart';
 import 'package:mindhearth/features/journal/presentation/pages/journal_page.dart';
+import 'package:mindhearth/features/journal/presentation/pages/journal_entry_page.dart';
 import 'package:mindhearth/features/documents/presentation/pages/documents_page.dart';
 import 'package:mindhearth/features/reports/presentation/pages/reports_page.dart';
 import 'package:mindhearth/features/settings/presentation/pages/settings_page.dart';
 import 'package:mindhearth/features/settings/presentation/pages/privacy_security_settings_page.dart';
-import 'package:flutter/foundation.dart';
-
-// GoRouter Refresh Stream for Riverpod integration
-class GoRouterRefreshStream extends ChangeNotifier {
-  late final ProviderSubscription<AuthState> _authStateSubscription;
-  late final ProviderSubscription<SafetyCodeState> _safetyCodeStateSubscription;
-
-  GoRouterRefreshStream(Ref ref) {
-    _authStateSubscription = ref.listen(authStateProvider, (previous, next) {
-      notifyListeners();
-    });
-    _safetyCodeStateSubscription = ref.listen(safetyCodeStateProvider, (previous, next) {
-      notifyListeners();
-    });
-  }
-
-  @override
-  void dispose() {
-    _authStateSubscription.close();
-    _safetyCodeStateSubscription.close();
-    super.dispose();
-  }
-}
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -46,7 +22,6 @@ final routerProvider = Provider<GoRouter>((ref) {
   
   return GoRouter(
     initialLocation: '/',
-    refreshListenable: GoRouterRefreshStream(ref),
     redirect: (context, state) {
       final isAuthenticated = authState.isAuthenticated;
       final isOnboarded = authState.user?.isOnboarded ?? false;
@@ -83,7 +58,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           return '/safety';
         }
         
-        // If no safety codes configured or safety code is verified, redirect to chat
+        // If no safety codes configured or safety code is verified, redirect to chat only from root
         if ((!hasSafetyCodes || isSafetyVerified) && state.matchedLocation == '/') {
           return '/chat';
         }
@@ -130,6 +105,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/journal',
         name: 'journal',
         builder: (context, state) => const JournalPage(),
+      ),
+      
+      GoRoute(
+        path: '/journal/:entryId',
+        name: 'journal-entry',
+        builder: (context, state) {
+          final entryId = state.pathParameters['entryId']!;
+          return JournalEntryPage(entryId: entryId);
+        },
       ),
       
       GoRoute(

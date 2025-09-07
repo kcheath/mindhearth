@@ -51,7 +51,7 @@ class _JournalPageState extends ConsumerState<JournalPage> {
   void _onJournalEntryTap(JournalEntry entry) {
     // Navigate to journal entry detail or edit
     ref.read(journalNotifierProvider.notifier).setCurrentEntry(entry);
-    // TODO: Navigate to journal entry detail page
+    context.go('/journal/${entry.id}');
   }
 
   void _onRefresh() {
@@ -284,10 +284,13 @@ class _CreateJournalEntryDialogState extends ConsumerState<_CreateJournalEntryDi
       ref.read(journalNotifierProvider.notifier).createJournalEntry(
         header: _headerController.text,
         entryType: _selectedType,
+        originalContent: _contentController.text,
         metaData: {
           'content': _contentController.text,
         },
         consent: _consent,
+        keywords: [], // Will be set when editing
+        isAIGenerated: false,
       ).then((entry) {
         if (entry != null && mounted) {
           Navigator.of(context).pop();

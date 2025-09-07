@@ -1,9 +1,7 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/features/chat/widgets/chat_message_bubble.dart';
-import 'package:mindhearth/core/models/api_response.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
-import 'package:mindhearth/core/config/logging_config.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 
 class ChatService {
@@ -58,7 +56,7 @@ class ChatService {
       return response.when(
         success: (data, message) {
           final communications = data['communications'] as List<dynamic>? ?? [];
-          return communications.map((comm) {
+          final messages = communications.map((comm) {
             final commData = comm as Map<String, dynamic>;
             return ChatMessage(
               id: commData['id'] as String,
@@ -68,6 +66,10 @@ class ChatService {
               sessionId: commData['session_id'] as String?,
             );
           }).toList();
+          
+          // Sort messages by timestamp (oldest first)
+          messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+          return messages;
         },
         error: (message, statusCode, errors) {
           appLogger.error('Failed to load chat history', {'message': message});

@@ -7,6 +7,7 @@ import 'package:mindhearth/features/chat/widgets/chat_message_bubble.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
 import 'package:mindhearth/core/services/chat_service.dart';
 import 'package:mindhearth/core/providers/session_provider.dart';
+import 'package:mindhearth/core/providers/journal_provider.dart';
 import 'package:mindhearth/core/models/session_state.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
@@ -28,15 +29,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     super.initState();
     _chatService = ref.read(chatServiceProvider);
     _initializeChat();
-    
-    // Listen for session state changes
-    ref.listen<SessionState>(sessionStateProvider, (previous, next) {
-      if (next.currentSession != previous?.currentSession) {
-        // Session changed, reload chat
-        _messages.clear();
-        _initializeChat();
-      }
-    });
   }
 
   Future<void> _initializeChat() async {
@@ -223,6 +215,15 @@ How can I help you today?''';
     final sessionState = ref.watch(sessionStateProvider);
     final currentSession = sessionState.currentSession;
     
+    // Listen for session state changes
+    ref.listen<SessionState>(sessionStateProvider, (previous, next) {
+      if (next.currentSession != previous?.currentSession) {
+        // Session changed, reload chat
+        _messages.clear();
+        _initializeChat();
+      }
+    });
+    
     return AdaptiveNavigation(
       selectedIndex: _selectedIndex,
       onDestinationSelected: _onDestinationSelected,
@@ -230,7 +231,15 @@ How can I help you today?''';
         appBar: AppBar(
           title: Text(currentSession?.name ?? 'Chat'),
           actions: [
-            if (currentSession != null)
+            if (currentSession != null) ...[
+              IconButton(
+                icon: const Icon(Icons.book_outlined),
+                onPressed: () {
+                  // Create journal entry from current session
+                  _createJournalFromSession();
+                },
+                tooltip: 'Create Journal Entry',
+              ),
               IconButton(
                 icon: const Icon(Icons.info_outline),
                 onPressed: () {
@@ -238,6 +247,7 @@ How can I help you today?''';
                   _showSessionInfo(currentSession);
                 },
               ),
+            ],
           ],
         ),
         body: SafeArea(
@@ -395,6 +405,68 @@ How can I help you today?''';
         ],
       ),
     );
+  }
+
+  void _createJournalFromSession() async {
+    final currentSession = ref.read(sessionStateProvider).currentSession;
+    if (currentSession == null) return;
+
+    try {
+      // Get chat history for the current session
+      final chatService = ref.read(chatServiceProvider);
+      final messages = await chatService.loadChatHistory();
+      
+      if (messages.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No messages found in this session')),
+        );
+        return;
+      }
+
+      // Build conversation text for journal entry
+      String conversationText = '';
+      for (final message in messages) {
+        final role = message.isUser ? 'You' : 'AI';
+        conversationText += '$role: ${message.message}\n\n';
+      }
+
+      // Create a journal entry with the conversation content
+      final journalEntry = await ref.read(journalNotifierProvider.notifier).createJournalEntry(
+        header: 'Chat Session - ${currentSession.name}',
+        entryType: 'conversation_summary',
+        sessionId: currentSession.id,
+        originalContent: conversationText,
+        keywords: ['chat-session', 'conversation'],
+        isAIGenerated: false,
+        consent: false,
+      );
+
+      if (journalEntry != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Journal entry created from chat session'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Navigate to the journal entry page
+        context.go('/journal/${journalEntry.id}');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to create journal entry'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error creating journal entry: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   String _formatDate(DateTime date) {

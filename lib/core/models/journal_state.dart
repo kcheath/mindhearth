@@ -31,6 +31,7 @@ class JournalState {
     return copyWith(
       entries: entries,
       error: null,
+      isLoading: false,
     );
   }
 
@@ -38,19 +39,20 @@ class JournalState {
   JournalState addEntry(JournalEntry entry) {
     return copyWith(
       entries: [entry, ...entries],
+      isLoading: false,
     );
   }
 
   /// Update existing journal entry
   JournalState updateEntry(JournalEntry entry) {
     final updatedEntries = entries.map((e) => e.id == entry.id ? entry : e).toList();
-    return copyWith(entries: updatedEntries);
+    return copyWith(entries: updatedEntries, isLoading: false);
   }
 
   /// Delete journal entry
   JournalState deleteEntry(String entryId) {
     final updatedEntries = entries.where((e) => e.id != entryId).toList();
-    return copyWith(entries: updatedEntries);
+    return copyWith(entries: updatedEntries, isLoading: false);
   }
 
   /// Set current entry
@@ -140,8 +142,13 @@ class JournalEntry {
   final DateTime createdAt;
   final DateTime? updatedAt;
   final String? sessionId;
+  final String? originalContent;
+  final String? redactedContent;
   final Map<String, dynamic>? metaData;
   final bool consent;
+  final List<String> keywords;
+  final String? sentiment;
+  final bool isAIGenerated;
 
   const JournalEntry({
     required this.id,
@@ -150,11 +157,28 @@ class JournalEntry {
     required this.createdAt,
     this.updatedAt,
     this.sessionId,
+    this.originalContent,
+    this.redactedContent,
     this.metaData,
     this.consent = false,
+    this.keywords = const [],
+    this.sentiment,
+    this.isAIGenerated = false,
   });
 
   factory JournalEntry.fromJson(Map<String, dynamic> json) {
+    // Extract keywords from metadata
+    List<String> keywords = [];
+    String? sentiment;
+    bool isAIGenerated = false;
+    
+    final metaData = json['meta_data'] as Map<String, dynamic>?;
+    if (metaData != null) {
+      keywords = (metaData['tags'] as List<dynamic>?)?.cast<String>() ?? [];
+      sentiment = metaData['sentiment'] as String?;
+      isAIGenerated = metaData['ai_generated'] as bool? ?? false;
+    }
+    
     return JournalEntry(
       id: json['id'] as String,
       header: json['header'] as String,
@@ -164,8 +188,13 @@ class JournalEntry {
           ? DateTime.parse(json['updated_at'] as String)
           : null,
       sessionId: json['session_id'] as String?,
-      metaData: json['meta_data'] as Map<String, dynamic>?,
+      originalContent: json['original_content'] as String?,
+      redactedContent: json['redacted_content'] as String?,
+      metaData: metaData,
       consent: json['consent'] as bool? ?? false,
+      keywords: keywords,
+      sentiment: sentiment,
+      isAIGenerated: isAIGenerated,
     );
   }
 
@@ -177,7 +206,14 @@ class JournalEntry {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
       'session_id': sessionId,
-      'meta_data': metaData,
+      'original_content': originalContent,
+      'redacted_content': redactedContent,
+      'meta_data': {
+        ...?metaData,
+        'tags': keywords,
+        'sentiment': sentiment,
+        'ai_generated': isAIGenerated,
+      },
       'consent': consent,
     };
   }
@@ -189,8 +225,13 @@ class JournalEntry {
     DateTime? createdAt,
     DateTime? updatedAt,
     String? sessionId,
+    String? originalContent,
+    String? redactedContent,
     Map<String, dynamic>? metaData,
     bool? consent,
+    List<String>? keywords,
+    String? sentiment,
+    bool? isAIGenerated,
   }) {
     return JournalEntry(
       id: id ?? this.id,
@@ -199,8 +240,13 @@ class JournalEntry {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       sessionId: sessionId ?? this.sessionId,
+      originalContent: originalContent ?? this.originalContent,
+      redactedContent: redactedContent ?? this.redactedContent,
       metaData: metaData ?? this.metaData,
       consent: consent ?? this.consent,
+      keywords: keywords ?? this.keywords,
+      sentiment: sentiment ?? this.sentiment,
+      isAIGenerated: isAIGenerated ?? this.isAIGenerated,
     );
   }
 
@@ -237,8 +283,13 @@ class JournalEntry {
         other.createdAt == createdAt &&
         other.updatedAt == updatedAt &&
         other.sessionId == sessionId &&
+        other.originalContent == originalContent &&
+        other.redactedContent == redactedContent &&
         other.metaData == metaData &&
-        other.consent == consent;
+        other.consent == consent &&
+        other.keywords == keywords &&
+        other.sentiment == sentiment &&
+        other.isAIGenerated == isAIGenerated;
   }
 
   @override
@@ -250,8 +301,13 @@ class JournalEntry {
       createdAt,
       updatedAt,
       sessionId,
+      originalContent,
+      redactedContent,
       metaData,
       consent,
+      keywords,
+      sentiment,
+      isAIGenerated,
     );
   }
 

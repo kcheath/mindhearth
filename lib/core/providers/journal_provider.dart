@@ -26,7 +26,7 @@ class JournalNotifier extends StateNotifier<JournalState> {
       
       response.when(
         success: (data, message) {
-          final entriesList = data['entries'] as List<dynamic>? ?? [];
+          final entriesList = data['journal_entries'] as List<dynamic>? ?? [];
           final entries = entriesList
               .map((entryData) => JournalEntry.fromJson(entryData as Map<String, dynamic>))
               .toList();
@@ -34,7 +34,7 @@ class JournalNotifier extends StateNotifier<JournalState> {
           state = state.loadEntries(entries);
           
           if (LoggingConfig.enableApiLogs) {
-            appLogger.apiResponse('GET', '/journal-entries/', 200, {
+            appLogger.apiResponse('GET', '/journals/', 200, {
               'count': entries.length,
               'entryType': entryType,
             });
@@ -44,7 +44,7 @@ class JournalNotifier extends StateNotifier<JournalState> {
           state = state.setError(message);
           
           if (LoggingConfig.enableApiLogs) {
-            appLogger.apiError('GET', '/journal-entries/', statusCode ?? 500, message);
+            appLogger.apiError('GET', '/journals/', statusCode ?? 500, message);
           }
         },
       );
@@ -52,7 +52,7 @@ class JournalNotifier extends StateNotifier<JournalState> {
       state = state.setError('Failed to load journal entries: ${e.toString()}');
       
       if (LoggingConfig.enableApiLogs) {
-        appLogger.apiError('GET', '/journal-entries/', 500, e.toString());
+        appLogger.apiError('GET', '/journals/', 500, e.toString());
       }
     }
   }
@@ -63,16 +63,29 @@ class JournalNotifier extends StateNotifier<JournalState> {
     required String entryType,
     String? sessionId,
     Map<String, dynamic>? metaData,
+    String? originalContent,
     bool consent = false,
+    List<String>? keywords,
+    String? sentiment,
+    bool isAIGenerated = false,
   }) async {
     state = state.setLoading(true);
     
     try {
+      // Prepare metadata with new fields
+      final enhancedMetaData = {
+        ...?metaData,
+        'tags': keywords ?? [],
+        'sentiment': sentiment,
+        'ai_generated': isAIGenerated,
+      };
+
       final response = await _apiService.createJournalEntry(
         header: header,
         entryType: entryType,
         sessionId: sessionId,
-        metaData: metaData,
+        metaData: enhancedMetaData,
+        originalContent: originalContent,
         consent: consent,
       );
       
@@ -82,7 +95,7 @@ class JournalNotifier extends StateNotifier<JournalState> {
           state = state.addEntry(entry);
           
           if (LoggingConfig.enableApiLogs) {
-            appLogger.apiResponse('POST', '/journal-entries/', 201, {
+            appLogger.apiResponse('POST', '/journals/', 201, {
               'entryId': entry.id,
               'header': entry.header,
               'entryType': entry.entryType,
@@ -95,7 +108,7 @@ class JournalNotifier extends StateNotifier<JournalState> {
           state = state.setError(message);
           
           if (LoggingConfig.enableApiLogs) {
-            appLogger.apiError('POST', '/journal-entries/', statusCode ?? 500, message);
+            appLogger.apiError('POST', '/journals/', statusCode ?? 500, message);
           }
           
           return null;
@@ -105,7 +118,7 @@ class JournalNotifier extends StateNotifier<JournalState> {
       state = state.setError('Failed to create journal entry: ${e.toString()}');
       
       if (LoggingConfig.enableApiLogs) {
-        appLogger.apiError('POST', '/journal-entries/', 500, e.toString());
+        appLogger.apiError('POST', '/journals/', 500, e.toString());
       }
       
       return null;
@@ -117,17 +130,30 @@ class JournalNotifier extends StateNotifier<JournalState> {
     required String entryId,
     String? header,
     String? entryType,
+    String? originalContent,
     Map<String, dynamic>? metaData,
     bool? consent,
+    List<String>? keywords,
+    String? sentiment,
+    bool? isAIGenerated,
   }) async {
     state = state.setLoading(true);
     
     try {
+      // Prepare metadata with new fields
+      final enhancedMetaData = {
+        ...?metaData,
+        if (keywords != null) 'tags': keywords,
+        if (sentiment != null) 'sentiment': sentiment,
+        if (isAIGenerated != null) 'ai_generated': isAIGenerated,
+      };
+
       final response = await _apiService.updateJournalEntry(
         entryId: entryId,
         header: header,
         entryType: entryType,
-        metaData: metaData,
+        originalContent: originalContent,
+        metaData: enhancedMetaData,
         consent: consent,
       );
       
@@ -137,7 +163,7 @@ class JournalNotifier extends StateNotifier<JournalState> {
           state = state.updateEntry(entry);
           
           if (LoggingConfig.enableApiLogs) {
-            appLogger.apiResponse('PUT', '/journal-entries/${entry.id}', 200, {
+            appLogger.apiResponse('PUT', '/journals/${entry.id}', 200, {
               'entryId': entry.id,
               'header': entry.header,
             });
@@ -149,7 +175,7 @@ class JournalNotifier extends StateNotifier<JournalState> {
           state = state.setError(message);
           
           if (LoggingConfig.enableApiLogs) {
-            appLogger.apiError('PUT', '/journal-entries/$entryId', statusCode ?? 500, message);
+            appLogger.apiError('PUT', '/journals/$entryId', statusCode ?? 500, message);
           }
           
           return null;
@@ -159,7 +185,7 @@ class JournalNotifier extends StateNotifier<JournalState> {
       state = state.setError('Failed to update journal entry: ${e.toString()}');
       
       if (LoggingConfig.enableApiLogs) {
-        appLogger.apiError('PUT', '/journal-entries/$entryId', 500, e.toString());
+        appLogger.apiError('PUT', '/journals/$entryId', 500, e.toString());
       }
       
       return null;
@@ -178,7 +204,7 @@ class JournalNotifier extends StateNotifier<JournalState> {
           state = state.deleteEntry(entryId);
           
           if (LoggingConfig.enableApiLogs) {
-            appLogger.apiResponse('DELETE', '/journal-entries/$entryId', 200, {
+            appLogger.apiResponse('DELETE', '/journals/$entryId', 200, {
               'entryId': entryId,
             });
           }
@@ -187,7 +213,7 @@ class JournalNotifier extends StateNotifier<JournalState> {
           state = state.setError(message);
           
           if (LoggingConfig.enableApiLogs) {
-            appLogger.apiError('DELETE', '/journal-entries/$entryId', statusCode ?? 500, message);
+            appLogger.apiError('DELETE', '/journals/$entryId', statusCode ?? 500, message);
           }
         },
       );
@@ -195,7 +221,7 @@ class JournalNotifier extends StateNotifier<JournalState> {
       state = state.setError('Failed to delete journal entry: ${e.toString()}');
       
       if (LoggingConfig.enableApiLogs) {
-        appLogger.apiError('DELETE', '/journal-entries/$entryId', 500, e.toString());
+        appLogger.apiError('DELETE', '/journals/$entryId', 500, e.toString());
       }
     }
   }
@@ -205,7 +231,7 @@ class JournalNotifier extends StateNotifier<JournalState> {
     state = state.setCurrentEntry(entry);
     
     if (LoggingConfig.enableApiLogs) {
-      appLogger.apiRequest('SELECT', '/journal-entries/${entry.id}', {
+      appLogger.apiRequest('SELECT', '/journals/${entry.id}', {
         'entryId': entry.id,
         'header': entry.header,
       });
@@ -217,13 +243,51 @@ class JournalNotifier extends StateNotifier<JournalState> {
     state = state.clearCurrentEntry();
     
     if (LoggingConfig.enableApiLogs) {
-      appLogger.apiRequest('CLEAR', '/journal-entries/', {});
+      appLogger.apiRequest('CLEAR', '/journals/', {});
     }
   }
 
   /// Get entry by ID
   JournalEntry? getEntryById(String id) {
     return state.getEntryById(id);
+  }
+
+  /// Load single journal entry by ID
+  Future<JournalEntry?> loadJournalEntry(String entryId) async {
+    try {
+      final response = await _apiService.getJournalEntry(entryId);
+      
+      return response.when(
+        success: (data, message) {
+          final entry = JournalEntry.fromJson(data);
+          
+          // Add to state if not already present
+          if (state.getEntryById(entryId) == null) {
+            state = state.addEntry(entry);
+          }
+          
+          if (LoggingConfig.enableApiLogs) {
+            appLogger.apiResponse('GET', '/journals/$entryId', 200, {
+              'entryId': entry.id,
+              'header': entry.header,
+            });
+          }
+          
+          return entry;
+        },
+        error: (message, statusCode, errors) {
+          if (LoggingConfig.enableApiLogs) {
+            appLogger.apiError('GET', '/journals/$entryId', statusCode ?? 500, message);
+          }
+          return null;
+        },
+      );
+    } catch (e) {
+      if (LoggingConfig.enableApiLogs) {
+        appLogger.apiError('GET', '/journals/$entryId', 500, e.toString());
+      }
+      return null;
+    }
   }
 
   /// Get entries by type
@@ -244,6 +308,39 @@ class JournalNotifier extends StateNotifier<JournalState> {
   /// Set loading state
   void setLoading(bool loading) {
     state = state.setLoading(loading);
+  }
+
+  /// Get journal tag configurations
+  Future<List<Map<String, dynamic>>> getJournalTagConfigurations() async {
+    try {
+      final response = await _apiService.dio.get('/journals/tags/config');
+      
+      if (LoggingConfig.enableApiLogs) {
+        appLogger.apiResponse('GET', '/journals/tags/config', response.statusCode ?? 200, {
+          'count': (response.data as List).length,
+        });
+      }
+      
+      return (response.data as List).cast<Map<String, dynamic>>();
+    } catch (e) {
+      if (LoggingConfig.enableApiLogs) {
+        appLogger.apiError('GET', '/journals/tags/config', 500, e.toString());
+      }
+      
+      // Return default tags if API fails
+      return [
+        {'tag_name': 'emotional-support', 'tag_description': 'Emotional support and validation'},
+        {'tag_name': 'parenting-challenges', 'tag_description': 'Parenting difficulties and strategies'},
+        {'tag_name': 'trauma-processing', 'tag_description': 'Processing trauma and healing'},
+        {'tag_name': 'post-separation-abuse', 'tag_description': 'Abuse after separation'},
+        {'tag_name': 'safety-planning', 'tag_description': 'Safety planning and protection'},
+        {'tag_name': 'legal-issues', 'tag_description': 'Legal matters and court proceedings'},
+        {'tag_name': 'visitation-issues', 'tag_description': 'Visitation and custody challenges'},
+        {'tag_name': 'depression', 'tag_description': 'Depression and mental health'},
+        {'tag_name': 'daily-reflection', 'tag_description': 'Daily thoughts and reflections'},
+        {'tag_name': 'gratitude', 'tag_description': 'Gratitude and positive moments'},
+      ];
+    }
   }
 }
 

@@ -42,6 +42,21 @@ class SituationData {
       background: background ?? this.background,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is SituationData &&
+        other.age == age &&
+        other.state == state &&
+        other.children == children &&
+        other.background == background;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(age, state, children, background);
+  }
 }
 
 class RedactionProfile {
@@ -106,6 +121,32 @@ class RedactionProfile {
       redactPronouns: redactPronouns ?? this.redactPronouns,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is RedactionProfile &&
+        other.userNames == userNames &&
+        other.childNames == childNames &&
+        other.emails == emails &&
+        other.phoneNumbers == phoneNumbers &&
+        other.address == address &&
+        other.peopleToRedact == peopleToRedact &&
+        other.redactPronouns == redactPronouns;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      userNames,
+      childNames,
+      emails,
+      phoneNumbers,
+      address,
+      peopleToRedact,
+      redactPronouns,
+    );
+  }
 }
 
 
@@ -135,6 +176,18 @@ class ConsentData {
     return ConsentData(
       analysisConsent: analysisConsent ?? this.analysisConsent,
     );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ConsentData &&
+        other.analysisConsent == analysisConsent;
+  }
+
+  @override
+  int get hashCode {
+    return analysisConsent.hashCode;
   }
 }
 
@@ -181,5 +234,19 @@ class OnboardingData {
       redactionProfile: redactionProfile ?? this.redactionProfile,
       consentData: consentData ?? this.consentData,
     );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is OnboardingData &&
+        other.situationData == situationData &&
+        other.redactionProfile == redactionProfile &&
+        other.consentData == consentData;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(situationData, redactionProfile, consentData);
   }
 }

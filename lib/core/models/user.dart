@@ -76,4 +76,34 @@ class User {
           : null,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is User &&
+        other.id == id &&
+        other.email == email &&
+        other.tenantId == tenantId &&
+        other.firstName == firstName &&
+        other.lastName == lastName &&
+        other.avatarUrl == avatarUrl &&
+        other.isOnboarded == isOnboarded &&
+        other.createdAt == createdAt &&
+        other.updatedAt == updatedAt;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      id,
+      email,
+      tenantId,
+      firstName,
+      lastName,
+      avatarUrl,
+      isOnboarded,
+      createdAt,
+      updatedAt,
+    );
+  }
 }

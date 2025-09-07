@@ -18,6 +18,30 @@ class OnboardingState {
     this.error,
   });
 
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is OnboardingState &&
+        other.isOnboarding == isOnboarding &&
+        other.currentStep == currentStep &&
+        other.isOnboardingCompleted == isOnboardingCompleted &&
+        other.onboardingData == onboardingData &&
+        other.isLoading == isLoading &&
+        other.error == error;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      isOnboarding,
+      currentStep,
+      isOnboardingCompleted,
+      onboardingData,
+      isLoading,
+      error,
+    );
+  }
+
   OnboardingState copyWith({
     bool? isOnboarding,
     int? currentStep,
@@ -121,30 +145,6 @@ class OnboardingState {
 
   /// Check if we can go to previous step
   bool get canGoPrevious => currentStep > 0;
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is OnboardingState &&
-        other.isOnboarding == isOnboarding &&
-        other.currentStep == currentStep &&
-        other.isOnboardingCompleted == isOnboardingCompleted &&
-        other.onboardingData == onboardingData &&
-        other.isLoading == isLoading &&
-        other.error == error;
-  }
-
-  @override
-  int get hashCode {
-    return Object.hash(
-      isOnboarding,
-      currentStep,
-      isOnboardingCompleted,
-      onboardingData,
-      isLoading,
-      error,
-    );
-  }
 
   @override
   String toString() {
