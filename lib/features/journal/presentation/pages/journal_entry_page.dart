@@ -30,6 +30,7 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
   Map<String, dynamic>? _redactionSummary;
   double? _confidenceScore;
   List<Map<String, dynamic>> _availableTags = [];
+  bool _isGeneratingAISummary = false;
   JournalEntry? _entry;
 
   @override
@@ -155,6 +156,113 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
     setState(() {
       _showRedactionPreview = !_showRedactionPreview;
     });
+  }
+
+  Future<void> _generateAISummary() async {
+    if (_entry?.sessionId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No session available for AI summary')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isGeneratingAISummary = true;
+    });
+
+    try {
+      final chatService = ref.read(chatServiceProvider);
+      
+      // Get the session communications to use as context
+      final messages = await chatService.loadChatHistory();
+      
+      if (messages.isEmpty) {
+        setState(() {
+          _isGeneratingAISummary = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No conversation found in this session')),
+        );
+        return;
+      }
+      
+      // Build conversation text for AI processing
+      String conversationText = "";
+      for (final message in messages) {
+        final role = message.isUser ? "You" : "AI";
+        conversationText += "$role: ${message.message}\n\n";
+      }
+      
+      // Use the chat API to generate a journal summary
+      final aiMessage = await chatService.getAIResponse(
+        "Please create a journal entry summary from this conversation. "
+        "Provide a concise summary of the key points and emotions discussed. "
+        "Also suggest a brief title (header) and relevant tags. "
+        "Format your response as: TITLE: [suggested title] CONTENT: [summary content] TAGS: [comma-separated tags]\n\n"
+        "Conversation:\n$conversationText"
+      );
+      
+      final response = aiMessage?.message ?? "";
+      
+      if (mounted) {
+        // Parse the AI response to extract title, content, and tags
+        String title = "";
+        String content = response;
+        List<String> tags = ["daily-reflection"];
+        
+        // Try to parse the structured response
+        if (response.contains("TITLE:") && response.contains("CONTENT:") && response.contains("TAGS:")) {
+          try {
+            final titleMatch = RegExp(r'TITLE:\s*(.+)').firstMatch(response);
+            final contentMatch = RegExp(r'CONTENT:\s*(.+)').firstMatch(response);
+            final tagsMatch = RegExp(r'TAGS:\s*(.+)').firstMatch(response);
+            
+            if (titleMatch != null) {
+              title = titleMatch.group(1)?.trim() ?? "";
+            }
+            if (contentMatch != null) {
+              content = contentMatch.group(1)?.trim() ?? response;
+            }
+            if (tagsMatch != null) {
+              final tagsStr = tagsMatch.group(1)?.trim() ?? "";
+              tags = tagsStr.split(',').map((tag) => tag.trim()).where((tag) => tag.isNotEmpty).toList();
+              if (tags.isEmpty) tags = ["daily-reflection"];
+            }
+          } catch (e) {
+            // If parsing fails, use the full response as content
+            content = response;
+          }
+        }
+        
+        setState(() {
+          if (title.isNotEmpty) {
+            _headerController.text = title;
+          }
+          _contentController.text = content;
+          _selectedTags = tags;
+          _isGeneratingAISummary = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('AI summary generated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isGeneratingAISummary = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error generating AI summary: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _toggleEdit() {
@@ -481,6 +589,18 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
                                   : const Icon(Icons.security),
                               tooltip: 'Generate Redaction Preview',
                             ),
+                            if (_entry?.sessionId != null)
+                              IconButton(
+                                onPressed: _isGeneratingAISummary ? null : _generateAISummary,
+                                icon: _isGeneratingAISummary
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    : const Icon(Icons.auto_awesome),
+                                tooltip: 'Generate AI Summary from Session',
+                              ),
                             if (_showRedactionPreview)
                               IconButton(
                                 onPressed: _toggleRedactionPreview,
