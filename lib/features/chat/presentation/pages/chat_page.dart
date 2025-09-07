@@ -414,7 +414,7 @@ How can I help you today?''';
     try {
       // Get chat history for the current session
       final chatService = ref.read(chatServiceProvider);
-      final messages = await chatService.loadChatHistory();
+      final messages = await chatService.loadChatHistory(sessionId: currentSession.id);
       
       if (messages.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
