@@ -238,7 +238,7 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
         await ref.read(journalNotifierProvider.notifier).deleteJournalEntry(_entry!.id);
         
         if (mounted) {
-          context.pop();
+          context.go('/journal');
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Journal entry deleted successfully')),
           );
@@ -265,7 +265,7 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
           title: const Text('Journal Entry'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.pop(),
+            onPressed: () => context.go('/journal'),
           ),
         ),
         body: const Center(
@@ -279,7 +279,7 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
         title: Text(_isEditing ? 'Edit Entry' : 'Journal Entry'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () => context.go('/journal'),
         ),
         actions: [
           if (!_isEditing) ...[
