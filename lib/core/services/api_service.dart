@@ -508,13 +508,33 @@ class ApiService {
     String? customContent,
   }) async {
     try {
-      final response = await _dio.post('/journals/ai-summary', data: {
+      final requestData = {
         'session_id': sessionId,
         if (customContent != null) 'custom_content': customContent,
-      });
+      };
+      
+      appLogger.debug('createAIJournalEntry - sending request with sessionId: $sessionId', 'ApiService');
+      appLogger.debug('createAIJournalEntry - request data: $requestData', 'ApiService');
+      
+      final response = await _dio.post(
+        '/journals/ai-summary',
+        data: requestData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+      
+      appLogger.debug('createAIJournalEntry - response status: ${response.statusCode}', 'ApiService');
+      appLogger.debug('createAIJournalEntry - response data: ${response.data}', 'ApiService');
       
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
+      appLogger.debug('createAIJournalEntry - error: ${e.toString()}', 'ApiService');
+      appLogger.debug('createAIJournalEntry - error response: ${e.response?.data}', 'ApiService');
+      
       return ApiError(
         message: e.response?.data?['detail'] ?? 'Failed to create AI journal entry',
         statusCode: e.response?.statusCode,
