@@ -183,6 +183,15 @@ class SafetyCodeNotifier extends StateNotifier<SafetyCodeState> {
     state = state.clearError();
   }
 
+  /// Reset verification status
+  void resetVerification() {
+    state = state.resetVerification();
+    
+    if (LoggingConfig.enableSafetyCodeLogs) {
+      appLogger.safetyCode('verification_reset', {});
+    }
+  }
+
   /// Set loading state
   void setLoading(bool loading) {
     state = state.setLoading(loading);

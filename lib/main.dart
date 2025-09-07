@@ -4,7 +4,8 @@ import 'package:mindhearth/app/themes/app_theme.dart';
 import 'package:mindhearth/app/router/app_router.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
 import 'package:mindhearth/core/config/logging_config.dart';
-import 'package:mindhearth/core/providers/app_state_provider.dart';
+import 'package:mindhearth/core/providers/auth_provider.dart';
+import 'package:mindhearth/core/providers/safety_code_provider.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/core/di/service_locator.dart';
 
@@ -34,6 +35,12 @@ class _MindhearthAppState extends ConsumerState<MindhearthApp> with WidgetsBindi
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    
+    // Initialize auth status when app starts
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authNotifier = ref.read(authNotifierProvider.notifier);
+      authNotifier.checkAuthStatus();
+    });
   }
 
   @override
@@ -48,8 +55,8 @@ class _MindhearthAppState extends ConsumerState<MindhearthApp> with WidgetsBindi
     
     // Reset safety code verification when app is paused or terminated
     if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
-      final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
-      appStateNotifier.resetSafetyCodeVerification();
+      final safetyCodeNotifier = ref.read(safetyCodeNotifierProvider.notifier);
+      safetyCodeNotifier.resetVerification();
       appLogger.info('Safety code verification reset due to app lifecycle change', {
         'state': state.toString(),
       });

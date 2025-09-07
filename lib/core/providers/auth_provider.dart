@@ -179,6 +179,47 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.clearError();
   }
 
+  /// Update onboarding status
+  Future<void> updateOnboardingStatus(bool isOnboarded) async {
+    try {
+      final updateOnboardingStatusUseCase = serviceLocator.get<UpdateOnboardingStatusUseCase>();
+      final result = await updateOnboardingStatusUseCase(isOnboarded);
+      
+      result.when(
+        success: (_) {
+          // Update the user's onboarding status in the state
+          if (state.user != null) {
+            final updatedUser = state.user!.copyWith(isOnboarded: isOnboarded);
+            state = state.copyWith(user: updatedUser);
+          }
+          
+          if (LoggingConfig.enableAuthLogs) {
+            appLogger.auth('Onboarding status updated', {
+              'isOnboarded': isOnboarded,
+            });
+          }
+        },
+        failure: (error) {
+          state = state.setError(error.message);
+          
+          if (LoggingConfig.enableAuthLogs) {
+            appLogger.auth('Failed to update onboarding status', {
+              'error': error.message,
+            });
+          }
+        },
+      );
+    } catch (e) {
+      state = state.setError('Failed to update onboarding status: ${e.toString()}');
+      
+      if (LoggingConfig.enableAuthLogs) {
+        appLogger.auth('Onboarding status update error', {
+          'error': e.toString(),
+        });
+      }
+    }
+  }
+
   /// Set loading state
   void setLoading(bool loading) {
     state = state.setLoading(loading);

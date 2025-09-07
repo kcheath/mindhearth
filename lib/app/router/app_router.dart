@@ -49,7 +49,6 @@ class GoRouterRefreshStream extends ChangeNotifier {
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
-  final onboardingState = ref.watch(onboardingStateProvider);
   final safetyCodeState = ref.watch(safetyCodeStateProvider);
   
   return GoRouter(
@@ -57,7 +56,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: GoRouterRefreshStream(ref),
     redirect: (context, state) {
       final isAuthenticated = authState.isAuthenticated;
-      final isOnboarded = onboardingState.isCompleted;
+      final isOnboarded = authState.user?.isOnboarded ?? false;
       final isSafetyVerified = safetyCodeState.isSafetyCodeVerified;
       final hasSafetyCodes = safetyCodeState.hasSafetyCodes;
       

@@ -53,6 +53,14 @@ class SafetyCodeState {
     return const SafetyCodeState();
   }
 
+  /// Reset verification status
+  SafetyCodeState resetVerification() {
+    return copyWith(
+      isSafetyCodeVerified: false,
+      currentSafetyCode: null,
+    );
+  }
+
   /// Set loading state
   SafetyCodeState setLoading(bool loading) {
     return copyWith(isLoading: loading);

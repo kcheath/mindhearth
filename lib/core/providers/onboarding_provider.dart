@@ -2,13 +2,15 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/models/onboarding_state.dart';
 import 'package:mindhearth/core/di/service_locator.dart';
 import 'package:mindhearth/core/domain/usecases/onboarding_usecases.dart';
-import 'package:mindhearth/core/domain/usecases/auth_usecases.dart';
 import 'package:mindhearth/core/config/logging_config.dart';
 import 'package:mindhearth/core/utils/logger.dart';
+import 'package:mindhearth/core/providers/auth_provider.dart';
 
 /// Onboarding state notifier
 class OnboardingNotifier extends StateNotifier<OnboardingState> {
-  OnboardingNotifier() : super(const OnboardingState());
+  final Ref ref;
+  
+  OnboardingNotifier(this.ref) : super(const OnboardingState());
 
   /// Start onboarding flow
   void startOnboarding() {
@@ -65,29 +67,18 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     state = state.setLoading(true);
     
     try {
-      final updateOnboardingStatusUseCase = serviceLocator.get<UpdateOnboardingStatusUseCase>();
-      final result = await updateOnboardingStatusUseCase(true);
+      // Update onboarding status in auth provider (which will call the API)
+      final authNotifier = ref.read(authNotifierProvider.notifier);
+      await authNotifier.updateOnboardingStatus(true);
       
-      result.when(
-        success: (_) {
-          state = state.completeOnboarding();
-          
-          if (LoggingConfig.enableOnboardingLogs) {
-            appLogger.onboarding('onboarding_completed', {
-              'step': state.currentStep,
-            });
-          }
-        },
-        failure: (error) {
-          state = state.setError(error.message);
-          
-          if (LoggingConfig.enableOnboardingLogs) {
-            appLogger.onboarding('onboarding_completion_failed', {
-              'error': error.message,
-            });
-          }
-        },
-      );
+      // Update local onboarding state
+      state = state.completeOnboarding();
+      
+      if (LoggingConfig.enableOnboardingLogs) {
+        appLogger.onboarding('onboarding_completed', {
+          'step': state.currentStep,
+        });
+      }
     } catch (e) {
       state = state.setError('Failed to complete onboarding: ${e.toString()}');
       
@@ -309,7 +300,7 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
 
 /// Onboarding state provider
 final onboardingNotifierProvider = StateNotifierProvider<OnboardingNotifier, OnboardingState>((ref) {
-  return OnboardingNotifier();
+  return OnboardingNotifier(ref);
 });
 
 /// Onboarding state provider (read-only)
