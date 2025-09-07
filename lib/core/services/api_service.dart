@@ -409,7 +409,7 @@ class ApiService {
   // Update onboarding status
   Future<ApiResponse<Map<String, dynamic>>> updateOnboardingStatus(bool isOnboarded) async {
     try {
-      final response = await _dio.put('/users/me', data: {
+      final response = await _dio.put('/users/onboarded', data: {
         'onboarded': isOnboarded,
       });
       return ApiSuccess(data: response.data);
