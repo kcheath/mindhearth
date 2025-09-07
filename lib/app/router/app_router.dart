@@ -2,8 +2,6 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/providers/auth_provider.dart';
 import 'package:mindhearth/core/models/auth_state.dart';
-import 'package:mindhearth/core/providers/onboarding_provider.dart';
-import 'package:mindhearth/core/models/onboarding_state.dart';
 import 'package:mindhearth/core/providers/safety_code_provider.dart';
 import 'package:mindhearth/core/models/safety_code_state.dart';
 import 'package:mindhearth/core/config/logging_config.dart';
@@ -23,14 +21,10 @@ import 'package:flutter/foundation.dart';
 // GoRouter Refresh Stream for Riverpod integration
 class GoRouterRefreshStream extends ChangeNotifier {
   late final ProviderSubscription<AuthState> _authStateSubscription;
-  late final ProviderSubscription<OnboardingState> _onboardingStateSubscription;
   late final ProviderSubscription<SafetyCodeState> _safetyCodeStateSubscription;
 
   GoRouterRefreshStream(Ref ref) {
     _authStateSubscription = ref.listen(authStateProvider, (previous, next) {
-      notifyListeners();
-    });
-    _onboardingStateSubscription = ref.listen(onboardingStateProvider, (previous, next) {
       notifyListeners();
     });
     _safetyCodeStateSubscription = ref.listen(safetyCodeStateProvider, (previous, next) {
@@ -41,7 +35,6 @@ class GoRouterRefreshStream extends ChangeNotifier {
   @override
   void dispose() {
     _authStateSubscription.close();
-    _onboardingStateSubscription.close();
     _safetyCodeStateSubscription.close();
     super.dispose();
   }
