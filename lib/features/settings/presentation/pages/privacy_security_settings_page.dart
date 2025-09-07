@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mindhearth/core/providers/app_state_provider.dart';
+import 'package:mindhearth/core/providers/onboarding_provider.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
 import 'package:mindhearth/core/config/logging_config.dart';
 import 'package:mindhearth/core/services/encryption_service.dart';
@@ -12,7 +12,6 @@ class PrivacySecuritySettingsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final appState = ref.watch(appStateProvider);
     
     return Scaffold(
       appBar: AppBar(
@@ -201,8 +200,8 @@ class PrivacySecuritySettingsPage extends ConsumerWidget {
       if (LoggingConfig.enableOnboardingLogs) {
         appLogger.onboarding('using_unified_app_state', null);
       }
-      final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
-      await appStateNotifier.resetOnboarding();
+      final onboardingNotifier = ref.read(onboardingNotifierProvider.notifier);
+      await onboardingNotifier.resetOnboarding();
 
       // Close loading dialog and show success message
       if (LoggingConfig.enableOnboardingLogs) {
