@@ -1,83 +1,77 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+/// Sealed class for application errors
+sealed class AppError {
+  final String message;
+  
+  const AppError(this.message);
+  
+  String get type => runtimeType.toString();
+}
 
-part 'app_error.freezed.dart';
+/// Network-related errors
+class NetworkError extends AppError {
+  const NetworkError(super.message);
+}
 
-@freezed
-class AppError with _$AppError {
-  const factory AppError.network({
-    required String message,
-    int? statusCode,
-    Map<String, dynamic>? details,
-  }) = NetworkError;
+/// Validation errors
+class ValidationError extends AppError {
+  const ValidationError(super.message);
+}
 
-  const factory AppError.validation({
-    required String message,
-    Map<String, String>? fieldErrors,
-  }) = ValidationError;
+/// Authentication errors
+class AuthenticationError extends AppError {
+  const AuthenticationError(super.message);
+}
 
-  const factory AppError.authentication({
-    required String message,
-  }) = AuthenticationError;
+/// Authorization errors
+class AuthorizationError extends AppError {
+  const AuthorizationError(super.message);
+}
 
-  const factory AppError.authorization({
-    required String message,
-  }) = AuthorizationError;
+/// Storage errors
+class StorageError extends AppError {
+  const StorageError(super.message);
+}
 
-  const factory AppError.storage({
-    required String message,
-  }) = StorageError;
+/// Encryption errors
+class EncryptionError extends AppError {
+  const EncryptionError(super.message);
+}
 
-  const factory AppError.encryption({
-    required String message,
-  }) = EncryptionError;
+/// Unknown errors
+class UnknownError extends AppError {
+  const UnknownError(super.message);
+}
 
-  const factory AppError.unknown({
-    required String message,
-    Object? originalError,
-  }) = UnknownError;
+/// Factory constructors for creating specific error types
+extension AppErrorFactory on AppError {
+  static AppError network({required String message}) => NetworkError(message);
+  static AppError validation({required String message}) => ValidationError(message);
+  static AppError authentication({required String message}) => AuthenticationError(message);
+  static AppError authorization({required String message}) => AuthorizationError(message);
+  static AppError storage({required String message}) => StorageError(message);
+  static AppError encryption({required String message}) => EncryptionError(message);
+  static AppError unknown({required String message}) => UnknownError(message);
+}
 
-  const AppError._();
-
-  String get userMessage {
-    return when(
-      network: (message, statusCode, details) => 
-        'Network error: $message',
-      validation: (message, fieldErrors) => 
-        'Validation error: $message',
-      authentication: (message) => 
-        'Authentication error: $message',
-      authorization: (message) => 
-        'Authorization error: $message',
-      storage: (message) => 
-        'Storage error: $message',
-      encryption: (message) => 
-        'Encryption error: $message',
-      unknown: (message, originalError) => 
-        'An unexpected error occurred: $message',
-    );
-  }
-
-  bool get isRetryable {
-    return when(
-      network: (_, __, ___) => true,
-      validation: (_, __) => false,
-      authentication: (_) => false,
-      authorization: (_) => false,
-      storage: (_) => true,
-      encryption: (_) => false,
-      unknown: (_, __) => false,
-    );
-  }
-
-  bool get shouldShowToUser {
-    return when(
-      network: (_, __, ___) => true,
-      validation: (_, __) => true,
-      authentication: (_) => true,
-      authorization: (_) => true,
-      storage: (_) => true,
-      encryption: (_) => false, // Don't expose encryption errors to users
-      unknown: (_, __) => false, // Don't expose unknown errors to users
-    );
+/// Pattern matching extension for AppError
+extension AppErrorPatternMatching on AppError {
+  T when<T>({
+    required T Function(NetworkError) network,
+    required T Function(ValidationError) validation,
+    required T Function(AuthenticationError) authentication,
+    required T Function(AuthorizationError) authorization,
+    required T Function(StorageError) storage,
+    required T Function(EncryptionError) encryption,
+    required T Function(UnknownError) unknown,
+  }) {
+    return switch (this) {
+      NetworkError e => network(e),
+      ValidationError e => validation(e),
+      AuthenticationError e => authentication(e),
+      AuthorizationError e => authorization(e),
+      StorageError e => storage(e),
+      EncryptionError e => encryption(e),
+      UnknownError e => unknown(e),
+    };
   }
 }

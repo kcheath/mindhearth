@@ -405,4 +405,121 @@ class ApiService {
       );
     }
   }
+
+  // Update onboarding status
+  Future<ApiResponse<Map<String, dynamic>>> updateOnboardingStatus(bool isOnboarded) async {
+    try {
+      final response = await _dio.put('/users/me', data: {
+        'onboarded': isOnboarded,
+      });
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to update onboarding status',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  // Update redaction profile (separate method for clarity)
+  Future<ApiResponse<Map<String, dynamic>>> updateRedactionProfile(Map<String, dynamic> profileData) async {
+    try {
+      final profileDataString = jsonEncode(profileData);
+      final response = await _dio.put('/redaction-profiles/', data: {
+        'encrypted_profile_data': profileDataString,
+      });
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to update redaction profile',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  // Journal Management
+  Future<ApiResponse<Map<String, dynamic>>> getJournalEntries({
+    String? entryType,
+    int limit = 100,
+    int offset = 0,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'limit': limit,
+        'offset': offset,
+      };
+      if (entryType != null) {
+        queryParams['entry_type'] = entryType;
+      }
+      
+      final response = await _dio.get('/journal-entries/', queryParameters: queryParams);
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to get journal entries',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> createJournalEntry({
+    required String header,
+    required String entryType,
+    String? sessionId,
+    Map<String, dynamic>? metaData,
+    bool consent = false,
+  }) async {
+    try {
+      final response = await _dio.post('/journal-entries/', data: {
+        'header': header,
+        'entry_type': entryType,
+        if (sessionId != null) 'session_id': sessionId,
+        if (metaData != null) 'meta_data': metaData,
+        'consent': consent,
+      });
+      
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to create journal entry',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> updateJournalEntry({
+    required String entryId,
+    String? header,
+    String? entryType,
+    Map<String, dynamic>? metaData,
+    bool? consent,
+  }) async {
+    try {
+      final data = <String, dynamic>{};
+      if (header != null) data['header'] = header;
+      if (entryType != null) data['entry_type'] = entryType;
+      if (metaData != null) data['meta_data'] = metaData;
+      if (consent != null) data['consent'] = consent;
+      
+      final response = await _dio.put('/journal-entries/$entryId', data: data);
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to update journal entry',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> deleteJournalEntry(String entryId) async {
+    try {
+      final response = await _dio.delete('/journal-entries/$entryId');
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to delete journal entry',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
 }

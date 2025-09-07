@@ -250,19 +250,18 @@ class ValidationUtils {
     if (result.isValid) return null;
 
     if (result.fieldErrors.isNotEmpty) {
-      return AppError.validation(
+      return AppErrorFactory.validation(
         message: 'Validation failed',
-        fieldErrors: result.fieldErrors,
       );
     }
 
     if (result.errors.isNotEmpty) {
-      return AppError.validation(
+      return AppErrorFactory.validation(
         message: result.errors.first,
       );
     }
 
-    return AppError.validation(
+    return AppErrorFactory.validation(
       message: 'Validation failed',
     );
   }

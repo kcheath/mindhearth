@@ -6,10 +6,14 @@ import 'package:mindhearth/core/config/debug_config.dart';
 import 'package:mindhearth/core/config/logging_config.dart';
 import 'package:mindhearth/core/providers/app_state_provider.dart';
 import 'package:mindhearth/core/utils/logger.dart';
+import 'package:mindhearth/core/di/service_locator.dart';
 
-void main() {
+void main() async {
   // Initialize logging system
   appLogger.initialize(enableDebugLogs: LoggingConfig.enableDebugLogs);
+  
+  // Initialize service locator
+  await ServiceLocator.initialize();
   
   runApp(
     const ProviderScope(

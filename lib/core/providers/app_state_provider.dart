@@ -8,6 +8,10 @@ import 'package:mindhearth/core/config/debug_config.dart';
 import 'package:mindhearth/core/config/logging_config.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
 import 'package:mindhearth/core/utils/logger.dart';
+import 'package:mindhearth/core/di/service_locator.dart';
+import 'package:mindhearth/core/domain/usecases/auth_usecases.dart';
+import 'package:mindhearth/core/domain/usecases/onboarding_usecases.dart';
+import 'package:mindhearth/core/domain/validators/validators.dart';
 
 // Unified App State
 class AppState {
@@ -122,92 +126,70 @@ class AppStateNotifier extends StateNotifier<AppState> {
     state = state.copyWith(isLoading: true, error: null);
     
     try {
-      final apiService = ref.read(apiServiceProvider);
-      final response = await apiService.login(email: email, password: password);
+                    final loginUseCase = serviceLocator.get<LoginUseCase>();
+      final result = await loginUseCase(email, password);
       
-              response.when(
-          success: (data, message) async {
-            if (LoggingConfig.enableAuthLogs) {
-              appLogger.auth('Login response received', {'data': data});
-            }
-          
-          // Validate required fields with proper null checks
-          final token = data['access_token'] as String?;
-          final userId = data['user_id'] as String?;
-          final tenantId = data['tenant_id'] as String?;
-          
-                      // Check for required fields
-            if (token == null || userId == null || tenantId == null) {
-              state = state.copyWith(
-                isLoading: false,
-                error: 'Invalid response from server: missing required fields',
-              );
-              appLogger.error('Login failed - missing required fields in response', {'data': data});
-              return;
-            }
-          
-          // Use the email from the login request since it's not in the response
-          // The email parameter is available in the method scope
-          final isOnboarded = data['is_onboarded'] as bool? ?? false;
-          
-          final user = User(
-            id: userId,
-            email: email,
-            tenantId: tenantId,
-            isOnboarded: isOnboarded,
+      result.when(
+        success: (user) {
+          state = state.copyWith(
+            isAuthenticated: true,
+            isLoading: false,
+            user: user,
+            accessToken: null,
+            isOnboardingCompleted: user.isOnboarded,
           );
           
-          // Store token in secure storage
-          await apiService.setToken(token);
-          
-                      state = state.copyWith(
-              isAuthenticated: true,
-              isLoading: false,
-              user: user,
-              accessToken: token,
-              isOnboardingCompleted: isOnboarded,
-            );
-            
-            if (LoggingConfig.enableAuthLogs) {
-              appLogger.auth('Login successful', {
-                'email': user.email,
-                'onboarded': isOnboarded,
-              });
-            }
-        },
-                  error: (message, statusCode, errors) {
-            state = state.copyWith(
-              isLoading: false,
-              error: message,
-            );
-            appLogger.error('Login failed', {
-              'message': message,
-              'statusCode': statusCode,
+          if (LoggingConfig.enableAuthLogs) {
+            appLogger.auth('Login successful', {
+              'email': user.email,
+              'onboarded': user.isOnboarded,
             });
-          },
+          }
+        },
+        failure: (error) {
+          state = state.copyWith(
+            isLoading: false,
+            error: error.message,
+          );
+          appLogger.error('Login failed', {
+            'error': error.message,
+            'type': error.runtimeType.toString(),
+          });
+        },
       );
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: 'An unexpected error occurred',
       );
+      appLogger.error('Login unexpected error', null, e is StackTrace ? e : null);
     }
   }
 
   Future<void> logout() async {
     try {
-      final apiService = ref.read(apiServiceProvider);
-      await apiService.clearToken();
+                    final logoutUseCase = serviceLocator.get<LogoutUseCase>();
+      final result = await logoutUseCase();
       
-      // Reset all state
-      state = const AppState();
-      
-      // Re-initialize state from storage
-      await _initializeState();
-      
-      if (LoggingConfig.enableStateLogs) {
-        appLogger.stateChange('AppState', 'logout_completed', null);
-      }
+      result.when(
+        success: (_) {
+          // Reset all state
+          state = const AppState();
+          
+          // Re-initialize state from storage
+          _initializeState();
+          
+          if (LoggingConfig.enableStateLogs) {
+            appLogger.stateChange('AppState', 'logout_completed', null);
+          }
+        },
+        failure: (error) {
+          appLogger.error('Logout failed', {
+            'error': error.message,
+            'type': error.runtimeType.toString(),
+          });
+        },
+      );
     } catch (e) {
       appLogger.error('Error during logout', {'error': e.toString()});
     }
@@ -245,11 +227,11 @@ class AppStateNotifier extends StateNotifier<AppState> {
       }
       
       // Update backend onboarding status
-      final apiService = ref.read(apiServiceProvider);
-      final response = await apiService.updateOnboardedStatus(true);
+      final updateOnboardingStatusUseCase = serviceLocator.get<UpdateOnboardingStatusUseCase>();
+      final result = await updateOnboardingStatusUseCase(true);
       
-      response.when(
-        success: (data, message) {
+      result.when(
+        success: (_) {
           final updatedUser = state.user?.copyWith(isOnboarded: true);
           state = state.copyWith(
             isOnboarding: false,
@@ -261,8 +243,11 @@ class AppStateNotifier extends StateNotifier<AppState> {
         appLogger.onboarding('completed_successfully', null);
       }
         },
-        error: (message, statusCode, errors) {
-                      appLogger.error('Failed to update onboarding status', {'message': message});
+        failure: (error) {
+          appLogger.error('Failed to update onboarding status', {
+            'error': error.message,
+            'type': error.runtimeType.toString(),
+          });
           // Still update local state for UI consistency
           final updatedUser = state.user?.copyWith(isOnboarded: true);
           state = state.copyWith(
@@ -281,11 +266,23 @@ class AppStateNotifier extends StateNotifier<AppState> {
   // Safety code methods
   Future<void> setSafetyCodes(Map<String, String> safetyCodes) async {
     try {
-      await EncryptionService.storeSafetyCodes(safetyCodes);
-      state = state.copyWith(hasSafetyCodes: true);
-      if (LoggingConfig.enableStateLogs) {
-        appLogger.stateChange('AppState', 'safety_codes_stored', null);
-      }
+      final saveSafetyCodesUseCase = serviceLocator.get<SaveSafetyCodesUseCase>();
+              final result = await saveSafetyCodesUseCase(safetyCodes);
+      
+      result.when(
+        success: (_) {
+          state = state.copyWith(hasSafetyCodes: true);
+          if (LoggingConfig.enableStateLogs) {
+            appLogger.stateChange('AppState', 'safety_codes_stored', null);
+          }
+        },
+        failure: (error) {
+          appLogger.error('Error storing safety codes', {
+            'error': error.message,
+            'type': error.runtimeType.toString(),
+          });
+        },
+      );
     } catch (e) {
       appLogger.error('Error storing safety codes', {'error': e.toString()});
     }
@@ -293,34 +290,29 @@ class AppStateNotifier extends StateNotifier<AppState> {
 
   Future<void> clearSafetyCodes() async {
     try {
-      // Clear from backend
-      final apiService = ref.read(apiServiceProvider);
-      final response = await apiService.clearSafetyCodes();
+      final clearSafetyCodesUseCase = serviceLocator.get<ClearSafetyCodesUseCase>();
+              final result = await clearSafetyCodesUseCase();
       
-      response.when(
-        success: (data, message) {
+      result.when(
+        success: (_) {
+          // Update state
+          state = state.copyWith(
+            hasSafetyCodes: false,
+            isSafetyCodeVerified: false,
+            currentSafetyCode: null,
+          );
+          
           if (LoggingConfig.enableStateLogs) {
-        appLogger.stateChange('AppState', 'safety_codes_cleared_backend', null);
-      }
+            appLogger.stateChange('AppState', 'safety_codes_cleared', null);
+          }
         },
-        error: (message, statusCode, errors) {
-                      appLogger.warning('Failed to clear safety codes from backend', {'message': message});
+        failure: (error) {
+          appLogger.error('Error clearing safety codes', {
+            'error': error.message,
+            'type': error.runtimeType.toString(),
+          });
         },
       );
-      
-      // Clear from local storage
-      await EncryptionService.clearSafetyCodes();
-      
-      // Update state
-      state = state.copyWith(
-        hasSafetyCodes: false,
-        isSafetyCodeVerified: false,
-        currentSafetyCode: null,
-      );
-      
-      if (LoggingConfig.enableStateLogs) {
-        appLogger.stateChange('AppState', 'safety_codes_cleared_storage', null);
-      }
     } catch (e) {
       appLogger.error('Error clearing safety codes', {'error': e.toString()});
     }
@@ -411,50 +403,60 @@ class AppStateNotifier extends StateNotifier<AppState> {
         appLogger.onboarding('starting_complete_reset', null);
       }
       
-      final apiService = ref.read(apiServiceProvider);
-      
       // 1. Update backend onboarding status
-      final onboardingResponse = await apiService.updateOnboardedStatus(false);
-      onboardingResponse.when(
-        success: (data, message) {
+      final updateOnboardingStatusUseCase = serviceLocator.get<UpdateOnboardingStatusUseCase>();
+              final onboardingResult = await updateOnboardingStatusUseCase(false);
+      onboardingResult.when(
+        success: (_) {
           if (LoggingConfig.enableOnboardingLogs) {
             appLogger.onboarding('backend_status_reset', null);
           }
         },
-        error: (message, statusCode, errors) {
-          appLogger.warning('Failed to reset backend onboarding status', {'message': message});
+        failure: (error) {
+          appLogger.warning('Failed to reset backend onboarding status', {
+            'error': error.message,
+            'type': error.runtimeType.toString(),
+          });
         },
       );
       
       // 2. Clear safety codes from backend
-      final safetyCodesResponse = await apiService.clearSafetyCodes();
-      safetyCodesResponse.when(
-        success: (data, message) {
+      final clearSafetyCodesUseCase = serviceLocator.get<ClearSafetyCodesUseCase>();
+              final safetyCodesResult = await clearSafetyCodesUseCase();
+      safetyCodesResult.when(
+        success: (_) {
           if (LoggingConfig.enableOnboardingLogs) {
             appLogger.onboarding('backend_safety_codes_cleared', null);
           }
         },
-        error: (message, statusCode, errors) {
-          appLogger.warning('Failed to clear backend safety codes', {'message': message});
+        failure: (error) {
+          appLogger.warning('Failed to clear backend safety codes', {
+            'error': error.message,
+            'type': error.runtimeType.toString(),
+          });
         },
       );
       
       // 3. Clear onboarding data from backend
-      final onboardingDataResponse = await apiService.clearOnboardingData();
-      onboardingDataResponse.when(
-        success: (data, message) {
+      final clearOnboardingDataUseCase = serviceLocator.get<ClearOnboardingDataUseCase>();
+              final onboardingDataResult = await clearOnboardingDataUseCase();
+      onboardingDataResult.when(
+        success: (_) {
           if (LoggingConfig.enableOnboardingLogs) {
             appLogger.onboarding('backend_onboarding_data_cleared', null);
           }
         },
-        error: (message, statusCode, errors) {
-          appLogger.warning('Failed to clear backend onboarding data', {'message': message});
+        failure: (error) {
+          appLogger.warning('Failed to clear backend onboarding data', {
+            'error': error.message,
+            'type': error.runtimeType.toString(),
+          });
         },
       );
       
       // 4. Clear all local stored data
-      await EncryptionService.clearPassphrase();
-      await EncryptionService.clearSafetyCodes();
+      final clearPassphraseUseCase = serviceLocator.get<ClearPassphraseUseCase>();
+              await clearPassphraseUseCase();
       
       // 5. Reset all onboarding-related state
       final updatedUser = state.user?.copyWith(isOnboarded: false);
@@ -468,7 +470,6 @@ class AppStateNotifier extends StateNotifier<AppState> {
         hasPassphrase: false,
         // Clear all new onboarding data
         onboardingData: null,
-
         user: updatedUser,
       );
       
@@ -490,11 +491,23 @@ class AppStateNotifier extends StateNotifier<AppState> {
 
       void setPassphrase(String passphrase) async {
       try {
-        await EncryptionService.storePassphrase(passphrase);
-        state = state.copyWith(hasPassphrase: true);
-        if (LoggingConfig.enableStateLogs) {
-          appLogger.stateChange('AppState', 'passphrase_stored', null);
-        }
+        final savePassphraseUseCase = serviceLocator.get<SavePassphraseUseCase>();
+        final result = await savePassphraseUseCase(passphrase);
+        
+        result.when(
+          success: (_) {
+            state = state.copyWith(hasPassphrase: true);
+            if (LoggingConfig.enableStateLogs) {
+              appLogger.stateChange('AppState', 'passphrase_stored', null);
+            }
+          },
+          failure: (error) {
+            appLogger.error('Error storing passphrase', {
+              'error': error.message,
+              'type': error.runtimeType.toString(),
+            });
+          },
+        );
       } catch (e) {
         appLogger.error('Error storing passphrase', {'error': e.toString()});
       }
@@ -502,19 +515,21 @@ class AppStateNotifier extends StateNotifier<AppState> {
 
     Future<void> loadOnboardingData() async {
       try {
-        final apiService = ref.read(apiServiceProvider);
-        final response = await apiService.getOnboardingData();
+        final getOnboardingDataUseCase = serviceLocator.get<GetOnboardingDataUseCase>();
+        final result = await getOnboardingDataUseCase();
         
-        response.when(
-          success: (data, message) {
-            final onboardingData = OnboardingData.fromJson(data);
+        result.when(
+          success: (onboardingData) {
             state = state.copyWith(onboardingData: onboardingData);
             if (LoggingConfig.enableOnboardingLogs) {
               appLogger.onboarding('data_loaded', null);
             }
           },
-          error: (message, statusCode, errors) {
-            appLogger.error('Failed to load onboarding data', {'message': message, 'statusCode': statusCode});
+          failure: (error) {
+            appLogger.error('Failed to load onboarding data', {
+              'error': error.message,
+              'type': error.runtimeType.toString(),
+            });
             // Don't use mock data - let the UI handle the error state
           },
         );
@@ -526,21 +541,21 @@ class AppStateNotifier extends StateNotifier<AppState> {
 
     Future<void> setSituationData(Map<String, dynamic> situationData) async {
       try {
-        final apiService = ref.read(apiServiceProvider);
-        final response = await apiService.saveSituationData(situationData);
+        final saveSituationDataUseCase = serviceLocator.get<SaveSituationDataUseCase>();
+        final result = await saveSituationDataUseCase(situationData);
         
-        response.when(
-          success: (data, message) {
-            final updatedOnboardingData = state.onboardingData?.copyWith(
-              situationData: SituationData.fromJson(situationData),
-            );
-            state = state.copyWith(onboardingData: updatedOnboardingData);
+        result.when(
+          success: (_) {
+            // Data is saved to backend, update local state if needed
             if (LoggingConfig.enableOnboardingLogs) {
               appLogger.onboarding('situation_data_saved', {'data': situationData});
             }
           },
-          error: (message, statusCode, errors) {
-            appLogger.error('Failed to save situation data', {'message': message});
+          failure: (error) {
+            appLogger.error('Failed to save situation data', {
+              'error': error.message,
+              'type': error.runtimeType.toString(),
+            });
           },
         );
       } catch (e) {
@@ -550,22 +565,21 @@ class AppStateNotifier extends StateNotifier<AppState> {
 
     Future<void> setRedactionProfile(Map<String, dynamic> profileData) async {
       try {
-        final apiService = ref.read(apiServiceProvider);
-        final response = await apiService.saveRedactionProfile(profileData);
+        final saveRedactionProfileUseCase = serviceLocator.get<SaveRedactionProfileUseCase>();
+        final result = await saveRedactionProfileUseCase(profileData);
         
-        response.when(
-          success: (data, message) {
-            final updatedOnboardingData = state.onboardingData?.copyWith(
-              redactionProfile: RedactionProfile.fromJson(profileData),
-            );
-            state = state.copyWith(onboardingData: updatedOnboardingData);
+        result.when(
+          success: (_) {
+            // Data is saved to backend, update local state if needed
             if (LoggingConfig.enableOnboardingLogs) {
               appLogger.onboarding('redaction_profile_saved', {'data': profileData});
             }
           },
-          error: (message, statusCode, errors) {
-            appLogger.error('Failed to save redaction profile', {'message': message});
-            appLogger.error('Failed to save redaction profile', {'message': message});
+          failure: (error) {
+            appLogger.error('Failed to save redaction profile', {
+              'error': error.message,
+              'type': error.runtimeType.toString(),
+            });
           },
         );
       } catch (e) {
@@ -575,21 +589,21 @@ class AppStateNotifier extends StateNotifier<AppState> {
 
     Future<void> setConsentForm(bool accepted) async {
       try {
-        final apiService = ref.read(apiServiceProvider);
-        final response = await apiService.saveConsentForm(accepted);
+        final saveConsentFormUseCase = serviceLocator.get<SaveConsentFormUseCase>();
+        final result = await saveConsentFormUseCase(accepted);
         
-        response.when(
-          success: (data, message) {
-            final updatedOnboardingData = state.onboardingData?.copyWith(
-              consentData: ConsentData(analysisConsent: accepted),
-            );
-            state = state.copyWith(onboardingData: updatedOnboardingData);
+        result.when(
+          success: (_) {
+            // Data is saved to backend, update local state if needed
             if (LoggingConfig.enableOnboardingLogs) {
               appLogger.onboarding('consent_updated', {'accepted': accepted});
             }
           },
-          error: (message, statusCode, errors) {
-            appLogger.error('Failed to save consent form', {'message': message});
+          failure: (error) {
+            appLogger.error('Failed to save consent form', {
+              'error': error.message,
+              'type': error.runtimeType.toString(),
+            });
           },
         );
       } catch (e) {
