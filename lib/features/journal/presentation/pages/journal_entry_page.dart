@@ -263,6 +263,10 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Journal Entry'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
+          ),
         ),
         body: const Center(
           child: CircularProgressIndicator(),
@@ -273,6 +277,10 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'Edit Entry' : 'Journal Entry'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
         actions: [
           if (!_isEditing) ...[
             IconButton(

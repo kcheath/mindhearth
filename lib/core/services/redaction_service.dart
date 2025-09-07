@@ -22,8 +22,8 @@ class RedactionService {
       }
 
       final response = await _apiService.dio.post('/redaction/preprocess', data: {
-        'content': content,
-        'redaction_profile': redactionProfile,
+        'text': content,
+        'profile': redactionProfile,
       });
 
       if (LoggingConfig.enableApiLogs) {
