@@ -175,7 +175,7 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
       final chatService = ref.read(chatServiceProvider);
       
       // Get the session communications to use as context
-      final messages = await chatService.loadChatHistory();
+      final messages = await chatService.loadChatHistory(sessionId: _entry!.sessionId!);
       
       if (messages.isEmpty) {
         setState(() {
