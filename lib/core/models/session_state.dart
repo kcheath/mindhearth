@@ -31,6 +31,7 @@ class SessionState {
     return copyWith(
       sessions: sessions,
       error: null,
+      isLoading: false,
     );
   }
 
