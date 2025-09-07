@@ -613,10 +613,12 @@ class AppStateNotifier extends StateNotifier<AppState> {
 }
 
 // Provider
-final appStateNotifierProvider = StateNotifierProvider<AppStateNotifier, AppState>((ref) {
-  return AppStateNotifier(ref);
-});
+// Temporarily disabled to prevent conflicts with new separated providers
+// final appStateNotifierProvider = StateNotifierProvider<AppStateNotifier, AppState>((ref) {
+//   return AppStateNotifier(ref);
+// });
 
-final appStateProvider = Provider<AppState>((ref) {
-  return ref.watch(appStateNotifierProvider);
-});
+// Temporarily disabled to prevent conflicts with new separated providers
+// final appStateProvider = Provider<AppState>((ref) {
+//   return ref.watch(appStateNotifierProvider);
+// });
