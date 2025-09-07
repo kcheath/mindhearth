@@ -270,7 +270,6 @@ class _CreateJournalEntryDialogState extends ConsumerState<_CreateJournalEntryDi
   final _headerController = TextEditingController();
   final _contentController = TextEditingController();
   String _selectedType = 'general';
-  bool _consent = false;
 
   @override
   void dispose() {
@@ -288,7 +287,7 @@ class _CreateJournalEntryDialogState extends ConsumerState<_CreateJournalEntryDi
         metaData: {
           'content': _contentController.text,
         },
-        consent: _consent,
+        consent: false, // Consent handled in onboarding
         keywords: [], // Will be set when editing
         isAIGenerated: false,
       ).then((entry) {
@@ -359,16 +358,6 @@ class _CreateJournalEntryDialogState extends ConsumerState<_CreateJournalEntryDi
               },
             ),
             const SizedBox(height: 16),
-            CheckboxListTile(
-              title: const Text('Allow use for AI training'),
-              subtitle: const Text('Help improve the AI by sharing your insights'),
-              value: _consent,
-              onChanged: (value) {
-                setState(() {
-                  _consent = value ?? false;
-                });
-              },
-            ),
           ],
         ),
       ),

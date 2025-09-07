@@ -21,7 +21,6 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
   late TextEditingController _headerController;
   late TextEditingController _contentController;
   late String _selectedType;
-  late bool _consent;
   late List<String> _selectedTags;
   bool _isEditing = false;
   bool _isLoading = false;
@@ -39,7 +38,6 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
     _headerController = TextEditingController();
     _contentController = TextEditingController();
     _selectedType = 'general';
-    _consent = false;
     _selectedTags = [];
     
     // Load the journal entry and available tags
@@ -70,7 +68,6 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
         _headerController.text = nonNullEntry.header;
         _contentController.text = nonNullEntry.originalContent ?? '';
         _selectedType = nonNullEntry.entryType;
-        _consent = nonNullEntry.consent;
         _selectedTags = List<String>.from(nonNullEntry.keywords);
       });
     }
@@ -179,7 +176,7 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
         header: _headerController.text,
         entryType: _selectedType,
         originalContent: _contentController.text,
-        consent: _consent,
+        consent: _entry!.consent, // Keep existing consent value
         keywords: _selectedTags,
         isAIGenerated: _entry!.isAIGenerated,
       );
@@ -638,21 +635,6 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
                     const SizedBox(height: 16),
                   ],
                   
-                  // Consent field (only show when editing)
-                  if (_isEditing) ...[
-                    Card(
-                      child: CheckboxListTile(
-                        title: const Text('Allow use for AI training'),
-                        subtitle: const Text('Help improve the AI by sharing your insights'),
-                        value: _consent,
-                        onChanged: (value) {
-                          setState(() {
-                            _consent = value ?? false;
-                          });
-                        },
-                      ),
-                    ),
-                  ],
                   
                   const SizedBox(height: 32),
                 ],
