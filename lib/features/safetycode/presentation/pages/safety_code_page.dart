@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mindhearth/core/providers/app_state_provider.dart';
+import 'package:mindhearth/core/providers/safety_code_provider.dart';
+import 'package:mindhearth/core/providers/onboarding_provider.dart';
+import 'package:mindhearth/core/models/safety_code_state.dart';
 import 'package:mindhearth/core/config/logging_config.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
@@ -61,10 +63,10 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
 
   @override
   Widget build(BuildContext context) {
-    final appState = ref.watch(appStateProvider);
+    final safetyCodeState = ref.watch(safetyCodeStateProvider);
     
     // Listen for safety code verification changes
-    ref.listen<AppState>(appStateProvider, (previous, next) {
+    ref.listen<SafetyCodeState>(safetyCodeStateProvider, (previous, next) {
       if (next.isSafetyCodeVerified != previous?.isSafetyCodeVerified) {
         if (LoggingConfig.enableSafetyCodeLogs) {
           appLogger.safetyCode('verification_state_changed', {'isVerified': next.isSafetyCodeVerified});
@@ -173,7 +175,7 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
               },
             ),
             SizedBox(height: 24),
-            if (appState.error != null)
+            if (safetyCodeState.error != null)
               Container(
                 padding: EdgeInsets.all(12),
                 margin: EdgeInsets.only(bottom: 16),
@@ -183,28 +185,28 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
                   border: Border.all(color: Colors.red[200]!),
                 ),
                 child: Text(
-                  appState.error!,
+                  safetyCodeState.error!,
                   style: TextStyle(color: Colors.red[700]),
                 ),
               ),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: appState.isLoading
+                onPressed: safetyCodeState.isLoading
                     ? null
                     : () {
                         if (LoggingConfig.enableSafetyCodeLogs) {
                           appLogger.safetyCode('verify_button_pressed', null);
                         }
-                        final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
-                        appStateNotifier.verifySafetyCode(_safetyCodeController.text);
+                        final safetyCodeNotifier = ref.read(safetyCodeNotifierProvider.notifier);
+                        safetyCodeNotifier.verifySafetyCode(_safetyCodeController.text);
                       },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFF6750A4),
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: appState.isLoading
+                child: safetyCodeState.isLoading
                     ? CircularProgressIndicator(color: Colors.white)
                     : Text('Verify Safety Code'),
               ),
@@ -290,8 +292,8 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
                                 if (LoggingConfig.enableOnboardingLogs) {
                                   appLogger.onboarding('using_unified_app_state', null);
                                 }
-                                final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
-                                await appStateNotifier.resetOnboarding();
+                                final onboardingNotifier = ref.read(onboardingNotifierProvider.notifier);
+                                await onboardingNotifier.resetOnboarding();
 
                                 // Close loading dialog and show success message
                                 if (LoggingConfig.enableOnboardingLogs) {
