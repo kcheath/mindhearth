@@ -288,6 +288,45 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     }
   }
 
+  /// Save passphrase
+  Future<void> savePassphrase(String passphrase) async {
+    state = state.setLoading(true);
+    
+    try {
+      final savePassphraseUseCase = serviceLocator.get<SavePassphraseUseCase>();
+      final result = await savePassphraseUseCase(passphrase);
+      
+      result.when(
+        success: (_) {
+          state = state.clearError();
+          
+          if (LoggingConfig.enableOnboardingLogs) {
+            appLogger.onboarding('passphrase_saved', {
+              'hasPassphrase': true,
+            });
+          }
+        },
+        failure: (error) {
+          state = state.setError(error.message);
+          
+          if (LoggingConfig.enableOnboardingLogs) {
+            appLogger.onboarding('passphrase_save_failed', {
+              'error': error.message,
+            });
+          }
+        },
+      );
+    } catch (e) {
+      state = state.setError('Failed to save passphrase: ${e.toString()}');
+      
+      if (LoggingConfig.enableOnboardingLogs) {
+        appLogger.onboarding('passphrase_save_error', {
+          'error': e.toString(),
+        });
+      }
+    }
+  }
+
   /// Clear error
   void clearError() {
     state = state.clearError();

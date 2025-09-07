@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mindhearth/core/providers/app_state_provider.dart';
+import 'package:mindhearth/core/providers/safety_code_provider.dart';
 
 class OnboardingStepSafetyCode extends ConsumerStatefulWidget {
   final Function(VoidCallback) onSave;
@@ -65,8 +65,8 @@ class _OnboardingStepSafetyCodeState extends ConsumerState<OnboardingStepSafetyC
       
       // Only update if we have at least one code
       if (codes.isNotEmpty) {
-        final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
-        appStateNotifier.setSafetyCodes(codes);
+        final safetyCodeNotifier = ref.read(safetyCodeNotifierProvider.notifier);
+        safetyCodeNotifier.setSafetyCodes(codes);
       }
     }
   }
@@ -169,8 +169,8 @@ class _OnboardingStepSafetyCodeState extends ConsumerState<OnboardingStepSafetyC
                       _journalCodeController.clear();
                       _safeCodeController.clear();
                       _wipeCodeController.clear();
-                      final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
-                      appStateNotifier.setSafetyCodes({});
+                      final safetyCodeNotifier = ref.read(safetyCodeNotifierProvider.notifier);
+                      safetyCodeNotifier.clearSafetyCodes();
                     }
                   });
                 },

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mindhearth/core/providers/app_state_provider.dart';
+import 'package:mindhearth/core/providers/onboarding_provider.dart';
 import 'package:mindhearth/core/models/onboarding_data.dart';
 
 class OnboardingStepCurrentSituation extends ConsumerStatefulWidget {
@@ -26,9 +26,9 @@ class _OnboardingStepCurrentSituationState extends ConsumerState<OnboardingStepC
     super.initState();
     // Load onboarding data if not already loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final appState = ref.read(appStateProvider);
-      if (appState.onboardingData == null) {
-        ref.read(appStateNotifierProvider.notifier).loadOnboardingData();
+      final onboardingState = ref.read(onboardingStateProvider);
+      if (onboardingState.onboardingData == null) {
+        ref.read(onboardingNotifierProvider.notifier).loadOnboardingData();
       }
     });
     
@@ -53,14 +53,14 @@ class _OnboardingStepCurrentSituationState extends ConsumerState<OnboardingStepC
       'background': _backgroundController.text.isNotEmpty ? _backgroundController.text : null,
     };
     
-    final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
-    appStateNotifier.setSituationData(situationData);
+    final onboardingNotifier = ref.read(onboardingNotifierProvider.notifier);
+    onboardingNotifier.saveSituationData(situationData);
   }
 
   @override
   Widget build(BuildContext context) {
-    final appState = ref.watch(appStateProvider);
-    final onboardingData = appState.onboardingData;
+    final onboardingState = ref.watch(onboardingStateProvider);
+    final onboardingData = onboardingState.onboardingData;
 
     if (onboardingData == null) {
       return Center(

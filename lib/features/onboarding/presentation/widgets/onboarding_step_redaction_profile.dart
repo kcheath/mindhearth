@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mindhearth/core/providers/app_state_provider.dart';
+import 'package:mindhearth/core/providers/onboarding_provider.dart';
 import 'package:mindhearth/core/models/onboarding_data.dart';
 
 class OnboardingStepRedactionProfile extends ConsumerStatefulWidget {
@@ -53,14 +53,14 @@ class _OnboardingStepRedactionProfileState extends ConsumerState<OnboardingStepR
       'redact_pronouns': _redactPronouns,
     };
     
-    final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
-    appStateNotifier.setRedactionProfile(profileData);
+    final onboardingNotifier = ref.read(onboardingNotifierProvider.notifier);
+    onboardingNotifier.saveRedactionProfile(profileData);
   }
 
   @override
   Widget build(BuildContext context) {
-    final appState = ref.watch(appStateProvider);
-    final onboardingData = appState.onboardingData;
+    final onboardingState = ref.watch(onboardingStateProvider);
+    final onboardingData = onboardingState.onboardingData;
 
     if (onboardingData == null) {
       return Center(

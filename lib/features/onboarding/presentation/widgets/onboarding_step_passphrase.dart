@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mindhearth/core/providers/app_state_provider.dart';
+import 'package:mindhearth/core/providers/onboarding_provider.dart';
 
 class OnboardingStepPassphrase extends ConsumerStatefulWidget {
   final Function(VoidCallback) onSave;
@@ -53,8 +53,8 @@ class _OnboardingStepPassphraseState extends ConsumerState<OnboardingStepPassphr
   void _savePassphrase() {
     if (_isValid) {
       final passphrase = _passphraseController.text;
-      final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
-      appStateNotifier.setPassphrase(passphrase);
+      final onboardingNotifier = ref.read(onboardingNotifierProvider.notifier);
+      onboardingNotifier.savePassphrase(passphrase);
     }
   }
 

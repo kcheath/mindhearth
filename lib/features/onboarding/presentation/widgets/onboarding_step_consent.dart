@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mindhearth/core/providers/app_state_provider.dart';
+import 'package:mindhearth/core/providers/onboarding_provider.dart';
 import 'package:mindhearth/core/models/onboarding_data.dart';
 
 class OnboardingStepConsent extends ConsumerStatefulWidget {
@@ -26,14 +26,14 @@ class _OnboardingStepConsentState extends ConsumerState<OnboardingStepConsent> {
   }
 
   void _saveConsent() {
-    final appStateNotifier = ref.read(appStateNotifierProvider.notifier);
-    appStateNotifier.setConsentForm(_analysisConsent);
+    final onboardingNotifier = ref.read(onboardingNotifierProvider.notifier);
+    onboardingNotifier.saveConsentForm(_analysisConsent);
   }
 
   @override
   Widget build(BuildContext context) {
-    final appState = ref.watch(appStateProvider);
-    final onboardingData = appState.onboardingData;
+    final onboardingState = ref.watch(onboardingStateProvider);
+    final onboardingData = onboardingState.onboardingData;
 
     if (onboardingData == null) {
       return Center(
