@@ -543,6 +543,7 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
                         DropdownMenuItem(value: 'reflection', child: Text('Reflection')),
                         DropdownMenuItem(value: 'gratitude', child: Text('Gratitude')),
                         DropdownMenuItem(value: 'goal', child: Text('Goal Setting')),
+                        DropdownMenuItem(value: 'conversation_summary', child: Text('Conversation Summary')),
                       ],
                       onChanged: (value) {
                         setState(() {
