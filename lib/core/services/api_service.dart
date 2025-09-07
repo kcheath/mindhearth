@@ -503,6 +503,25 @@ class ApiService {
     }
   }
 
+  Future<ApiResponse<Map<String, dynamic>>> createAIJournalEntry({
+    required String sessionId,
+    String? customContent,
+  }) async {
+    try {
+      final response = await _dio.post('/journals/ai-summary', data: {
+        'session_id': sessionId,
+        if (customContent != null) 'custom_content': customContent,
+      });
+      
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to create AI journal entry',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
   Future<ApiResponse<Map<String, dynamic>>> updateJournalEntry({
     required String entryId,
     String? header,

@@ -342,6 +342,55 @@ class JournalNotifier extends StateNotifier<JournalState> {
       ];
     }
   }
+
+  /// Create AI-generated journal entry from session
+  Future<JournalEntry?> createAIJournalEntry({
+    required String sessionId,
+    String? customContent,
+  }) async {
+    state = state.setLoading(true);
+    
+    try {
+      final response = await _apiService.createAIJournalEntry(
+        sessionId: sessionId,
+        customContent: customContent,
+      );
+      
+      return response.when(
+        success: (data, message) {
+          final entry = JournalEntry.fromJson(data);
+          state = state.addEntry(entry);
+          
+          if (LoggingConfig.enableApiLogs) {
+            appLogger.apiResponse('POST', '/journals/ai-summary', 200, {
+              'entryId': entry.id,
+              'header': entry.header,
+              'sessionId': sessionId,
+            });
+          }
+          
+          return entry;
+        },
+        error: (message, statusCode, errors) {
+          state = state.setError(message);
+          
+          if (LoggingConfig.enableApiLogs) {
+            appLogger.apiError('POST', '/journals/ai-summary', statusCode ?? 500, message);
+          }
+          
+          return null;
+        },
+      );
+    } catch (e) {
+      state = state.setError('Failed to create AI journal entry: ${e.toString()}');
+      
+      if (LoggingConfig.enableApiLogs) {
+        appLogger.apiError('POST', '/journals/ai-summary', 500, e.toString());
+      }
+      
+      return null;
+    }
+  }
 }
 
 /// Journal state provider
