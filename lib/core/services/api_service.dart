@@ -9,6 +9,10 @@ import 'package:mindhearth/core/utils/logger.dart';
 class ApiService {
   static const String _tokenKey = 'access_token';
   
+  // Backend API keys from debug config
+  static const String _tenantId = '1aca2ef7-b1fa-46bb-af08-a8fdb449b1f9';
+  static const String _applicationId = 'c8f67708-8f15-4205-be08-ebc676205d1d';
+  
   late final Dio _dio;
   late final FlutterSecureStorage _storage;
   
@@ -38,6 +42,13 @@ class ApiService {
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
+          
+          // Add required headers for backend API
+          options.headers['X-API-Key'] = _tenantId;
+          options.headers['X-Application-ID'] = _applicationId;
+          
+          // Debug logging to verify headers are being added
+          appLogger.debug('API Request Headers: ${options.headers}', 'ApiService');
           
           if (LoggingConfig.enableApiLogs && LoggingConfig.shouldLogEndpoint(options.path)) {
             appLogger.apiRequest(options.method, options.path, options.headers);
@@ -513,8 +524,16 @@ class ApiService {
         if (customContent != null) 'custom_content': customContent,
       };
       
+      // Validate session ID format
+      if (sessionId.isEmpty) {
+        throw Exception('Session ID cannot be empty');
+      }
+      
       appLogger.debug('createAIJournalEntry - sending request with sessionId: $sessionId', 'ApiService');
       appLogger.debug('createAIJournalEntry - request data: $requestData', 'ApiService');
+      
+      // Add more detailed logging for debugging
+      appLogger.apiRequest('POST', '/journals/ai-summary', requestData);
       
       final response = await _dio.post(
         '/journals/ai-summary',
@@ -524,13 +543,25 @@ class ApiService {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
           },
+          validateStatus: (status) {
+            // Don't throw for 500 errors, let us handle them
+            return status != null && status < 600;
+          },
         ),
       );
       
       appLogger.debug('createAIJournalEntry - response status: ${response.statusCode}', 'ApiService');
       appLogger.debug('createAIJournalEntry - response data: ${response.data}', 'ApiService');
       
-      return ApiSuccess(data: response.data);
+      if (response.statusCode == 200) {
+        return ApiSuccess(data: response.data);
+      } else {
+        appLogger.apiError('POST', '/journals/ai-summary', response.statusCode ?? 500, response.data);
+        return ApiError(
+          message: response.data?['detail'] ?? 'Failed to create AI journal entry',
+          statusCode: response.statusCode,
+        );
+      }
     } on DioException catch (e) {
       appLogger.debug('createAIJournalEntry - error: ${e.toString()}', 'ApiService');
       appLogger.debug('createAIJournalEntry - error response: ${e.response?.data}', 'ApiService');

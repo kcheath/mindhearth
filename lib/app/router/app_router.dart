@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/providers/auth_provider.dart';
 import 'package:mindhearth/core/providers/safety_code_provider.dart';
+import 'package:mindhearth/core/providers/onboarding_provider.dart';
 import 'package:mindhearth/core/config/logging_config.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/features/auth/presentation/pages/login_page.dart';
@@ -19,6 +20,7 @@ import 'package:mindhearth/features/settings/presentation/pages/privacy_security
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
   final safetyCodeState = ref.watch(safetyCodeStateProvider);
+  final onboardingState = ref.watch(onboardingStateProvider);
   
   return GoRouter(
     initialLocation: '/',
@@ -27,6 +29,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isOnboarded = authState.user?.isOnboarded ?? false;
       final isSafetyVerified = safetyCodeState.isSafetyCodeVerified;
       final hasSafetyCodes = safetyCodeState.hasSafetyCodes;
+      final isOnboardingInProgress = onboardingState.isOnboarding;
       
       if (LoggingConfig.enableNavigationLogs) {
         appLogger.navigation(state.matchedLocation, 'redirect', {
@@ -34,6 +37,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           'isOnboarded': isOnboarded,
           'isSafetyVerified': isSafetyVerified,
           'hasSafetyCodes': hasSafetyCodes,
+          'isOnboardingInProgress': isOnboardingInProgress,
         });
       }
       
@@ -46,13 +50,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/login';
       }
       
-      // If authenticated but not onboarded, redirect to onboarding
-      if (isAuthenticated && !isOnboarded && !isOnboardingRoute) {
+      // If authenticated but not onboarded OR onboarding is in progress, redirect to onboarding
+      if (isAuthenticated && (!isOnboarded || isOnboardingInProgress) && !isOnboardingRoute) {
         return '/onboarding';
       }
       
-      // If authenticated and onboarded, check safety code requirements
-      if (isAuthenticated && isOnboarded) {
+      // If authenticated and onboarded and not in onboarding flow, check safety code requirements
+      if (isAuthenticated && isOnboarded && !isOnboardingInProgress) {
         // Only require safety code verification if safety codes are configured
         if (hasSafetyCodes && !isSafetyVerified && !isSafetyRoute) {
           return '/safety';

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mindhearth/core/providers/journal_provider.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
 import 'package:mindhearth/core/models/journal_state.dart';
+import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/core/services/chat_service.dart';
 
 class JournalEntryPage extends ConsumerStatefulWidget {
@@ -172,7 +173,7 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
     });
 
     try {
-      // Try the dedicated AI journal summary endpoint first
+      // Use the dedicated AI journal summary endpoint (backend confirmed working!)
       final aiEntry = await ref.read(journalNotifierProvider.notifier).createAIJournalEntry(
         sessionId: _entry!.sessionId!,
       );
@@ -194,119 +195,22 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
         return;
       }
     } catch (e) {
-      // If the dedicated endpoint fails, try fallback method
-      print('AI journal endpoint failed, trying fallback: $e');
-    }
-
-    // Fallback: Use chat API to generate summary and update current entry
-    try {
-      final chatService = ref.read(chatServiceProvider);
-      
-      // Get the session communications to use as context
-      final messages = await chatService.loadChatHistory(sessionId: _entry!.sessionId!);
-      
-      if (messages.isEmpty) {
-        if (mounted) {
-          setState(() {
-            _isGeneratingAISummary = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No conversation found in this session')),
-          );
-        }
-        return;
-      }
-      
-      // Build conversation text for AI processing
-      String conversationText = "";
-      for (final message in messages) {
-        final role = message.isUser ? "You" : "AI";
-        conversationText += "$role: ${message.message}\n\n";
-      }
-      
-      // Use the chat API to generate a journal summary
-      final aiMessage = await chatService.getAIResponse(
-        "Please create a journal entry summary from this conversation. "
-        "Provide a concise summary of the key points and emotions discussed. "
-        "Also suggest a brief title (header) and relevant tags. "
-        "Format your response as: TITLE: [suggested title] CONTENT: [summary content] TAGS: [comma-separated tags]\n\n"
-        "Conversation:\n$conversationText",
-        sessionId: _entry!.sessionId!,
-      );
-      
-      final response = aiMessage?.message ?? "";
-      
-      if (mounted && response.isNotEmpty) {
-        // Parse the AI response to extract title, content, and tags
-        String title = "";
-        String content = response;
-        List<String> tags = ["daily-reflection"];
-        
-        // Try to parse the structured response
-        if (response.contains("TITLE:") && response.contains("CONTENT:") && response.contains("TAGS:")) {
-          try {
-            final titleMatch = RegExp(r'TITLE:\s*(.+)').firstMatch(response);
-            final contentMatch = RegExp(r'CONTENT:\s*(.+)').firstMatch(response);
-            final tagsMatch = RegExp(r'TAGS:\s*(.+)').firstMatch(response);
-            
-            if (titleMatch != null) {
-              title = titleMatch.group(1)?.trim() ?? "";
-            }
-            if (contentMatch != null) {
-              content = contentMatch.group(1)?.trim() ?? response;
-            }
-            if (tagsMatch != null) {
-              final tagsStr = tagsMatch.group(1)?.trim() ?? "";
-              tags = tagsStr.split(',').map((tag) => tag.trim()).where((tag) => tag.isNotEmpty).toList();
-              if (tags.isEmpty) tags = ["daily-reflection"];
-            }
-          } catch (e) {
-            // If parsing fails, use the full response as content
-            content = response;
-          }
-        }
-        
-        setState(() {
-          if (title.isNotEmpty) {
-            _headerController.text = title;
-          }
-          _contentController.text = content;
-          _selectedTags = tags;
-          _isGeneratingAISummary = false;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('AI summary generated successfully (fallback method)'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else {
-        if (mounted) {
-          setState(() {
-            _isGeneratingAISummary = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to generate AI summary'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
+      // Log the error and show user-friendly message
+      appLogger.error('AI summary generation failed: $e');
       if (mounted) {
         setState(() {
           _isGeneratingAISummary = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error generating AI summary: $e'),
+            content: Text('Failed to generate AI summary: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
       }
+      return;
     }
+
   }
 
   void _toggleEdit() {

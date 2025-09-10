@@ -71,9 +71,8 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
       final authNotifier = ref.read(authNotifierProvider.notifier);
       await authNotifier.updateOnboardingStatus(true);
       
-      // Don't update local onboarding state - let the router handle navigation
-      // based on the auth state change
-      state = state.setLoading(false);
+      // Update local onboarding state to mark as completed
+      state = state.completeOnboarding();
       
       if (LoggingConfig.enableOnboardingLogs) {
         appLogger.onboarding('onboarding_completed', {
@@ -96,27 +95,24 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     state = state.setLoading(true);
     
     try {
-      final clearOnboardingDataUseCase = serviceLocator.get<ClearOnboardingDataUseCase>();
-      final result = await clearOnboardingDataUseCase();
+      // Clear local onboarding data (passphrase, safety codes, etc.)
+      final clearPassphraseUseCase = serviceLocator.get<ClearPassphraseUseCase>();
+      final clearSafetyCodesUseCase = serviceLocator.get<ClearSafetyCodesUseCase>();
       
-      result.when(
-        success: (_) {
-          state = state.resetOnboarding();
-          
-          if (LoggingConfig.enableOnboardingLogs) {
-            appLogger.onboarding('onboarding_reset', {});
-          }
-        },
-        failure: (error) {
-          state = state.setError(error.message);
-          
-          if (LoggingConfig.enableOnboardingLogs) {
-            appLogger.onboarding('onboarding_reset_failed', {
-              'error': error.message,
-            });
-          }
-        },
-      );
+      // Clear passphrase and safety codes
+      await clearPassphraseUseCase();
+      await clearSafetyCodesUseCase();
+      
+      // Reset local onboarding state
+      state = state.resetOnboarding().startOnboarding();
+      
+      // Logout the user to force re-authentication
+      final authNotifier = ref.read(authNotifierProvider.notifier);
+      await authNotifier.logout();
+      
+      if (LoggingConfig.enableOnboardingLogs) {
+        appLogger.onboarding('onboarding_reset', {});
+      }
     } catch (e) {
       state = state.setError('Failed to reset onboarding: ${e.toString()}');
       
