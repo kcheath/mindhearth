@@ -43,9 +43,9 @@ class ApiService {
             options.headers['Authorization'] = 'Bearer $token';
           }
           
-          // Add required headers for backend API
-          options.headers['X-API-Key'] = _tenantId;
-          options.headers['X-Application-ID'] = _applicationId;
+          // Add required headers for Tsukiyo API
+          options.headers['X-Tenant-ID'] = _tenantId;
+          options.headers['X-App-ID'] = _applicationId;
           
           // Debug logging to verify headers are being added
           appLogger.debug('API Request Headers: ${options.headers}', 'ApiService');
@@ -144,19 +144,55 @@ class ApiService {
     }
   }
 
-  // Chat endpoint
+  // Chat endpoint - Full AI chat with trauma-informed responses (Tsukiyo API)
   Future<ApiResponse<Map<String, dynamic>>> sendChatMessage({
     required List<Map<String, dynamic>> messages,
+    String? sessionId,
+    String? purpose,
+    String sessionType = 'conversation',
   }) async {
     try {
-      final response = await _dio.post('/chat', data: {
+      final requestData = {
         'messages': messages,
+        if (sessionId != null) 'session_id': sessionId,
+        'session_type': sessionType,
+        'purpose': purpose ?? 'chat',
+      };
+      
+      appLogger.debug('sendChatMessage - sending request to /chat/', 'ApiService');
+      appLogger.debug('sendChatMessage - request data: $requestData', 'ApiService');
+      
+      final response = await _dio.post('/chat/', data: requestData);
+      
+      appLogger.debug('sendChatMessage - response status: ${response.statusCode}', 'ApiService');
+      appLogger.debug('sendChatMessage - response data: ${response.data}', 'ApiService');
+      
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      appLogger.debug('sendChatMessage - error: ${e.toString()}', 'ApiService');
+      appLogger.debug('sendChatMessage - error response: ${e.response?.data}', 'ApiService');
+      appLogger.debug('sendChatMessage - error status code: ${e.response?.statusCode}', 'ApiService');
+      
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Chat request failed',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  // Simple chat endpoint without session management
+  Future<ApiResponse<Map<String, dynamic>>> sendSimpleChatMessage({
+    required String message,
+  }) async {
+    try {
+      final response = await _dio.post('/api/chat/simple', data: {
+        'message': message,
       });
       
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
       return ApiError(
-        message: e.response?.data?['detail'] ?? 'Chat request failed',
+        message: e.response?.data?['detail'] ?? 'Simple chat request failed',
         statusCode: e.response?.statusCode,
       );
     }
