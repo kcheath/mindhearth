@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/features/billing/providers/billing_provider.dart';
 import 'package:mindhearth/features/billing/presentation/widgets/billing_status_card.dart';
@@ -48,6 +49,11 @@ class _BillingPageState extends ConsumerState<BillingPage>
         backgroundColor: Theme.of(context).colorScheme.surface,
         foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/chat'),
+          tooltip: 'Back to Chat',
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -118,33 +124,42 @@ class _BillingPageState extends ConsumerState<BillingPage>
   }
 
   Widget _buildOverviewTab(BuildContext context, billingState, billingNotifier) {
-    return SingleChildScrollView(
+    return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Credit Balance Card
-          CreditBalanceCard(
-            balance: billingState.balance,
-            isLoading: billingState.isLoading,
+          Expanded(
+            flex: 2,
+            child: CreditBalanceCard(
+              balance: billingState.balance,
+              isLoading: billingState.isLoading,
+            ),
           ),
           
           const SizedBox(height: 16),
           
           // Billing Status Card
           if (billingState.billingStatus != null)
-            BillingStatusCard(
-              status: billingState.billingStatus!,
-              isLoading: billingState.isLoading,
+            Expanded(
+              flex: 2,
+              child: BillingStatusCard(
+                status: billingState.billingStatus!,
+                isLoading: billingState.isLoading,
+              ),
             ),
           
           const SizedBox(height: 16),
           
           // Billing Actions
-          BillingActionsWidget(
-            onPurchaseCredits: () => _showPurchaseDialog(context),
-            onGiftCredits: () => _showGiftDialog(context),
-            onContactSupport: () => _showSupportDialog(context),
+          Expanded(
+            flex: 1,
+            child: BillingActionsWidget(
+              onPurchaseCredits: () => _showPurchaseDialog(context),
+              onGiftCredits: () => _showGiftDialog(context),
+              onContactSupport: () => _showSupportDialog(context),
+            ),
           ),
         ],
       ),
@@ -152,22 +167,28 @@ class _BillingPageState extends ConsumerState<BillingPage>
   }
 
   Widget _buildTransactionsTab(BuildContext context, billingState, billingNotifier) {
-    return LedgerHistoryWidget(
-      entries: billingState.ledgerEntries,
-      isLoading: billingState.isLoading,
-      hasMore: billingState.hasMoreLedger,
-      onLoadMore: () => billingNotifier.loadLedger(),
-      onRefresh: () => billingNotifier.loadLedger(refresh: true),
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: LedgerHistoryWidget(
+        entries: billingState.ledgerEntries,
+        isLoading: billingState.isLoading,
+        hasMore: billingState.hasMoreLedger,
+        onLoadMore: () => billingNotifier.loadLedger(),
+        onRefresh: () => billingNotifier.loadLedger(refresh: true),
+      ),
     );
   }
 
   Widget _buildPurchasesTab(BuildContext context, billingState, billingNotifier) {
-    return PurchaseHistoryWidget(
-      purchases: billingState.purchases,
-      isLoading: billingState.isLoading,
-      hasMore: billingState.hasMorePurchases,
-      onLoadMore: () => billingNotifier.loadPurchases(),
-      onRefresh: () => billingNotifier.loadPurchases(refresh: true),
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: PurchaseHistoryWidget(
+        purchases: billingState.purchases,
+        isLoading: billingState.isLoading,
+        hasMore: billingState.hasMorePurchases,
+        onLoadMore: () => billingNotifier.loadPurchases(),
+        onRefresh: () => billingNotifier.loadPurchases(refresh: true),
+      ),
     );
   }
 

@@ -22,66 +22,57 @@ class PurchaseHistoryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        onRefresh?.call();
-      },
-      child: CustomScrollView(
-        slivers: [
-          // Header
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Purchase History',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'A secure record of all your credit purchases. '
-                    'Your payment information is always protected and your privacy is our priority.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Purchase History',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
+              const SizedBox(height: 8),
+              Text(
+                'A secure record of all your credit purchases. '
+                'Your payment information is always protected and your privacy is our priority.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
-          
-          // Purchases list
-          if (purchases.isEmpty && !isLoading)
-            SliverToBoxAdapter(
-              child: _buildEmptyState(context),
-            )
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  if (index < purchases.length) {
-                    return _buildPurchaseTile(context, purchases[index]);
-                  } else if (hasMore && !isLoading) {
-                    // Load more trigger
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      onLoadMore?.call();
-                    });
-                    return const SizedBox.shrink();
-                  } else if (isLoading) {
-                    return _buildLoadingTile(context);
-                  } else {
-                    return _buildEndOfList(context);
-                  }
-                },
-                childCount: purchases.length + (hasMore ? 1 : 0) + (isLoading ? 1 : 0),
-              ),
-            ),
-        ],
-      ),
+        ),
+        
+        // Purchases list
+        Expanded(
+          child: purchases.isEmpty && !isLoading
+              ? _buildEmptyState(context)
+              : ListView.builder(
+                  itemCount: purchases.length + (hasMore ? 1 : 0) + (isLoading ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index < purchases.length) {
+                      return _buildPurchaseTile(context, purchases[index]);
+                    } else if (hasMore && !isLoading) {
+                      // Load more trigger
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        onLoadMore?.call();
+                      });
+                      return const SizedBox.shrink();
+                    } else if (isLoading) {
+                      return _buildLoadingTile(context);
+                    } else {
+                      return _buildEndOfList(context);
+                    }
+                  },
+                ),
+        ),
+      ],
     );
   }
 
