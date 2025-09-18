@@ -124,51 +124,51 @@ class _BillingPageState extends ConsumerState<BillingPage>
   }
 
   Widget _buildOverviewTab(BuildContext context, billingState, billingNotifier) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Credit Balance Card
-          Expanded(
-            flex: 2,
-            child: CreditBalanceCard(
-              balance: billingState.balance,
-              isLoading: billingState.isLoading,
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Billing Status Card
-          if (billingState.billingStatus != null)
+      return Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Credit Balance Card
             Expanded(
               flex: 2,
-              child: BillingStatusCard(
-                status: billingState.billingStatus!,
+              child: CreditBalanceCard(
+                balance: billingState.balance,
                 isLoading: billingState.isLoading,
               ),
             ),
-          
-          const SizedBox(height: 16),
-          
-          // Billing Actions
-          Expanded(
-            flex: 1,
-            child: BillingActionsWidget(
-              onPurchaseCredits: () => _showPurchaseDialog(context),
-              onGiftCredits: () => _showGiftDialog(context),
-              onContactSupport: () => _showSupportDialog(context),
+            
+            const SizedBox(height: 12),
+            
+            // Billing Status Card
+            if (billingState.billingStatus != null)
+              Expanded(
+                flex: 2,
+                child: BillingStatusCard(
+                  status: billingState.billingStatus!,
+                  isLoading: billingState.isLoading,
+                ),
+              ),
+            
+            const SizedBox(height: 12),
+            
+            // Billing Actions
+            Expanded(
+              flex: 1,
+              child: BillingActionsWidget(
+                onPurchaseCredits: () => _showPurchaseDialog(context),
+                onGiftCredits: () => _showGiftDialog(context),
+                onContactSupport: () => _showSupportDialog(context),
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
   }
 
   Widget _buildTransactionsTab(BuildContext context, billingState, billingNotifier) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       child: LedgerHistoryWidget(
         entries: billingState.ledgerEntries,
         isLoading: billingState.isLoading,
@@ -181,7 +181,7 @@ class _BillingPageState extends ConsumerState<BillingPage>
 
   Widget _buildPurchasesTab(BuildContext context, billingState, billingNotifier) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       child: PurchaseHistoryWidget(
         purchases: billingState.purchases,
         isLoading: billingState.isLoading,

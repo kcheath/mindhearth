@@ -22,7 +22,7 @@ class BillingActionsWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -35,24 +35,15 @@ class BillingActionsWidget extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Billing Actions',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  'Actions',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Manage your account and continue your healing journey with confidence. '
-              'All actions are secure and your privacy is protected.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 8),
             _buildActionGrid(context),
           ],
         ),

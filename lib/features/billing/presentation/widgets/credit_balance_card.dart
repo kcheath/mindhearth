@@ -20,7 +20,7 @@ class CreditBalanceCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           gradient: LinearGradient(
@@ -64,14 +64,14 @@ class CreditBalanceCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Row(
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
               children: [
                 Text(
                   balance.toString(),
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.primary,
                   ),
@@ -79,13 +79,13 @@ class CreditBalanceCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   'credits',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
@@ -116,12 +116,12 @@ class CreditBalanceCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             Text(
-              _getTraumaInformedMessage(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              _getCompactMessage(),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
-                height: 1.4,
+                height: 1.3,
               ),
             ),
           ],
@@ -166,15 +166,15 @@ class CreditBalanceCard extends StatelessWidget {
     }
   }
 
-  String _getTraumaInformedMessage() {
+  String _getCompactMessage() {
     if (balance >= 100) {
-      return 'You have a healthy balance of credits. You can continue your healing journey with confidence, knowing you have the resources you need.';
+      return 'Healthy balance - continue your healing journey with confidence.';
     } else if (balance >= 50) {
-      return 'Your balance is good. You have enough credits to continue your healing journey. Consider purchasing more credits when convenient.';
+      return 'Good balance - you have enough credits to continue.';
     } else if (balance >= 10) {
-      return 'Your balance is getting low. This is completely normal - healing takes time and resources. You can purchase more credits or wait for your monthly grant.';
+      return 'Low balance - consider purchasing more credits or wait for your monthly grant.';
     } else {
-      return 'Your balance is very low. Don\'t worry - this is a normal part of the healing process. You can purchase credits or wait for your monthly grant. We\'re here to support you.';
+      return 'Very low balance - purchase credits or wait for your monthly grant. We\'re here to support you.';
     }
   }
 }
