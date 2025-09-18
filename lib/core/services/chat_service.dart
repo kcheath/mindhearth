@@ -7,6 +7,8 @@ import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/features/chat/widgets/chat_message_bubble.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
 import 'package:mindhearth/core/utils/logger.dart';
+import 'package:mindhearth/features/billing/domain/services/credit_validator.dart';
+import 'package:mindhearth/features/billing/domain/entities/billing_status.dart';
 
 class ChatService {
   final ApiService _apiService;
@@ -114,9 +116,55 @@ class ChatService {
     }
   }
 
+  // Check if user has sufficient credits for chat operation
+  Future<bool> checkChatCredits() async {
+    try {
+      // Get billing status to check credits
+      final billingResponse = await _apiService.getBillingStatus();
+      
+      return billingResponse.when(
+        success: (billingStatus, statusCode) {
+          final canChat = CreditValidator.canPerformChatOperation(billingStatus);
+          appLogger.info('Chat credits check', {
+            'canChat': canChat,
+            'currentBalance': billingStatus.currentBalance,
+            'status': billingStatus.status,
+          });
+          return canChat;
+        },
+        error: (message, statusCode, errors) {
+          appLogger.warning('Failed to check billing status, allowing chat', {
+            'error': message,
+          });
+          return true; // Allow chat if billing check fails
+        },
+      );
+    } catch (e) {
+      appLogger.warning('Error checking chat credits, allowing chat', {
+        'error': e.toString(),
+      });
+      return true; // Allow chat if check fails
+    }
+  }
+
   // Send a user message and get AI response in one call
   Future<List<ChatMessage>?> sendMessageAndGetResponse(String message) async {
     try {
+      // Check credits before sending message
+      final hasCredits = await checkChatCredits();
+      if (!hasCredits) {
+        appLogger.warning('Insufficient credits for chat operation');
+        return [
+          ChatMessage(
+            id: 'insufficient_credits_${DateTime.now().millisecondsSinceEpoch}',
+            message: 'You don\'t have enough credits to send a chat message. This is completely normal - healing takes time and resources. You can purchase more credits or wait for your monthly grant.',
+            isUser: false,
+            timestamp: DateTime.now(),
+            sessionId: _currentSessionId,
+          ),
+        ];
+      }
+
       // Ensure we have a session
       if (_currentSessionId == null) {
         await createChatSession();

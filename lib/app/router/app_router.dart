@@ -17,6 +17,7 @@ import 'package:mindhearth/features/documents/presentation/pages/documents_page.
 import 'package:mindhearth/features/reports/presentation/pages/reports_page.dart';
 import 'package:mindhearth/features/settings/presentation/pages/settings_page.dart';
 import 'package:mindhearth/features/settings/presentation/pages/privacy_security_settings_page.dart';
+import 'package:mindhearth/features/billing/presentation/pages/billing_page.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -157,6 +158,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/settings/privacy-security',
         name: 'privacy-security',
         builder: (context, state) => const PrivacySecuritySettingsPage(),
+      ),
+      
+      GoRoute(
+        path: '/billing',
+        name: 'billing',
+        builder: (context, state) => const BillingPage(),
       ),
     ],
   );

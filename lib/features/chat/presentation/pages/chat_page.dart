@@ -176,6 +176,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           case 4:
             context.go('/reports');
             break;
+          case 5:
+            context.go('/billing');
+            break;
         }
       },
       child: Scaffold(

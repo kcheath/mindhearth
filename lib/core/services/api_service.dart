@@ -714,4 +714,34 @@ class ApiService {
       );
     }
   }
+
+  // Get user balance
+  Future<ApiResponse<int>> getBalance() async {
+    try {
+      final response = await _dio.get('/billing/balance');
+      return ApiSuccess(data: response.data['balance'] as int);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data['detail'] ?? 'Failed to get balance',
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return ApiError(message: 'An unexpected error occurred: ${e.toString()}');
+    }
+  }
+
+  // Get billing status
+  Future<ApiResponse<Map<String, dynamic>>> getBillingStatus() async {
+    try {
+      final response = await _dio.get('/billing/status');
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data['detail'] ?? 'Failed to get billing status',
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return ApiError(message: 'An unexpected error occurred: ${e.toString()}');
+    }
+  }
 }
