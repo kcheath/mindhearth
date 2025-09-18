@@ -4,8 +4,8 @@
 class BillingStatus {
   final String status; // healthy, low_balance, insufficient
   final int currentBalance;
-  final int monthlyGrant;
-  final int daysUntilGrant;
+  final int? monthlyGrant;
+  final int? daysUntilGrant;
   final List<String> warnings;
   final List<String> actionsRequired;
   final Map<String, dynamic>? metadata;
@@ -13,8 +13,8 @@ class BillingStatus {
   const BillingStatus({
     required this.status,
     required this.currentBalance,
-    required this.monthlyGrant,
-    required this.daysUntilGrant,
+    this.monthlyGrant,
+    this.daysUntilGrant,
     required this.warnings,
     required this.actionsRequired,
     this.metadata,
@@ -24,8 +24,8 @@ class BillingStatus {
     return BillingStatus(
       status: json['status'] as String,
       currentBalance: json['current_balance'] as int,
-      monthlyGrant: json['monthly_grant'] as int,
-      daysUntilGrant: json['days_until_grant'] as int,
+      monthlyGrant: json['monthly_grant'] as int?,
+      daysUntilGrant: json['days_until_grant'] as int?,
       warnings: List<String>.from(json['warnings'] ?? []),
       actionsRequired: List<String>.from(json['actions_required'] ?? []),
       metadata: json['metadata'] != null 
@@ -105,7 +105,9 @@ class BillingStatus {
 
   /// Get formatted grant information
   String get grantInfo {
-    if (daysUntilGrant == 0) {
+    if (daysUntilGrant == null) {
+      return 'Grant information not available';
+    } else if (daysUntilGrant == 0) {
       return 'Grant available today';
     } else if (daysUntilGrant == 1) {
       return 'Grant available tomorrow';

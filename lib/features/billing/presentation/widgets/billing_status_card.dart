@@ -245,7 +245,7 @@ class BillingStatusCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${status.monthlyGrant} credits • ${status.grantInfo}',
+                  '${status.monthlyGrant ?? 'N/A'} credits • ${status.grantInfo}',
                   style: TextStyle(
                     color: Colors.green.shade700,
                     fontSize: 13,
