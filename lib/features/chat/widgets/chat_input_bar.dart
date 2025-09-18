@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mindhearth/features/chat/presentation/widgets/chat_tools_menu.dart';
 
 class ChatInputBar extends ConsumerStatefulWidget {
   final Function(String) onSendMessage;
   final Function()? onToolSelected;
   final List<ChatTool>? availableTools;
   final bool isLoading;
+  final String? sessionId;
 
   const ChatInputBar({
     super.key,
@@ -14,6 +16,7 @@ class ChatInputBar extends ConsumerStatefulWidget {
     this.onToolSelected,
     this.availableTools,
     this.isLoading = false,
+    this.sessionId,
   });
 
   @override
@@ -152,6 +155,14 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar>
           ),
           child: Row(
             children: [
+              // Journal tools menu
+              ChatToolsMenu(
+                sessionId: widget.sessionId,
+                onJournalCreated: () {
+                  // Refresh or update UI if needed
+                },
+              ),
+              
               // Tools button
               if (widget.availableTools != null && widget.availableTools!.isNotEmpty)
                 IconButton(

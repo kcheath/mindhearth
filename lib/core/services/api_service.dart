@@ -185,7 +185,7 @@ class ApiService {
     required String message,
   }) async {
     try {
-      final response = await _dio.post('/api/chat/simple', data: {
+      final response = await _dio.post('/chat/simple', data: {
         'message': message,
       });
       
@@ -239,6 +239,74 @@ class ApiService {
     } on DioException catch (e) {
       return ApiError(
         message: e.response?.data?['detail'] ?? 'Failed to get sessions',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  // Update session name
+  Future<ApiResponse<Map<String, dynamic>>> updateSessionName({
+    required String sessionId,
+    required String name,
+  }) async {
+    try {
+      appLogger.debug('updateSessionName - sending request to /sessions/$sessionId', 'ApiService');
+      appLogger.debug('updateSessionName - query parameter: name=$name', 'ApiService');
+      
+      final response = await _dio.put('/sessions/$sessionId', queryParameters: {
+        'name': name,
+      });
+      
+      appLogger.debug('updateSessionName - response status: ${response.statusCode}', 'ApiService');
+      appLogger.debug('updateSessionName - response data: ${response.data}', 'ApiService');
+      
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      appLogger.debug('updateSessionName - error: ${e.toString()}', 'ApiService');
+      appLogger.debug('updateSessionName - error response: ${e.response?.data}', 'ApiService');
+      appLogger.debug('updateSessionName - error status code: ${e.response?.statusCode}', 'ApiService');
+      
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to update session name',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  // Delete session
+  Future<ApiResponse<Map<String, dynamic>>> deleteSession({
+    required String sessionId,
+  }) async {
+    try {
+      appLogger.debug('deleteSession - sending request to /sessions/$sessionId', 'ApiService');
+      
+      final response = await _dio.delete('/sessions/$sessionId');
+      
+      appLogger.debug('deleteSession - response status: ${response.statusCode}', 'ApiService');
+      appLogger.debug('deleteSession - response data: ${response.data}', 'ApiService');
+      
+      // Handle 204 No Content (successful deletion)
+      if (response.statusCode == 204) {
+        return ApiSuccess(data: {'deleted': true});
+      }
+      
+      // Handle other success status codes
+      return ApiSuccess(data: response.data ?? {'deleted': true});
+    } on DioException catch (e) {
+      appLogger.debug('deleteSession - error: ${e.toString()}', 'ApiService');
+      appLogger.debug('deleteSession - error response: ${e.response?.data}', 'ApiService');
+      appLogger.debug('deleteSession - error status code: ${e.response?.statusCode}', 'ApiService');
+      
+      // Handle specific error cases
+      if (e.response?.statusCode == 404) {
+        return ApiError(
+          message: 'Session not found',
+          statusCode: 404,
+        );
+      }
+      
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to delete session',
         statusCode: e.response?.statusCode,
       );
     }

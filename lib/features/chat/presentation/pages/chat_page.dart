@@ -6,6 +6,7 @@ import 'package:mindhearth/features/chat/widgets/chat_input_bar.dart';
 import 'package:mindhearth/features/chat/widgets/chat_message_bubble.dart';
 import 'package:mindhearth/features/chat/providers/chat_provider.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
+import 'package:mindhearth/core/utils/logger.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
   const ChatPage({super.key});
@@ -88,11 +89,65 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   }
 
   void _showSessionHistory() {
+    appLogger.debug('Showing session history dialog');
     showDialog(
       context: context,
-      builder: (context) => _SessionHistoryDialog(),
+      builder: (context) => _SessionHistoryDialog(
+        onRenameSession: (session) => _showSessionInfoFromHistory(context, session),
+      ),
     );
   }
+
+  void _showSessionInfo(BuildContext context, chatState) async {
+    if (chatState.currentSessionId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No active session to view information')),
+      );
+      return;
+    }
+
+    final sessionName = _getSessionTitle(chatState);
+    final result = await context.push('/session-info/${chatState.currentSessionId}', extra: {
+      'sessionName': sessionName,
+    });
+    
+    // Handle the result from session info page
+    if (result != null) {
+      if (result == true) {
+        // Success - session was deleted and last session loaded
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Session deleted and last session loaded')),
+        );
+      } else if (result is String) {
+        // Error - show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete session: $result')),
+        );
+      }
+    }
+  }
+
+  void _showSessionInfoFromHistory(BuildContext context, Map<String, dynamic> session) async {
+    final result = await context.push('/session-info/${session['id']}', extra: {
+      'sessionName': session['name'] ?? 'Untitled Session',
+    });
+    
+    // Handle the result from session info page
+    if (result != null) {
+      if (result == true) {
+        // Success - session was deleted and last session loaded
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Session deleted and last session loaded')),
+        );
+      } else if (result is String) {
+        // Error - show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete session: $result')),
+        );
+      }
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -138,9 +193,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               tooltip: 'Start New Session',
             ),
             IconButton(
-              icon: const Icon(Icons.settings),
-              onPressed: () => context.push('/settings'),
-              tooltip: 'Settings',
+              icon: const Icon(Icons.info_outline),
+              onPressed: () => _showSessionInfo(context, chatState),
+              tooltip: 'Session Information',
             ),
           ],
         ),
@@ -214,6 +269,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             ChatInputBar(
               onSendMessage: _handleSendMessage,
               isLoading: chatState.isLoading || chatState.isStreaming,
+              sessionId: chatState.currentSessionId,
             ),
           ],
         ),
@@ -268,9 +324,21 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 }
 
 class _SessionHistoryDialog extends ConsumerWidget {
+  final Function(Map<String, dynamic>) onRenameSession;
+  
+  const _SessionHistoryDialog({
+    Key? key,
+    required this.onRenameSession,
+  }) : super(key: key);
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final chatState = ref.watch(chatProvider);
+    
+    appLogger.debug('SessionHistoryDialog building', {
+      'sessionsCount': chatState.sessions.length,
+      'currentSessionId': chatState.currentSessionId,
+    });
     
     return Dialog(
       child: Container(
@@ -299,6 +367,13 @@ class _SessionHistoryDialog extends ConsumerWidget {
                         final session = chatState.sessions[index];
                         final isCurrentSession = session['id'] == chatState.currentSessionId;
                         
+                        // Debug logging
+                        appLogger.debug('Session comparison', {
+                          'sessionId': session['id'],
+                          'currentSessionId': chatState.currentSessionId,
+                          'isCurrentSession': isCurrentSession,
+                        });
+                        
                         return ListTile(
                           title: Text(
                             session['name'] ?? 'Untitled Session',
@@ -309,14 +384,59 @@ class _SessionHistoryDialog extends ConsumerWidget {
                           subtitle: Text(
                             'Created: ${_formatDate(session['created_at'])}',
                           ),
-                          trailing: isCurrentSession
-                              ? const Icon(Icons.check_circle, color: Colors.green)
-                              : null,
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (isCurrentSession)
+                                const Icon(Icons.check_circle, color: Colors.green),
+                              PopupMenuButton<String>(
+                                onSelected: (value) {
+                                  switch (value) {
+                     case 'rename':
+                       // Navigate to session info page
+                       Navigator.pop(context); // Close session history dialog
+                       onRenameSession(session);
+                       break;
+                                    case 'delete':
+                                      _showDeleteDialog(context, ref, session);
+                                      break;
+                                  }
+                                },
+                                itemBuilder: (context) => [
+                                  const PopupMenuItem(
+                                    value: 'rename',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.edit, size: 18),
+                                        SizedBox(width: 8),
+                                        Text('Rename'),
+                                      ],
+                                    ),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.delete, size: 18, color: Colors.red),
+                                        SizedBox(width: 8),
+                                        Text('Delete', style: TextStyle(color: Colors.red)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                           onTap: () {
-                            if (!isCurrentSession) {
-                              ref.read(chatProvider.notifier).switchToSession(session['id']);
-                              Navigator.pop(context);
-                            }
+                            appLogger.debug('Session tapped', {
+                              'sessionId': session['id'],
+                              'isCurrentSession': isCurrentSession,
+                            });
+                            
+                            // Always switch to the tapped session and close dialog
+                            appLogger.debug('Calling switchToSession', {'sessionId': session['id']});
+                            ref.read(chatProvider.notifier).switchToSession(session['id']);
+                            Navigator.pop(context);
                           },
                         );
                       },
@@ -337,5 +457,108 @@ class _SessionHistoryDialog extends ConsumerWidget {
     } catch (e) {
       return 'Unknown';
     }
+  }
+
+  void _showRenameDialog(BuildContext context, WidgetRef ref, Map<String, dynamic> session) {
+    final TextEditingController nameController = TextEditingController(
+      text: session['name'] ?? 'Untitled Session',
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rename Session'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            labelText: 'Session Name',
+            hintText: 'Enter a name for this conversation',
+            border: OutlineInputBorder(),
+          ),
+          maxLength: 100,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final newName = nameController.text.trim();
+              if (newName.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please enter a session name')),
+                );
+                return;
+              }
+              if (newName == session['name']) {
+                Navigator.pop(context);
+                return;
+              }
+
+              await ref.read(chatProvider.notifier).updateSessionName(session['id'], newName);
+              Navigator.pop(context);
+              
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Session renamed successfully')),
+              );
+            },
+            child: const Text('Rename'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context, WidgetRef ref, Map<String, dynamic> session) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Session'),
+        content: Text('Are you sure you want to delete "${session['name'] ?? 'Untitled Session'}"? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                await ref.read(chatProvider.notifier).deleteSession(session['id']);
+                Navigator.pop(context);
+                
+                // Show success message on the parent context (chat screen)
+                // This avoids the widget lifecycle issue
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  final rootContext = Navigator.of(context, rootNavigator: true).context;
+                  if (rootContext.mounted) {
+                    ScaffoldMessenger.of(rootContext).showSnackBar(
+                      const SnackBar(content: Text('Session deleted successfully')),
+                    );
+                  }
+                });
+              } catch (e) {
+                Navigator.pop(context);
+                
+                // Show error message on the parent context
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  final rootContext = Navigator.of(context, rootNavigator: true).context;
+                  if (rootContext.mounted) {
+                    ScaffoldMessenger.of(rootContext).showSnackBar(
+                      SnackBar(content: Text('Failed to delete session: $e')),
+                    );
+                  }
+                });
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
   }
 }

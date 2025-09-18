@@ -534,7 +534,7 @@ class ChatService {
     String sessionType = 'conversation',
   }) async {
     try {
-      final response = await _apiService.dio.get('/api/sessions/', queryParameters: {
+      final response = await _apiService.dio.get('/sessions/', queryParameters: {
         'session_type': sessionType,
       });
 
@@ -615,7 +615,7 @@ class ChatService {
   // Get specific session
   Future<Map<String, dynamic>?> getSession(String sessionId) async {
     try {
-      final response = await _apiService.dio.get('/api/sessions/$sessionId');
+      final response = await _apiService.dio.get('/sessions/$sessionId');
 
       if (response.statusCode == 200) {
         return response.data as Map<String, dynamic>;
@@ -652,25 +652,6 @@ class ChatService {
     }
   }
 
-  // Update session name
-  Future<bool> updateSessionName(String sessionId, String name) async {
-    try {
-      final response = await _apiService.dio.put('/api/sessions/$sessionId', data: {
-        'name': name,
-      });
-
-      if (response.statusCode == 200) {
-        appLogger.info('Session name updated', {'sessionId': sessionId, 'name': name});
-        return true;
-      } else {
-        appLogger.error('Failed to update session name', {'sessionId': sessionId, 'statusCode': response.statusCode});
-        return false;
-      }
-    } catch (e) {
-      appLogger.error('Error updating session name', {'sessionId': sessionId, 'error': e.toString()});
-      return false;
-    }
-  }
 
   // Switch to a different session
   Future<bool> switchToSession(String sessionId) async {
@@ -690,6 +671,99 @@ class ChatService {
     }
   }
 
+  // Update session name
+  Future<bool> updateSessionName(String sessionId, String newName) async {
+    try {
+      final response = await _apiService.updateSessionName(
+        sessionId: sessionId,
+        name: newName,
+      );
+      
+      return response.when(
+        success: (data, statusCode) {
+          appLogger.info('Successfully updated session name', {
+            'sessionId': sessionId,
+            'newName': newName,
+          });
+          return true;
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('Failed to update session name', {
+            'sessionId': sessionId,
+            'newName': newName,
+            'error': message,
+            'statusCode': statusCode,
+          });
+          return false;
+        },
+      );
+    } catch (e) {
+      appLogger.error('Error updating session name', {
+        'sessionId': sessionId,
+        'newName': newName,
+        'error': e.toString(),
+      });
+      return false;
+    }
+  }
+
+  // Delete session
+  Future<bool> deleteSession(String sessionId) async {
+    try {
+      final response = await _apiService.deleteSession(sessionId: sessionId);
+      
+      return response.when(
+        success: (data, statusCode) {
+          appLogger.info('Successfully deleted session', {
+            'sessionId': sessionId,
+          });
+          
+          // Remove from local storage
+          _removeSessionLocally(sessionId);
+          
+          // If this was the current session, clear it
+          if (_currentSessionId == sessionId) {
+            _currentSessionId = null;
+          }
+          
+          return true;
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('Failed to delete session', {
+            'sessionId': sessionId,
+            'error': message,
+            'statusCode': statusCode,
+          });
+          return false;
+        },
+      );
+    } catch (e) {
+      appLogger.error('Error deleting session', {
+        'sessionId': sessionId,
+        'error': e.toString(),
+      });
+      return false;
+    }
+  }
+
+  // Remove session from local storage
+  Future<void> _removeSessionLocally(String sessionId) async {
+    try {
+      final sessionsJson = await _storage.read(key: _sessionsKey);
+      if (sessionsJson != null) {
+        final List<dynamic> sessions = jsonDecode(sessionsJson);
+        sessions.removeWhere((session) => session['id'] == sessionId);
+        await _storage.write(key: _sessionsKey, value: jsonEncode(sessions));
+        appLogger.info('Removed session from local storage', {'sessionId': sessionId});
+      }
+    } catch (e) {
+      appLogger.error('Error removing session from local storage', {
+        'sessionId': sessionId,
+        'error': e.toString(),
+      });
+    }
+  }
+
   // Get chat history for a specific session
   Future<List<Map<String, dynamic>>> getChatHistory({
     String? sessionId,
@@ -698,20 +772,26 @@ class ChatService {
   }) async {
     try {
       final targetSessionId = sessionId ?? _currentSessionId;
+      appLogger.info('Getting chat history', {'sessionId': targetSessionId, 'limit': limit, 'offset': offset});
+      
       if (targetSessionId == null) {
+        appLogger.warning('No session ID provided for chat history');
         return [];
       }
 
-      final response = await _apiService.dio.get('/api/communications/', queryParameters: {
+      final response = await _apiService.dio.get('/communications/', queryParameters: {
         'session_id': targetSessionId,
         'item_type': 'chat',
         'limit': limit,
         'offset': offset,
       });
 
+      appLogger.info('Chat history API response', {'sessionId': targetSessionId, 'statusCode': response.statusCode});
+
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
         final communications = data['communications'] as List<dynamic>? ?? [];
+        appLogger.info('Retrieved communications from API', {'sessionId': targetSessionId, 'count': communications.length});
         return communications.cast<Map<String, dynamic>>();
       } else {
         appLogger.error('Failed to get chat history from API', {'sessionId': targetSessionId, 'statusCode': response.statusCode});
@@ -768,7 +848,7 @@ class ChatService {
     bool consent = true,
   }) async {
     try {
-      final response = await _apiService.dio.post('/api/communications/', data: {
+      final response = await _apiService.dio.post('/communications/', data: {
         'session_id': sessionId,
         'item_type': itemType,
         'original_content': originalContent,

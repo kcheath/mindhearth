@@ -4,6 +4,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/services/chat_service.dart';
 import 'package:mindhearth/features/chat/widgets/chat_message_bubble.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
+import 'package:mindhearth/core/providers/session_provider.dart';
+import 'package:mindhearth/core/models/session_state.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 
 // Chat state class
@@ -123,18 +125,24 @@ class ChatNotifier extends StateNotifier<ChatState> {
   // Switch to a different session
   Future<void> switchToSession(String sessionId) async {
     try {
+      appLogger.info('Starting session switch', {'sessionId': sessionId});
       state = state.copyWith(isLoading: true, error: null);
       
       final success = await _chatService.switchToSession(sessionId);
+      appLogger.info('Session switch result', {'sessionId': sessionId, 'success': success});
       
       if (success) {
-        // Load chat history for the new session
-        await loadChatHistory(sessionId);
+        // Update the current session ID in the state first
+        state = state.copyWith(currentSessionId: sessionId);
+        appLogger.info('Updated current session ID in state', {'sessionId': sessionId});
         
-        state = state.copyWith(
-          currentSessionId: sessionId,
-          isLoading: false,
-        );
+        // Load chat history for the new session
+        appLogger.info('About to load chat history', {'sessionId': sessionId});
+        await loadChatHistory(sessionId);
+        appLogger.info('Finished loading chat history', {'sessionId': sessionId});
+        
+        // Ensure loading is set to false
+        state = state.copyWith(isLoading: false);
         
         appLogger.info('Switched to session', {'sessionId': sessionId});
       } else {
@@ -155,9 +163,11 @@ class ChatNotifier extends StateNotifier<ChatState> {
   // Load chat history for a session
   Future<void> loadChatHistory(String sessionId) async {
     try {
-      state = state.copyWith(isLoading: true, error: null);
+      appLogger.info('Starting to load chat history', {'sessionId': sessionId});
       
       final history = await _chatService.getChatHistory(sessionId: sessionId);
+      
+      appLogger.info('Received chat history from service', {'sessionId': sessionId, 'historyCount': history.length});
       
       // Convert history to ChatMessage objects
       final messages = history.map((comm) {
@@ -175,14 +185,13 @@ class ChatNotifier extends StateNotifier<ChatState> {
       
       state = state.copyWith(
         messages: messages,
-        isLoading: false,
+        error: null,
       );
       
       appLogger.info('Loaded ${messages.length} messages for session', {'sessionId': sessionId});
     } catch (e) {
       appLogger.error('Error loading chat history', {'sessionId': sessionId, 'error': e.toString()});
       state = state.copyWith(
-        isLoading: false,
         error: 'Failed to load chat history',
       );
     }
@@ -326,30 +335,6 @@ class ChatNotifier extends StateNotifier<ChatState> {
     }
   }
 
-  // Update session name
-  Future<void> updateSessionName(String sessionId, String name) async {
-    try {
-      final success = await _chatService.updateSessionName(sessionId, name);
-      
-      if (success) {
-        // Update the session in the list
-        final updatedSessions = state.sessions.map((session) {
-          if (session['id'] == sessionId) {
-            return {...session, 'name': name};
-          }
-          return session;
-        }).toList();
-        
-        state = state.copyWith(sessions: updatedSessions);
-        appLogger.info('Updated session name', {'sessionId': sessionId, 'name': name});
-      } else {
-        state = state.copyWith(error: 'Failed to update session name');
-      }
-    } catch (e) {
-      appLogger.error('Error updating session name', {'sessionId': sessionId, 'error': e.toString()});
-      state = state.copyWith(error: 'Failed to update session name');
-    }
-  }
 
   // Clear current session
   void clearSession() {
@@ -363,6 +348,119 @@ class ChatNotifier extends StateNotifier<ChatState> {
   }
 
   // Clear error
+  // Update session name
+  Future<void> updateSessionName(String sessionId, String newName) async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+      
+      final success = await _chatService.updateSessionName(sessionId, newName);
+      
+      if (success) {
+        // Reload sessions to get the updated name
+        await loadSessions();
+        
+        state = state.copyWith(
+          isLoading: false,
+        );
+        
+        appLogger.info('Updated session name', {'sessionId': sessionId, 'newName': newName});
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Failed to update session name',
+        );
+      }
+    } catch (e) {
+      appLogger.error('Error updating session name', {'sessionId': sessionId, 'newName': newName, 'error': e.toString()});
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to update session name',
+      );
+    }
+  }
+
+  // Delete session
+  Future<void> deleteSession(String sessionId) async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+      
+      final success = await _chatService.deleteSession(sessionId);
+      
+      if (success) {
+        // Reload sessions to get the updated list
+        await loadSessions();
+        
+        // If this was the current session, restart the chat screen as if just logged in
+        if (state.currentSessionId == sessionId) {
+          // Clear all messages and create a fresh session
+          state = state.copyWith(
+            messages: [],
+            currentSessionId: null,
+            error: null,
+          );
+          await createNewSession();
+        }
+        
+        state = state.copyWith(
+          isLoading: false,
+        );
+        
+        appLogger.info('Deleted session', {'sessionId': sessionId});
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Failed to delete session',
+        );
+      }
+    } catch (e) {
+      appLogger.error('Error deleting session', {'sessionId': sessionId, 'error': e.toString()});
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to delete session',
+      );
+    }
+  }
+
+  // Load the most recent session
+  Future<void> loadLastSession() async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+      
+      // Get all sessions
+      await loadSessions();
+      
+      if (state.sessions.isNotEmpty) {
+        // Find the most recent session (by created_at date)
+        final sortedSessions = List<Map<String, dynamic>>.from(state.sessions);
+        sortedSessions.sort((a, b) {
+          final aDate = DateTime.tryParse(a['created_at'] ?? '') ?? DateTime(1970);
+          final bDate = DateTime.tryParse(b['created_at'] ?? '') ?? DateTime(1970);
+          return bDate.compareTo(aDate); // Most recent first
+        });
+        
+        final lastSession = sortedSessions.first;
+        final sessionId = lastSession['id'] as String;
+        
+        // Switch to the last session
+        await switchToSession(sessionId);
+        
+        appLogger.info('Loaded last session', {'sessionId': sessionId});
+      } else {
+        // No sessions available, create a new one
+        await createNewSession();
+        appLogger.info('No sessions available, created new session');
+      }
+      
+      state = state.copyWith(isLoading: false);
+    } catch (e) {
+      appLogger.error('Error loading last session', {'error': e.toString()});
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to load last session',
+      );
+    }
+  }
+
   void clearError() {
     state = state.copyWith(error: null);
   }
@@ -377,5 +475,24 @@ class ChatNotifier extends StateNotifier<ChatState> {
 // Provider for ChatNotifier
 final chatProvider = StateNotifierProvider<ChatNotifier, ChatState>((ref) {
   final chatService = ref.read(chatServiceProvider);
-  return ChatNotifier(chatService);
+  final chatNotifier = ChatNotifier(chatService);
+  
+  // Listen to session changes from SessionNotifier
+  ref.listen<SessionState>(sessionNotifierProvider, (previous, next) {
+    final previousSessionId = previous?.currentSession?.id;
+    final nextSessionId = next.currentSession?.id;
+    
+    // If session changed, load chat history for the new session
+    if (previousSessionId != nextSessionId && nextSessionId != null) {
+      appLogger.info('Session changed via SessionNotifier', {
+        'previousSessionId': previousSessionId,
+        'nextSessionId': nextSessionId,
+      });
+      
+      // Switch to the new session in ChatNotifier
+      chatNotifier.switchToSession(nextSessionId);
+    }
+  });
+  
+  return chatNotifier;
 });

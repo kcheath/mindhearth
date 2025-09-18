@@ -9,6 +9,7 @@ import 'package:mindhearth/features/auth/presentation/pages/login_page.dart';
 import 'package:mindhearth/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:mindhearth/features/safetycode/presentation/pages/safety_code_page.dart';
 import 'package:mindhearth/features/chat/presentation/pages/chat_page.dart';
+import 'package:mindhearth/features/chat/presentation/pages/session_info_page.dart';
 import 'package:mindhearth/features/sessions/presentation/pages/sessions_page.dart';
 import 'package:mindhearth/features/journal/presentation/pages/journal_page.dart';
 import 'package:mindhearth/features/journal/presentation/pages/journal_entry_page.dart';
@@ -97,6 +98,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/chat',
         name: 'chat',
         builder: (context, state) => const ChatPage(),
+      ),
+      
+      GoRoute(
+        path: '/session-info/:sessionId',
+        name: 'session-info',
+        builder: (context, state) {
+          final sessionId = state.pathParameters['sessionId']!;
+          final extra = state.extra as Map<String, dynamic>?;
+          final sessionName = extra?['sessionName'] ?? 'Session';
+          return SessionInfoPage(
+            sessionId: sessionId,
+            sessionName: sessionName,
+          );
+        },
       ),
       
       GoRoute(
