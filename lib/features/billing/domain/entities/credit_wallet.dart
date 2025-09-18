@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 /// Credit wallet model representing a user's credit balance
 /// Aligned with Mindhearth's principles of transparency and user empowerment

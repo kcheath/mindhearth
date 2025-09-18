@@ -123,7 +123,8 @@ class ChatService {
       final billingResponse = await _apiService.getBillingStatus();
       
       return billingResponse.when(
-        success: (billingStatus, statusCode) {
+        success: (billingStatusData, message) {
+          final billingStatus = BillingStatus.fromJson(billingStatusData);
           final canChat = CreditValidator.canPerformChatOperation(billingStatus);
           appLogger.info('Chat credits check', {
             'canChat': canChat,

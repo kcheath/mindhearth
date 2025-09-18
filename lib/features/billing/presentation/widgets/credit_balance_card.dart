@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 /// Credit balance card with trauma-informed design
 /// Shows current balance with clear, reassuring messaging

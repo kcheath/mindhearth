@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/core/models/api_response.dart';
-import 'package:mindhearth/features/billing/domain/entities/credit_wallet.dart';
 import 'package:mindhearth/features/billing/domain/entities/ledger_entry.dart';
 import 'package:mindhearth/features/billing/domain/entities/purchase.dart';
 import 'package:mindhearth/features/billing/domain/entities/billing_status.dart';
@@ -28,7 +26,6 @@ class BillingService {
       
       return ApiSuccess(
         data: response.data['balance'] as int,
-        statusCode: response.statusCode,
       );
     } on DioException catch (e) {
       appLogger.error('Error getting balance', {
@@ -61,7 +58,6 @@ class BillingService {
       
       return ApiSuccess(
         data: billingStatus,
-        statusCode: response.statusCode,
       );
     } on DioException catch (e) {
       appLogger.error('Error getting billing status', {
@@ -112,7 +108,6 @@ class BillingService {
       
       return ApiSuccess(
         data: entries,
-        statusCode: response.statusCode,
       );
     } on DioException catch (e) {
       appLogger.error('Error getting credit ledger', {
@@ -147,7 +142,6 @@ class BillingService {
       
       return ApiSuccess(
         data: response.data,
-        statusCode: response.statusCode,
       );
     } on DioException catch (e) {
       appLogger.error('Error checking operation', {
@@ -199,7 +193,6 @@ class BillingService {
       
       return ApiSuccess(
         data: purchase,
-        statusCode: response.statusCode,
       );
     } on DioException catch (e) {
       appLogger.error('Error validating purchase', {
@@ -252,7 +245,6 @@ class BillingService {
       
       return ApiSuccess(
         data: purchases,
-        statusCode: response.statusCode,
       );
     } on DioException catch (e) {
       appLogger.error('Error getting purchase history', {
@@ -296,7 +288,6 @@ class BillingService {
       
       return ApiSuccess(
         data: ledgerEntry,
-        statusCode: response.statusCode,
       );
     } on DioException catch (e) {
       appLogger.error('Error gifting credits', {

@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 /// Billing status model for comprehensive credit status information
 /// Provides trauma-informed status indicators and user guidance

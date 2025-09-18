@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 /// Ledger entry model for immutable audit trail of all credit transactions
 /// Ensures transparency and accountability in Mindhearth's billing system

@@ -1,9 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/services/billing_service.dart';
-import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
-import 'package:mindhearth/features/billing/domain/entities/credit_wallet.dart';
 import 'package:mindhearth/features/billing/domain/entities/ledger_entry.dart';
 import 'package:mindhearth/features/billing/domain/entities/purchase.dart';
 import 'package:mindhearth/features/billing/domain/entities/billing_status.dart';
