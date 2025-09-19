@@ -262,10 +262,6 @@ class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
             ),
             
             const SizedBox(height: 16),
-            
-            // Status display
-            if (debugState.healthStatus != null || debugState.billingMode != null)
-              _buildStatusDisplay(debugState),
           ],
         ),
       ),
@@ -283,66 +279,6 @@ class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
     );
   }
 
-  Widget _buildStatusDisplay(DebugBillingState state) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'System Status',
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 8),
-          
-          if (state.healthStatus != null) ...[
-            Text(
-              'Health: ${state.healthStatus!['status'] ?? 'Unknown'}',
-              style: const TextStyle(fontSize: 12),
-            ),
-            Text(
-              'Ledger Mode: ${state.healthStatus!['ledger_mode'] ?? 'Unknown'}',
-              style: const TextStyle(fontSize: 12),
-            ),
-          ],
-          
-          if (state.billingMode != null) ...[
-            Text(
-              'Billing Mode: ${state.billingMode!['ledger_mode'] ?? 'Unknown'}',
-              style: const TextStyle(fontSize: 12),
-            ),
-            Text(
-              'IAP Mode: ${state.billingMode!['iap_validation_mode'] ?? 'Unknown'}',
-              style: const TextStyle(fontSize: 12),
-            ),
-          ],
-          
-          if (state.operationChecks.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            const Text(
-              'Recent Operations:',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
-              ),
-            ),
-            ...state.operationChecks.take(3).map((check) => Text(
-              '• ${check['operationType']}: ${check['result']?['allowed'] ?? 'Unknown'}',
-              style: const TextStyle(fontSize: 12),
-            )),
-          ],
-        ],
-      ),
-    );
-  }
 
   Future<void> _seedCredits(DebugBillingNotifier notifier) async {
     final userId = _userIdController.text.trim();

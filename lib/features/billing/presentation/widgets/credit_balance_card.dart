@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
-import 'package:mindhearth/features/billing/presentation/widgets/debug_billing_panel.dart';
+import 'package:mindhearth/features/billing/presentation/pages/debug_billing_screen.dart';
 
 /// Credit balance card with trauma-informed design
 /// Shows current balance with clear, reassuring messaging
@@ -197,15 +197,11 @@ class CreditBalanceCard extends StatelessWidget {
   }
 
   void _showDebugPanel(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        child: Container(
-          width: MediaQuery.of(context).size.width * 0.9,
-          height: MediaQuery.of(context).size.height * 0.8,
-          padding: const EdgeInsets.all(16),
-          child: const DebugBillingPanel(),
-        ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const DebugBillingScreen(),
+        fullscreenDialog: true,
       ),
     );
   }
