@@ -35,64 +35,59 @@ class _SupportDialogState extends State<SupportDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Row(
-        children: [
-          Icon(
-            Icons.support_agent,
-            color: Colors.blue,
-          ),
-          const SizedBox(width: 8),
-          const Text('Contact Support'),
-        ],
-      ),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'We\'re here to help with any billing questions or concerns. '
-                'Your privacy and security are our top priorities.',
-                style: TextStyle(fontSize: 14),
-              ),
-              const SizedBox(height: 16),
-              _buildCategorySelector(),
-              const SizedBox(height: 16),
-              _buildSubjectField(),
-              const SizedBox(height: 16),
-              _buildMessageField(),
-              const SizedBox(height: 16),
-              _buildContactInfo(),
-            ],
-          ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Icon(
+              Icons.support_agent,
+              color: Colors.blue,
+            ),
+            const SizedBox(width: 8),
+            const Text('Contact Support'),
+          ],
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isSubmitting ? null : () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _canSubmit() ? _submitSupportRequest : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
-          ),
-          child: _isSubmitting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                const Text(
+                  'We\'re here to help with any billing questions or concerns. '
+                  'Your privacy and security are our top priorities.',
+                  style: TextStyle(fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        _buildCategorySelector(),
+                        const SizedBox(height: 16),
+                        _buildSubjectField(),
+                        const SizedBox(height: 16),
+                        _buildMessageField(),
+                        const SizedBox(height: 16),
+                        _buildContactInfo(),
+                      ],
+                    ),
                   ),
-                )
-              : const Text('Send Message'),
+                ),
+                const SizedBox(height: 16),
+                _buildActionButtons(context),
+              ],
+            ),
+          ),
         ),
-      ],
+      ),
     );
   }
 
@@ -241,6 +236,39 @@ class _SupportDialogState extends State<SupportDialog> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: _isSubmitting ? null : () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: _canSubmit() ? _submitSupportRequest : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+            ),
+            child: _isSubmitting
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Text('Send Message'),
+          ),
+        ),
+      ],
     );
   }
 

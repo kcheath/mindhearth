@@ -82,54 +82,56 @@ class _PurchaseDialogState extends ConsumerState<PurchaseDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Row(
-        children: [
-          Icon(
-            Icons.add_circle,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          const SizedBox(width: 8),
-          const Text('Purchase Credits'),
-        ],
-      ),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
           children: [
-            const Text(
-              'Choose a credit package to continue your healing journey. '
-              'All transactions are secure and your privacy is protected.',
-              style: TextStyle(fontSize: 14),
+            Icon(
+              Icons.add_circle,
+              color: Theme.of(context).colorScheme.primary,
             ),
-            const SizedBox(height: 16),
-            _buildPackageList(),
-            const SizedBox(height: 16),
-            _buildPaymentMethodSelector(),
-            if (_selectedPackage != null) ...[
-              const SizedBox(height: 16),
-              _buildPurchaseSummary(),
-            ],
+            const SizedBox(width: 8),
+            const Text('Purchase Credits'),
           ],
         ),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isProcessing ? null : () => Navigator.pop(context),
-          child: const Text('Cancel'),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              const Text(
+                'Choose a credit package to continue your healing journey. '
+                'All transactions are secure and your privacy is protected.',
+                style: TextStyle(fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      _buildPackageList(),
+                      const SizedBox(height: 16),
+                      _buildPaymentMethodSelector(),
+                      if (_selectedPackage != null) ...[
+                        const SizedBox(height: 16),
+                        _buildPurchaseSummary(),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildActionButtons(context),
+            ],
+          ),
         ),
-        ElevatedButton(
-          onPressed: _canPurchase() ? _processPurchase : null,
-          child: _isProcessing
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text('Purchase ${_selectedPackage?.formattedPrice ?? ''}'),
-        ),
-      ],
+      ),
     );
   }
 
@@ -366,6 +368,32 @@ class _PurchaseDialogState extends ConsumerState<PurchaseDialog> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: _isProcessing ? null : () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: _canPurchase() ? _processPurchase : null,
+            child: _isProcessing
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text('Purchase ${_selectedPackage?.formattedPrice ?? ''}'),
+          ),
+        ),
+      ],
     );
   }
 

@@ -29,61 +29,56 @@ class _GiftDialogState extends ConsumerState<GiftDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Row(
-        children: [
-          Icon(
-            Icons.card_giftcard,
-            color: Colors.purple,
-          ),
-          const SizedBox(width: 8),
-          const Text('Gift Credits'),
-        ],
-      ),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
           children: [
-            const Text(
-              'Share the gift of healing with someone you care about. '
-              'Help them on their journey to wellness and growth.',
-              style: TextStyle(fontSize: 14),
+            Icon(
+              Icons.card_giftcard,
+              color: Colors.purple,
             ),
-            const SizedBox(height: 16),
-            _buildRecipientField(),
-            const SizedBox(height: 16),
-            _buildAmountSelector(),
-            const SizedBox(height: 16),
-            _buildMessageField(),
-            const SizedBox(height: 16),
-            _buildGiftSummary(),
+            const SizedBox(width: 8),
+            const Text('Gift Credits'),
           ],
         ),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isProcessing ? null : () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _canGift() ? _processGift : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.purple,
-            foregroundColor: Colors.white,
-          ),
-          child: _isProcessing
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              const Text(
+                'Share the gift of healing with someone you care about. '
+                'Help them on their journey to wellness and growth.',
+                style: TextStyle(fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      _buildRecipientField(),
+                      const SizedBox(height: 16),
+                      _buildAmountSelector(),
+                      const SizedBox(height: 16),
+                      _buildMessageField(),
+                      const SizedBox(height: 16),
+                      _buildGiftSummary(),
+                    ],
                   ),
-                )
-              : Text('Gift $_selectedAmount Credits'),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildActionButtons(context),
+            ],
+          ),
         ),
-      ],
+      ),
     );
   }
 
@@ -215,6 +210,39 @@ class _GiftDialogState extends ConsumerState<GiftDialog> {
           ],
         ],
       ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: _isProcessing ? null : () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: _canGift() ? _processGift : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purple,
+              foregroundColor: Colors.white,
+            ),
+            child: _isProcessing
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : Text('Gift $_selectedAmount Credits'),
+          ),
+        ),
+      ],
     );
   }
 

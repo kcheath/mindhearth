@@ -183,23 +183,32 @@ class _BillingPageState extends ConsumerState<BillingPage>
   }
 
   void _showPurchaseDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const PurchaseDialog(),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const PurchaseDialog(),
+        fullscreenDialog: true,
+      ),
     );
   }
 
   void _showGiftDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const GiftDialog(),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const GiftDialog(),
+        fullscreenDialog: true,
+      ),
     );
   }
 
   void _showSupportDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const SupportDialog(),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SupportDialog(),
+        fullscreenDialog: true,
+      ),
     );
   }
 }
