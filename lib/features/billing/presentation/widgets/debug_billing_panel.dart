@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
 import 'package:mindhearth/features/billing/providers/debug_billing_provider.dart';
+import 'package:mindhearth/features/billing/providers/billing_provider.dart';
 
 /// Debug billing panel for development and testing
 class DebugBillingPanel extends ConsumerStatefulWidget {
@@ -299,6 +300,8 @@ class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
     final success = await notifier.seedCredits(credits: credits);
     if (success) {
       _showSnackBar('Credits seeded successfully!', Colors.green);
+      // Refresh billing data to show updated balance
+      ref.read(billingProvider.notifier).refreshAll();
     } else {
       _showSnackBar('Failed to seed credits', Colors.red);
     }
@@ -315,6 +318,8 @@ class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
     final success = await notifier.topUpCredits(credits: credits);
     if (success) {
       _showSnackBar('Credits topped up successfully!', Colors.green);
+      // Refresh billing data to show updated balance
+      ref.read(billingProvider.notifier).refreshAll();
     } else {
       _showSnackBar('Failed to top up credits', Colors.red);
     }
@@ -331,6 +336,8 @@ class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
     final success = await notifier.simulatePurchase(credits: credits);
     if (success) {
       _showSnackBar('Purchase simulated successfully!', Colors.green);
+      // Refresh billing data to show updated balance
+      ref.read(billingProvider.notifier).refreshAll();
     } else {
       _showSnackBar('Failed to simulate purchase', Colors.red);
     }
@@ -359,6 +366,8 @@ class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
       final success = await notifier.resetBillingData();
       if (success) {
         _showSnackBar('Billing data reset successfully!', Colors.green);
+        // Refresh billing data to show updated balance
+        ref.read(billingProvider.notifier).refreshAll();
       } else {
         _showSnackBar('Failed to reset billing data', Colors.red);
       }
