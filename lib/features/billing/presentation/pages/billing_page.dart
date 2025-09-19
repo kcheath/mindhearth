@@ -6,6 +6,9 @@ import 'package:mindhearth/features/billing/presentation/widgets/credit_balance_
 import 'package:mindhearth/features/billing/presentation/widgets/ledger_history_widget.dart';
 import 'package:mindhearth/features/billing/presentation/widgets/purchase_history_widget.dart';
 import 'package:mindhearth/features/billing/presentation/widgets/billing_actions_widget.dart';
+import 'package:mindhearth/features/billing/presentation/widgets/purchase_dialog.dart';
+import 'package:mindhearth/features/billing/presentation/widgets/gift_dialog.dart';
+import 'package:mindhearth/features/billing/presentation/widgets/support_dialog.dart';
 
 /// Main billing page with trauma-informed design
 /// Provides comprehensive billing information and controls
@@ -182,93 +185,21 @@ class _BillingPageState extends ConsumerState<BillingPage>
   void _showPurchaseDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Purchase Credits'),
-        content: const Text(
-          'Purchase credits to continue your healing journey. '
-          'All transactions are secure and your privacy is protected.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: Implement purchase flow
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Purchase flow coming soon!'),
-                ),
-              );
-            },
-            child: const Text('Continue'),
-          ),
-        ],
-      ),
+      builder: (context) => const PurchaseDialog(),
     );
   }
 
   void _showGiftDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Gift Credits'),
-        content: const Text(
-          'Share the gift of healing with someone you care about. '
-          'Gift credits to help them on their journey.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: Implement gift flow
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Gift flow coming soon!'),
-                ),
-              );
-            },
-            child: const Text('Continue'),
-          ),
-        ],
-      ),
+      builder: (context) => const GiftDialog(),
     );
   }
 
   void _showSupportDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Contact Support'),
-        content: const Text(
-          'We\'re here to help with any billing questions or concerns. '
-          'Your privacy and security are our top priorities.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: Implement support flow
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Support flow coming soon!'),
-                ),
-              );
-            },
-            child: const Text('Contact Support'),
-          ),
-        ],
-      ),
+      builder: (context) => const SupportDialog(),
     );
   }
 }

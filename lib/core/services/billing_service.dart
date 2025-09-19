@@ -305,4 +305,49 @@ class BillingService {
       return ApiError(message: 'An unexpected error occurred: ${e.toString()}');
     }
   }
+
+  /// Purchase credits directly
+  Future<ApiResponse<Purchase>> purchaseCredits({
+    required String packageId,
+    required String paymentMethod,
+    Map<String, dynamic>? paymentData,
+  }) async {
+    try {
+      appLogger.info('Purchasing credits', {
+        'packageId': packageId,
+        'paymentMethod': paymentMethod,
+      });
+      
+      final response = await _apiService.dio.post('/billing/purchase', data: {
+        'package_id': packageId,
+        'payment_method': paymentMethod,
+        'payment_data': paymentData,
+      });
+      
+      final purchase = Purchase.fromJson(response.data);
+      
+      appLogger.info('Credits purchased successfully', {
+        'purchaseId': purchase.id,
+        'packageId': packageId,
+      });
+      
+      return ApiSuccess(
+        data: purchase,
+      );
+    } on DioException catch (e) {
+      appLogger.error('Error purchasing credits', {
+        'error': e.toString(),
+        'response': e.response?.data,
+        'packageId': packageId,
+        'paymentMethod': paymentMethod,
+      });
+      return ApiError(
+        message: e.response?.data['detail'] ?? 'Failed to purchase credits',
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      appLogger.error('Unexpected error purchasing credits', {'error': e.toString()});
+      return ApiError(message: 'An unexpected error occurred: ${e.toString()}');
+    }
+  }
 }

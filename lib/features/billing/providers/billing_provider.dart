@@ -57,6 +57,16 @@ class BillingNotifier extends StateNotifier<BillingState> {
 
   BillingNotifier(this._billingService) : super(const BillingState());
 
+  /// Load all billing data
+  Future<void> loadBillingData() async {
+    await Future.wait([
+      loadBalance(),
+      loadBillingStatus(),
+      loadLedger(),
+      loadPurchases(),
+    ]);
+  }
+
   /// Load user balance
   Future<void> loadBalance() async {
     try {
@@ -307,6 +317,52 @@ class BillingNotifier extends StateNotifier<BillingState> {
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to gift credits',
+      );
+      return false;
+    }
+  }
+
+  /// Purchase credits
+  Future<bool> purchaseCredits({
+    required String packageId,
+    required String paymentMethod,
+    Map<String, dynamic>? paymentData,
+  }) async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+      
+      final response = await _billingService.purchaseCredits(
+        packageId: packageId,
+        paymentMethod: paymentMethod,
+        paymentData: paymentData,
+      );
+      
+      return response.when(
+        success: (purchase, statusCode) {
+          state = state.copyWith(isLoading: false);
+          appLogger.info('Credits purchased successfully', {
+            'purchaseId': purchase.id,
+            'packageId': packageId,
+          });
+          return true;
+        },
+        error: (message, statusCode, errors) {
+          state = state.copyWith(
+            isLoading: false,
+            error: message,
+          );
+          appLogger.error('Failed to purchase credits', {
+            'error': message,
+            'packageId': packageId,
+          });
+          return false;
+        },
+      );
+    } catch (e) {
+      appLogger.error('Error purchasing credits', {'error': e.toString()});
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to purchase credits',
       );
       return false;
     }
