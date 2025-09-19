@@ -125,32 +125,32 @@ class _BillingPageState extends ConsumerState<BillingPage>
 
   Widget _buildOverviewTab(BuildContext context, billingState, billingNotifier) {
       return Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Credit Balance Card
             Expanded(
-              flex: 2,
+              flex: 1,
               child: CreditBalanceCard(
                 balance: billingState.balance,
                 isLoading: billingState.isLoading,
               ),
             ),
             
-            const SizedBox(height: 12),
+            const SizedBox(height: 6),
             
             // Billing Status Card
             if (billingState.billingStatus != null)
               Expanded(
-                flex: 2,
+                flex: 1,
                 child: BillingStatusCard(
                   status: billingState.billingStatus!,
                   isLoading: billingState.isLoading,
                 ),
               ),
             
-            const SizedBox(height: 12),
+            const SizedBox(height: 6),
             
             // Billing Actions
             Expanded(

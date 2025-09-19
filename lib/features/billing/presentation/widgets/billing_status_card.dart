@@ -21,7 +21,7 @@ class BillingStatusCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
@@ -61,7 +61,7 @@ class BillingStatusCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Row(
               children: [
                 Container(
@@ -93,7 +93,7 @@ class BillingStatusCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               status.traumaInformedMessage,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -102,14 +102,14 @@ class BillingStatusCard extends StatelessWidget {
               ),
             ),
             if (status.hasWarnings) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               _buildWarningsSection(context),
             ],
             if (status.hasRequiredActions) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               _buildActionsSection(context),
             ],
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             _buildGrantInfoSection(context),
           ],
         ),
