@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/features/billing/providers/billing_provider.dart';
-import 'package:mindhearth/features/billing/presentation/widgets/billing_status_card.dart';
 import 'package:mindhearth/features/billing/presentation/widgets/credit_balance_card.dart';
 import 'package:mindhearth/features/billing/presentation/widgets/ledger_history_widget.dart';
 import 'package:mindhearth/features/billing/presentation/widgets/purchase_history_widget.dart';
@@ -131,26 +130,14 @@ class _BillingPageState extends ConsumerState<BillingPage>
           children: [
             // Credit Balance Card
             Expanded(
-              flex: 1,
+              flex: 2,
               child: CreditBalanceCard(
                 balance: billingState.balance,
                 isLoading: billingState.isLoading,
               ),
             ),
             
-            const SizedBox(height: 6),
-            
-            // Billing Status Card
-            if (billingState.billingStatus != null)
-              Expanded(
-                flex: 1,
-                child: BillingStatusCard(
-                  status: billingState.billingStatus!,
-                  isLoading: billingState.isLoading,
-                ),
-              ),
-            
-            const SizedBox(height: 6),
+            const SizedBox(height: 12),
             
             // Billing Actions
             Expanded(
