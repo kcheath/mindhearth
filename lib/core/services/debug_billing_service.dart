@@ -24,7 +24,7 @@ class DebugBillingService {
       // Get current user ID
       final userResponse = await _apiService.getCurrentUser();
       if (userResponse is ApiError) {
-        return ApiError(message: 'Failed to get current user: ${userResponse.message}');
+        return ApiError(message: 'Failed to get current user: ${(userResponse as ApiError).message}');
       }
       
       final userData = (userResponse as ApiSuccess).data;
@@ -53,7 +53,6 @@ class DebugBillingService {
     } catch (e) {
       appLogger.error('Failed to seed credits', {
         'error': e.toString(),
-        'userId': userId,
         'credits': credits,
       });
       return ApiError(message: 'Failed to seed credits: ${e.toString()}');
@@ -107,7 +106,7 @@ class DebugBillingService {
       // Get current user ID
       final userResponse = await _apiService.getCurrentUser();
       if (userResponse is ApiError) {
-        return ApiError(message: 'Failed to get current user: ${userResponse.message}');
+        return ApiError(message: 'Failed to get current user: ${(userResponse as ApiError).message}');
       }
       
       final userData = (userResponse as ApiSuccess).data;
@@ -136,7 +135,6 @@ class DebugBillingService {
     } catch (e) {
       appLogger.error('Failed to simulate purchase', {
         'error': e.toString(),
-        'userId': userId,
         'credits': credits,
       });
       return ApiError(message: 'Failed to simulate purchase: ${e.toString()}');
