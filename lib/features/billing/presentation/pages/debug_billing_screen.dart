@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mindhearth/features/billing/presentation/widgets/debug_billing_panel.dart';
 
-/// Full screen debug billing screen
-/// Provides comprehensive debug tools for billing system
+/// Full screen debug credit screen
+/// Provides comprehensive debug tools for credit system
 class DebugBillingScreen extends StatelessWidget {
   const DebugBillingScreen({Key? key}) : super(key: key);
 
@@ -17,7 +17,7 @@ class DebugBillingScreen extends StatelessWidget {
               color: Theme.of(context).colorScheme.secondary,
             ),
             const SizedBox(width: 8),
-            const Text('Debug Billing Tools'),
+            const Text('Debug Credit Tools'),
           ],
         ),
         backgroundColor: Theme.of(context).colorScheme.surface,
@@ -26,7 +26,7 @@ class DebugBillingScreen extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
-          tooltip: 'Back to Billing',
+          tooltip: 'Back to Credits',
         ),
         actions: [
           IconButton(
@@ -49,9 +49,9 @@ class DebugBillingScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Debug Billing Tools'),
+        title: const Text('Debug Credit Tools'),
         content: const Text(
-          'This debug panel provides development tools for testing and managing the billing system. '
+          'This debug panel provides development tools for testing and managing the credit system. '
           'Use these tools to seed credits, test purchases, and monitor system health.\n\n'
           '⚠️ These tools are only available in debug mode.',
         ),

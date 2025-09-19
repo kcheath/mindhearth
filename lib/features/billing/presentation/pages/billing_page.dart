@@ -47,7 +47,7 @@ class _BillingPageState extends ConsumerState<BillingPage>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Billing & Credits'),
+        title: const Text('Credits & Account'),
         backgroundColor: Theme.of(context).colorScheme.surface,
         foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
@@ -60,7 +60,7 @@ class _BillingPageState extends ConsumerState<BillingPage>
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => billingNotifier.refreshAll(),
-            tooltip: 'Refresh billing information',
+            tooltip: 'Refresh credit information',
           ),
         ],
         bottom: TabBar(
@@ -142,7 +142,7 @@ class _BillingPageState extends ConsumerState<BillingPage>
             
             const SizedBox(height: 4),
             
-            // Billing Actions - Bottom 2/3
+            // Credit Actions - Bottom 2/3
             Expanded(
               flex: 2,
               child: BillingActionsWidget(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 
-/// Support dialog for contacting billing support
+/// Support dialog for contacting credit support
 /// Provides trauma-informed support experience with clear communication
 class SupportDialog extends StatefulWidget {
   const SupportDialog({Key? key}) : super(key: key);
@@ -15,11 +15,10 @@ class _SupportDialogState extends State<SupportDialog> {
   final _subjectController = TextEditingController();
   final _messageController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  String _selectedCategory = 'billing';
+  String _selectedCategory = 'credits';
   bool _isSubmitting = false;
 
   final List<Map<String, String>> _categories = [
-    {'value': 'billing', 'label': 'Billing & Payments'},
     {'value': 'credits', 'label': 'Credits & Usage'},
     {'value': 'account', 'label': 'Account Issues'},
     {'value': 'technical', 'label': 'Technical Support'},
@@ -60,7 +59,7 @@ class _SupportDialogState extends State<SupportDialog> {
             child: Column(
               children: [
                 const Text(
-                  'We\'re here to help with any billing questions or concerns. '
+                  'We\'re here to help with any credit questions or concerns. '
                   'Your privacy and security are our top priorities.',
                   style: TextStyle(fontSize: 14),
                   textAlign: TextAlign.center,

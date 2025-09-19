@@ -55,7 +55,7 @@ class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
                 ),
                 const SizedBox(width: 8),
                 const Text(
-                  'Debug Billing Panel',
+                  'Debug Credit Panel',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -118,7 +118,7 @@ class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Debug endpoints are now available! Backend billing system is working.',
+                      'Debug endpoints are now available! Backend credit system is working.',
                       style: TextStyle(
                         color: Colors.green[700],
                         fontSize: 12,
@@ -227,7 +227,7 @@ class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
                   child: ElevatedButton.icon(
                     onPressed: debugState.isLoading ? null : () => debugNotifier.loadBillingMode(),
                     icon: const Icon(Icons.settings, size: 16),
-                    label: const Text('Billing Mode'),
+                    label: const Text('Credit Mode'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.indigo,
                       foregroundColor: Colors.white,
@@ -347,8 +347,8 @@ class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reset Billing Data'),
-        content: const Text('Are you sure you want to reset all billing data? This action cannot be undone.'),
+        title: const Text('Reset Credit Data'),
+        content: const Text('Are you sure you want to reset all credit data? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -365,11 +365,11 @@ class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
     if (confirmed == true) {
       final success = await notifier.resetBillingData();
       if (success) {
-        _showSnackBar('Billing data reset successfully!', Colors.green);
+        _showSnackBar('Credit data reset successfully!', Colors.green);
         // Refresh billing data to show updated balance
         ref.read(billingProvider.notifier).refreshAll();
       } else {
-        _showSnackBar('Failed to reset billing data', Colors.red);
+        _showSnackBar('Failed to reset credit data', Colors.red);
       }
     }
   }

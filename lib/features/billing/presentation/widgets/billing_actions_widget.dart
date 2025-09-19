@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// Billing actions widget with trauma-informed design
-/// Provides safe, reassuring actions for billing management
+/// Credit actions widget with trauma-informed design
+/// Provides safe, reassuring actions for credit management
 class BillingActionsWidget extends StatelessWidget {
   final VoidCallback? onPurchaseCredits;
   final VoidCallback? onGiftCredits;
@@ -81,7 +81,7 @@ class BillingActionsWidget extends StatelessWidget {
           context,
           icon: Icons.support_agent,
           title: 'Contact Support',
-          subtitle: 'Get help with billing questions or account issues',
+          subtitle: 'Get help with credit questions or account issues',
           color: Colors.blue,
           onTap: onContactSupport,
         ),

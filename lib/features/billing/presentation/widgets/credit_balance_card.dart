@@ -62,7 +62,7 @@ class CreditBalanceCard extends StatelessWidget {
                       size: 20,
                     ),
                     onPressed: () => _showDebugPanel(context),
-                    tooltip: 'Debug Billing Tools',
+                    tooltip: 'Debug Credit Tools',
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
                       minWidth: 32,
