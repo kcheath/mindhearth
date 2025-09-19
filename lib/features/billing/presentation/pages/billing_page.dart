@@ -128,7 +128,7 @@ class _BillingPageState extends ConsumerState<BillingPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Credit Balance Card
+            // Credit Balance Card - Top 1/3
             Expanded(
               flex: 1,
               child: CreditBalanceCard(
@@ -139,9 +139,9 @@ class _BillingPageState extends ConsumerState<BillingPage>
             
             const SizedBox(height: 4),
             
-            // Billing Actions
+            // Billing Actions - Bottom 2/3
             Expanded(
-              flex: 1,
+              flex: 2,
               child: BillingActionsWidget(
                 onPurchaseCredits: () => _showPurchaseDialog(context),
                 onGiftCredits: () => _showGiftDialog(context),
