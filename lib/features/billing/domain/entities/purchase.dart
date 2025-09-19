@@ -38,22 +38,28 @@ class Purchase {
 
   factory Purchase.fromJson(Map<String, dynamic> json) {
     return Purchase(
-      id: json['id'] as String,
-      userId: json['user_id'] as String,
-      provider: json['provider'] as String,
-      productId: json['product_id'] as String,
-      quantity: json['quantity'] as int,
-      amountCents: json['amount_cents'] as int,
-      currency: json['currency'] as String,
-      transactionId: json['transaction_id'] as String,
-      status: json['status'] as String,
+      id: json['id'] as String? ?? '',
+      userId: json['user_id'] as String? ?? '',
+      provider: json['provider'] as String? ?? 'unknown',
+      productId: json['product_id'] as String? ?? '',
+      quantity: json['quantity'] as int? ?? 1,
+      amountCents: json['amount_cents'] as int? ?? 0,
+      currency: json['currency'] as String? ?? 'USD',
+      transactionId: json['transaction_id'] as String? ?? '',
+      status: json['status'] as String? ?? 'unknown',
       receiptData: json['receipt_data'] as String?,
       metadata: json['metadata'] != null 
           ? Map<String, dynamic>.from(json['metadata'])
           : null,
-      validatedAt: DateTime.parse(json['validated_at'] as String),
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      validatedAt: json['validated_at'] != null 
+          ? DateTime.parse(json['validated_at'] as String)
+          : DateTime.now(),
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at'] as String)
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null 
+          ? DateTime.parse(json['updated_at'] as String)
+          : DateTime.now(),
       ledgerEntryId: json['ledger_entry_id'] as String?,
     );
   }
