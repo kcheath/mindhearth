@@ -1,62 +1,106 @@
 import 'package:flutter/foundation.dart';
 
+/// Debug configuration for development and testing
 class DebugConfig {
-  static const bool _enableDebugMode = kDebugMode;
+  static const bool _kDebugMode = kDebugMode;
   
-  // Debug mode settings
-  static bool get isDebugMode => _enableDebugMode;
+  /// Whether debug mode is enabled
+  static bool get isDebugMode => _kDebugMode;
   
-  // Test user credentials for development
-  // ✅ Found in kch_dev backend database
-  // Email: test@tsukiyo.dev
-  // Password: password123
-  // Tenant ID: 1aca2ef7-b1fa-46bb-af08-a8fdb449b1f9
-  // Application ID: c8f67708-8f15-4205-be08-ebc676205d1d
-  static const String testEmail = 'test@tsukiyo.dev';
-  static const String testPassword = 'password123';
+  /// Whether billing debug features are enabled
+  static bool get isBillingDebugEnabled => _kDebugMode;
   
-  // Debug API settings
-  static const String debugApiUrl = 'http://localhost:8000/api';
-  static const String productionApiUrl = 'https://api.mindhearth.com/api';
+  /// Whether development endpoints are available
+  static bool get areDevEndpointsAvailable => _kDebugMode;
   
-  // Get the appropriate API URL based on debug mode
-  static String get apiUrl => isDebugMode ? debugApiUrl : productionApiUrl;
+  /// Whether fake payment providers are enabled
+  static bool get isFakeProviderEnabled => _kDebugMode;
   
-  // Debug features
-  static bool get enableDebugLogging => isDebugMode;
-  static bool get enableTestData => isDebugMode;
-  static bool get enableMockResponses => false; // Always use real backend
+  /// Whether IAP validation is stubbed
+  static bool get isIAPValidationStubbed => _kDebugMode;
   
-  // Debug navigation shortcuts
-  static bool get enableDebugNavigation => isDebugMode;
+  /// Whether ledger is in fake mode
+  static bool get isLedgerFakeMode => _kDebugMode;
   
-  // Debug user state shortcuts
-  static bool get enableAutoLogin => isDebugMode;
-  static bool get enableSkipOnboarding => false; // Always go through real onboarding
-  static bool get enableSkipSafetyCode => false; // Always go through real safety code
-  
-  // Debug UI features
-  // Set to true to show debug banner across the top of the app
-  static bool get showDebugBanner => false; // Disabled for cleaner UI
-  static bool get enablePerformanceOverlay => false; // Disabled for cleaner UI
-  
-  // Debug data - only used if backend is unavailable
-  static Map<String, dynamic> get testUserData => {
-    'id': 'test_user_123',
-    'email': testEmail,
-    'tenant_id': 'test_tenant_456',
-    'first_name': 'Test',
-    'last_name': 'User',
-    'is_onboarded': false,
+  /// Debug settings for billing
+  static const Map<String, dynamic> billingDebugSettings = {
+    'ledger_mode': 'fake',
+    'iap_validation_mode': 'stub',
+    'fake_provider_mode': 'auto',
+    'fake_provider_success_rate': 1.0,
+    'fake_provider_delay_ms': 100,
+    'fake_provider_error_rate': 0.0,
+    'questions_per_credit': 10,
   };
   
-  static Map<String, dynamic> get testAuthResponse => {
-    'access_token': 'debug_jwt_token_for_testing',
-    'user_id': testUserData['id'],
-    'tenant_id': testUserData['tenant_id'],
-    'message': 'Debug login successful',
+  /// Development endpoints configuration
+  static const Map<String, String> devEndpoints = {
+    'seed_credits': '/api/billing/dev/seed',
+    'top_up_credits': '/api/billing/dev/top-up',
+    'simulate_purchase': '/api/billing/dev/purchase',
+    'reset_billing': '/api/billing/dev/reset',
+    'billing_health': '/api/billing/health',
+    'billing_mode': '/api/billing/mode',
+    'billing_status': '/api/billing/status',
+    'billing_balance': '/api/billing/balance',
+    'billing_ledger': '/api/billing/ledger',
+    'check_operation': '/api/billing/check-operation',
   };
   
-  // Backend connectivity check
-  static bool get useRealBackend => true; // Always use real backend in debug mode
+  /// Get debug settings for a specific feature
+  static T getDebugSetting<T>(String key, T defaultValue) {
+    if (!isDebugMode) return defaultValue;
+    
+    final settings = billingDebugSettings;
+    return settings[key] as T? ?? defaultValue;
+  }
+  
+  /// Check if a debug feature is enabled
+  static bool isDebugFeatureEnabled(String feature) {
+    if (!isDebugMode) return false;
+    
+    switch (feature) {
+      case 'billing_debug':
+        return isBillingDebugEnabled;
+      case 'dev_endpoints':
+        return areDevEndpointsAvailable;
+      case 'fake_provider':
+        return isFakeProviderEnabled;
+      case 'iap_stub':
+        return isIAPValidationStubbed;
+      case 'fake_ledger':
+        return isLedgerFakeMode;
+      default:
+        return false;
+    }
+  }
+  
+  /// Get development endpoint URL
+  static String getDevEndpoint(String endpointName) {
+    if (!areDevEndpointsAvailable) {
+      throw StateError('Development endpoints not available in production');
+    }
+    
+    final endpoint = devEndpoints[endpointName];
+    if (endpoint == null) {
+      throw ArgumentError('Unknown development endpoint: $endpointName');
+    }
+    
+    return endpoint;
+  }
+  
+  /// Debug logging configuration
+  static const Map<String, bool> debugLogging = {
+    'api_calls': true,
+    'billing_operations': true,
+    'payment_validation': true,
+    'credit_calculations': true,
+    'error_details': true,
+  };
+  
+  /// Check if debug logging is enabled for a category
+  static bool isDebugLoggingEnabled(String category) {
+    if (!isDebugMode) return false;
+    return debugLogging[category] ?? false;
+  }
 }
