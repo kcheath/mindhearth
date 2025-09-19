@@ -54,7 +54,7 @@ class _AdaptiveNavigationState extends ConsumerState<AdaptiveNavigation> {
     NavigationDestination(
       icon: Icon(Icons.account_balance_wallet_outlined),
       selectedIcon: Icon(Icons.account_balance_wallet),
-      label: 'Billing',
+      label: 'Credits',
     ),
   ];
 
@@ -88,7 +88,7 @@ class _AdaptiveNavigationState extends ConsumerState<AdaptiveNavigation> {
     NavigationRailDestination(
       icon: Icon(Icons.account_balance_wallet_outlined),
       selectedIcon: Icon(Icons.account_balance_wallet),
-      label: Text('Billing'),
+      label: Text('Credits'),
     ),
   ];
 
