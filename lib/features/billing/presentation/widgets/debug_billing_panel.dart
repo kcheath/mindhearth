@@ -105,23 +105,23 @@ class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
             
             if (debugState.error != null) const SizedBox(height: 16),
             
-            // Backend status warning
+            // Backend status success
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
+                color: Colors.green.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                border: Border.all(color: Colors.green.withOpacity(0.3)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.warning, color: Colors.orange[700], size: 16),
+                  Icon(Icons.check_circle, color: Colors.green[700], size: 16),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Debug endpoints not available on local backend. Some features may not work.',
+                      'Debug endpoints are now available! Backend billing system is working.',
                       style: TextStyle(
-                        color: Colors.orange[700],
+                        color: Colors.green[700],
                         fontSize: 12,
                       ),
                     ),
