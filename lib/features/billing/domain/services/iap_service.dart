@@ -79,12 +79,23 @@ class IAPService {
   /// Get product by package ID
   ProductDetails? getProduct(String packageId) {
     final productId = _productIds[packageId];
-    if (productId == null) return null;
+    if (productId == null) {
+      appLogger.warning('Package ID not found in product mapping', {'packageId': packageId});
+      return null;
+    }
     
-    return _products.firstWhere(
-      (product) => product.id == productId,
-      orElse: () => throw StateError('Product not found'),
-    );
+    try {
+      return _products.firstWhere(
+        (product) => product.id == productId,
+      );
+    } catch (e) {
+      appLogger.warning('Product not found in store', {
+        'packageId': packageId,
+        'productId': productId,
+        'availableProducts': _products.map((p) => p.id).toList(),
+      });
+      return null;
+    }
   }
 
   /// Purchase a product

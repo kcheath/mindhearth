@@ -32,7 +32,12 @@ class _PurchaseDialogState extends ConsumerState<PurchaseDialog> {
     if (Platform.isIOS || Platform.isAndroid) {
       _iapAvailable = await _iapService.initialize();
       if (mounted) {
-        setState(() {});
+        setState(() {
+          // If IAP is available but no products, fallback to stripe
+          if (_iapAvailable && _iapService.products.isEmpty) {
+            _selectedPaymentMethod = 'stripe';
+          }
+        });
       }
     }
   }
@@ -256,8 +261,33 @@ class _PurchaseDialogState extends ConsumerState<PurchaseDialog> {
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        if (_iapAvailable) ...[
+        if (_iapAvailable && _iapService.products.isNotEmpty) ...[
           _buildPaymentOption('iap', 'In-App Purchase', Icons.smartphone),
+          const SizedBox(height: 8),
+        ] else if (_iapAvailable && _iapService.products.isEmpty) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.orange.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.orange.withOpacity(0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.orange[700], size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'In-App Purchase not available. Products need to be configured in the app store.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.orange[700],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 8),
         ],
         Row(
@@ -416,7 +446,7 @@ class _PurchaseDialogState extends ConsumerState<PurchaseDialog> {
       
       bool success = false;
       
-      if (_selectedPaymentMethod == 'iap' && _iapAvailable) {
+      if (_selectedPaymentMethod == 'iap' && _iapAvailable && _iapService.products.isNotEmpty) {
         // Use in-app purchase
         success = await _iapService.purchaseProduct(_selectedPackage!.id);
       } else {
