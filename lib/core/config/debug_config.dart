@@ -35,16 +35,16 @@ class DebugConfig {
   
   /// Development endpoints configuration
   static const Map<String, String> devEndpoints = {
-    'seed_credits': '/api/billing/dev/seed',
-    'top_up_credits': '/api/billing/dev/top-up',
-    'simulate_purchase': '/api/billing/dev/purchase',
-    'reset_billing': '/api/billing/dev/reset',
-    'billing_health': '/api/billing/health',
-    'billing_mode': '/api/billing/mode',
-    'billing_status': '/api/billing/status',
-    'billing_balance': '/api/billing/balance',
-    'billing_ledger': '/api/billing/ledger',
-    'check_operation': '/api/billing/check-operation',
+    'seed_credits': '/billing/dev/seed',
+    'top_up_credits': '/billing/dev/top-up',
+    'simulate_purchase': '/billing/dev/purchase',
+    'reset_billing': '/billing/dev/reset',
+    'billing_health': '/billing/health',
+    'billing_mode': '/billing/mode',
+    'billing_status': '/billing/status',
+    'billing_balance': '/billing/balance',
+    'billing_ledger': '/billing/ledger',
+    'check_operation': '/billing/check-operation',
   };
   
   /// Get debug settings for a specific feature

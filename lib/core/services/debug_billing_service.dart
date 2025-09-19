@@ -29,7 +29,7 @@ class DebugBillingService {
 
       final response = await _apiService.dio.post(
         DebugConfig.getDevEndpoint('seed_credits'),
-        data: {
+        queryParameters: {
           'user_id': userId,
           'credits': credits,
         },
@@ -104,7 +104,7 @@ class DebugBillingService {
 
       final response = await _apiService.dio.post(
         DebugConfig.getDevEndpoint('simulate_purchase'),
-        data: {
+        queryParameters: {
           'user_id': userId,
           'credits': credits,
         },
@@ -220,7 +220,7 @@ class DebugBillingService {
 
       final response = await _apiService.dio.post(
         DebugConfig.getDevEndpoint('check_operation'),
-        data: {
+        queryParameters: {
           'operation_type': operationType,
         },
       );
