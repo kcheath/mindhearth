@@ -114,5 +114,5 @@ class DebugConfig {
   static bool get showDebugBanner => _kDebugMode;
   
   /// Enable performance overlay
-  static bool get enablePerformanceOverlay => _kDebugMode;
+  static bool get enablePerformanceOverlay => false;
 }

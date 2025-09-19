@@ -44,9 +44,10 @@ class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
       margin: const EdgeInsets.all(16),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             Row(
               children: [
                 Icon(
@@ -103,6 +104,32 @@ class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
               ),
             
             if (debugState.error != null) const SizedBox(height: 16),
+            
+            // Backend status warning
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.warning, color: Colors.orange[700], size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Debug endpoints not available on local backend. Some features may not work.',
+                      style: TextStyle(
+                        color: Colors.orange[700],
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
             
             // Credit management section
             _buildSectionTitle('Credit Management'),
@@ -262,7 +289,8 @@ class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
             ),
             
             const SizedBox(height: 16),
-          ],
+            ],
+          ),
         ),
       ),
     );
