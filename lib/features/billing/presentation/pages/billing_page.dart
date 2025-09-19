@@ -9,8 +9,6 @@ import 'package:mindhearth/features/billing/presentation/widgets/billing_actions
 import 'package:mindhearth/features/billing/presentation/widgets/purchase_dialog.dart';
 import 'package:mindhearth/features/billing/presentation/widgets/gift_dialog.dart';
 import 'package:mindhearth/features/billing/presentation/widgets/support_dialog.dart';
-import 'package:mindhearth/features/billing/presentation/widgets/debug_billing_panel.dart';
-import 'package:mindhearth/core/config/debug_config.dart';
 
 /// Main billing page with trauma-informed design
 /// Provides comprehensive billing information and controls
@@ -133,12 +131,6 @@ class _BillingPageState extends ConsumerState<BillingPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Debug panel (only in debug mode)
-            if (DebugConfig.isDebugMode) ...[
-              const DebugBillingPanel(),
-              const SizedBox(height: 8),
-            ],
-            
             // Credit Balance Card - Top 1/3
             Expanded(
               flex: 1,

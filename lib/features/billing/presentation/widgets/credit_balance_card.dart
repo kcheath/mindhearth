@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mindhearth/core/config/debug_config.dart';
+import 'package:mindhearth/features/billing/presentation/widgets/debug_billing_panel.dart';
 
 /// Credit balance card with trauma-informed design
 /// Shows current balance with clear, reassuring messaging
@@ -51,6 +53,22 @@ class CreditBalanceCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
+                // Debug icon (only in debug mode)
+                if (DebugConfig.isDebugMode)
+                  IconButton(
+                    icon: Icon(
+                      Icons.bug_report,
+                      color: Theme.of(context).colorScheme.secondary,
+                      size: 20,
+                    ),
+                    onPressed: () => _showDebugPanel(context),
+                    tooltip: 'Debug Billing Tools',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                  ),
                 if (isLoading)
                   SizedBox(
                     width: 20,
@@ -176,5 +194,19 @@ class CreditBalanceCard extends StatelessWidget {
     } else {
       return 'Very low balance - purchase credits or wait for your monthly grant. We\'re here to support you.';
     }
+  }
+
+  void _showDebugPanel(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.9,
+          height: MediaQuery.of(context).size.height * 0.8,
+          padding: const EdgeInsets.all(16),
+          child: const DebugBillingPanel(),
+        ),
+      ),
+    );
   }
 }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
 import 'package:mindhearth/features/billing/providers/debug_billing_provider.dart';
-import 'package:mindhearth/core/utils/logger.dart';
 
 /// Debug billing panel for development and testing
 class DebugBillingPanel extends ConsumerStatefulWidget {

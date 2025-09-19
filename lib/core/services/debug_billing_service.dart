@@ -1,8 +1,6 @@
 import 'package:mindhearth/core/config/debug_config.dart';
 import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/core/models/api_response.dart';
-import 'package:mindhearth/features/billing/domain/entities/credit_wallet.dart';
-import 'package:mindhearth/features/billing/domain/entities/ledger_entry.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 
 /// Debug service for billing operations in development mode

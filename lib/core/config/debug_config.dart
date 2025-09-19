@@ -103,4 +103,16 @@ class DebugConfig {
     if (!isDebugMode) return false;
     return debugLogging[category] ?? false;
   }
+  
+  /// API URL for development
+  static String get apiUrl => 'http://localhost:8000/api';
+  
+  /// Test email for development
+  static String get testEmail => 'test@tsukiyo.dev';
+  
+  /// Show debug banner
+  static bool get showDebugBanner => _kDebugMode;
+  
+  /// Enable performance overlay
+  static bool get enablePerformanceOverlay => _kDebugMode;
 }

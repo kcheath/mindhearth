@@ -376,7 +376,7 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
 
 /// Debug billing service provider
 final debugBillingServiceProvider = Provider<DebugBillingService>((ref) {
-  final apiService = ref.read(apiServiceProvider);
+  final apiService = ApiService();
   return DebugBillingService(apiService);
 });
 
