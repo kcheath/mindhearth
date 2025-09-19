@@ -12,7 +12,6 @@ class DebugBillingPanel extends ConsumerStatefulWidget {
 }
 
 class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
-  final TextEditingController _userIdController = TextEditingController();
   final TextEditingController _creditsController = TextEditingController();
   final TextEditingController _operationTypeController = TextEditingController();
 
@@ -25,7 +24,6 @@ class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
 
   @override
   void dispose() {
-    _userIdController.dispose();
     _creditsController.dispose();
     _operationTypeController.dispose();
     super.dispose();
@@ -135,33 +133,15 @@ class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
             _buildSectionTitle('Credit Management'),
             const SizedBox(height: 8),
             
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _userIdController,
-                    decoration: const InputDecoration(
-                      labelText: 'User ID',
-                      hintText: 'Enter user ID',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextField(
-                    controller: _creditsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Credits',
-                      hintText: 'Enter credits',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-              ],
+            TextField(
+              controller: _creditsController,
+              decoration: const InputDecoration(
+                labelText: 'Credits',
+                hintText: 'Enter credit amount',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 8),
             
@@ -309,20 +289,14 @@ class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
 
 
   Future<void> _seedCredits(DebugBillingNotifier notifier) async {
-    final userId = _userIdController.text.trim();
     final credits = int.tryParse(_creditsController.text.trim()) ?? 0;
-    
-    if (userId.isEmpty) {
-      _showSnackBar('Please enter a user ID', Colors.red);
-      return;
-    }
     
     if (credits <= 0) {
       _showSnackBar('Please enter a valid credit amount', Colors.red);
       return;
     }
     
-    final success = await notifier.seedCredits(userId: userId, credits: credits);
+    final success = await notifier.seedCredits(credits: credits);
     if (success) {
       _showSnackBar('Credits seeded successfully!', Colors.green);
     } else {
@@ -347,20 +321,14 @@ class _DebugBillingPanelState extends ConsumerState<DebugBillingPanel> {
   }
 
   Future<void> _simulatePurchase(DebugBillingNotifier notifier) async {
-    final userId = _userIdController.text.trim();
     final credits = int.tryParse(_creditsController.text.trim()) ?? 0;
-    
-    if (userId.isEmpty) {
-      _showSnackBar('Please enter a user ID', Colors.red);
-      return;
-    }
     
     if (credits <= 0) {
       _showSnackBar('Please enter a valid credit amount', Colors.red);
       return;
     }
     
-    final success = await notifier.simulatePurchase(userId: userId, credits: credits);
+    final success = await notifier.simulatePurchase(credits: credits);
     if (success) {
       _showSnackBar('Purchase simulated successfully!', Colors.green);
     } else {

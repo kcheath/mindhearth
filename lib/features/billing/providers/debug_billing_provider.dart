@@ -48,7 +48,6 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
 
   /// Seed credits for testing
   Future<bool> seedCredits({
-    required String userId,
     required int credits,
   }) async {
     if (!isDebugMode) {
@@ -60,7 +59,6 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
       state = state.copyWith(isLoading: true, error: null);
 
       final response = await _debugService.seedCredits(
-        userId: userId,
         credits: credits,
       );
 
@@ -68,7 +66,6 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
         success: (data, statusCode) {
           state = state.copyWith(isLoading: false);
           appLogger.info('Credits seeded successfully', {
-            'userId': userId,
             'credits': credits,
             'response': data,
           });
@@ -81,7 +78,6 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
           );
           appLogger.error('Failed to seed credits', {
             'error': message,
-            'userId': userId,
             'credits': credits,
           });
           return false;
@@ -140,9 +136,8 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
     }
   }
 
-  /// Simulate a purchase
+  /// Simulate a purchase for testing
   Future<bool> simulatePurchase({
-    required String userId,
     required int credits,
   }) async {
     if (!isDebugMode) {
@@ -154,7 +149,6 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
       state = state.copyWith(isLoading: true, error: null);
 
       final response = await _debugService.simulatePurchase(
-        userId: userId,
         credits: credits,
       );
 
@@ -162,7 +156,6 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
         success: (data, statusCode) {
           state = state.copyWith(isLoading: false);
           appLogger.info('Purchase simulated successfully', {
-            'userId': userId,
             'credits': credits,
             'response': data,
           });
@@ -175,7 +168,6 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
           );
           appLogger.error('Failed to simulate purchase', {
             'error': message,
-            'userId': userId,
             'credits': credits,
           });
           return false;
@@ -190,6 +182,7 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
       return false;
     }
   }
+
 
   /// Reset all billing data
   Future<bool> resetBillingData() async {

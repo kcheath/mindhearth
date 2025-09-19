@@ -14,7 +14,6 @@ class DebugBillingService {
 
   /// Seed credits for testing
   Future<ApiResponse<Map<String, dynamic>>> seedCredits({
-    required String userId,
     required int credits,
   }) async {
     if (!isDebugMode) {
@@ -22,6 +21,15 @@ class DebugBillingService {
     }
 
     try {
+      // Get current user ID
+      final userResponse = await _apiService.getCurrentUser();
+      if (userResponse is ApiError) {
+        return ApiError(message: 'Failed to get current user: ${userResponse.message}');
+      }
+      
+      final userData = (userResponse as ApiSuccess).data;
+      final userId = userData['id'] as String;
+      
       appLogger.info('Seeding credits for testing', {
         'userId': userId,
         'credits': credits,
@@ -89,7 +97,6 @@ class DebugBillingService {
 
   /// Simulate a purchase
   Future<ApiResponse<Map<String, dynamic>>> simulatePurchase({
-    required String userId,
     required int credits,
   }) async {
     if (!isDebugMode) {
@@ -97,6 +104,15 @@ class DebugBillingService {
     }
 
     try {
+      // Get current user ID
+      final userResponse = await _apiService.getCurrentUser();
+      if (userResponse is ApiError) {
+        return ApiError(message: 'Failed to get current user: ${userResponse.message}');
+      }
+      
+      final userData = (userResponse as ApiSuccess).data;
+      final userId = userData['id'] as String;
+      
       appLogger.info('Simulating purchase for testing', {
         'userId': userId,
         'credits': credits,
