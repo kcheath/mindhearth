@@ -124,7 +124,7 @@ class _BillingPageState extends ConsumerState<BillingPage>
 
   Widget _buildOverviewTab(BuildContext context, billingState, billingNotifier) {
       return Padding(
-        padding: const EdgeInsets.all(6),
+        padding: const EdgeInsets.all(4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -137,7 +137,7 @@ class _BillingPageState extends ConsumerState<BillingPage>
               ),
             ),
             
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             
             // Billing Actions
             Expanded(

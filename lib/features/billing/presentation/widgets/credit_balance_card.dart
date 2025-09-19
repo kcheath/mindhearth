@@ -20,7 +20,7 @@ class CreditBalanceCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           gradient: LinearGradient(
@@ -64,7 +64,7 @@ class CreditBalanceCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Row(
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
@@ -85,7 +85,7 @@ class CreditBalanceCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
@@ -116,7 +116,7 @@ class CreditBalanceCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Text(
               _getCompactMessage(),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
