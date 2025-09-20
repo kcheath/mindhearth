@@ -1,7 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mindhearth/app/widgets/adaptive_navigation.dart';
 import 'package:mindhearth/core/providers/journal_provider.dart';
 import 'package:mindhearth/core/models/journal_state.dart';
 
@@ -13,8 +13,6 @@ class JournalPage extends ConsumerStatefulWidget {
 }
 
 class _JournalPageState extends ConsumerState<JournalPage> {
-  int _selectedIndex = 2;
-
   @override
   void initState() {
     super.initState();
@@ -22,30 +20,6 @@ class _JournalPageState extends ConsumerState<JournalPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(journalNotifierProvider.notifier).loadJournalEntries();
     });
-  }
-
-  void _onDestinationSelected(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-    
-    switch (index) {
-      case 0:
-        context.go('/chat');
-        break;
-      case 1:
-        context.go('/sessions');
-        break;
-      case 2:
-        context.go('/journal');
-        break;
-      case 3:
-        context.go('/documents');
-        break;
-      case 4:
-        context.go('/reports');
-        break;
-    }
   }
 
   void _onJournalEntryTap(JournalEntry entry) {
@@ -74,24 +48,24 @@ class _JournalPageState extends ConsumerState<JournalPage> {
   Widget build(BuildContext context) {
     final journalState = ref.watch(journalStateProvider);
     
-    return AdaptiveNavigation(
-      selectedIndex: _selectedIndex,
-      onDestinationSelected: _onDestinationSelected,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Journal'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _onRefresh,
-            ),
-          ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Journal'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/chat'),
         ),
-        body: _buildBody(context, journalState),
-        floatingActionButton: FloatingActionButton(
-          onPressed: _onCreateEntry,
-          child: const Icon(Icons.add),
-        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _onRefresh,
+          ),
+        ],
+      ),
+      body: _buildBody(context, journalState),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _onCreateEntry,
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -192,6 +166,20 @@ class _JournalPageState extends ConsumerState<JournalPage> {
   }
 
   Widget _buildJournalEntryCard(BuildContext context, JournalEntry entry) {
+    // Parse JSON content if it's in JSON format
+    String content = entry.originalContent ?? '';
+    try {
+      // Check if content is JSON
+      if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
+        final jsonData = jsonDecode(content);
+        // Extract the summary or content from JSON
+        content = jsonData['summary'] ?? jsonData['content'] ?? content;
+      }
+    } catch (e) {
+      // If JSON parsing fails, use original content
+      // Content will remain as is
+    }
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
@@ -209,6 +197,18 @@ class _JournalPageState extends ConsumerState<JournalPage> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Show formatted content preview
+            if (content.isNotEmpty) ...[
+              Text(
+                content.length > 100 ? '${content.substring(0, 100)}...' : content,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+            ],
             Text(
               entry.entryType.toUpperCase(),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
