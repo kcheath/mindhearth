@@ -113,6 +113,7 @@ class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
     try {
       appLogger.info('Loading question counts from backend');
 
+      // Use the status endpoint to get current question counts
       final response = await _apiService.dio.get('/billing/session-questions/status');
 
       if (response.statusCode == 200) {
@@ -160,13 +161,12 @@ class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
         'globalQuestions': globalQuestions,
       });
 
+      // Use the correct backend endpoint for adding questions
       final response = await _apiService.dio.post(
-        '/billing/session-questions/track',
+        '/billing/session-questions/add',
         data: {
           'session_id': sessionId,
-          'session_questions': sessionQuestions,
-          'global_questions': globalQuestions,
-          'questions_per_credit': state.questionsPerCredit,
+          'questions': sessionQuestions, // Number of questions to add
         },
       );
 
@@ -266,6 +266,24 @@ class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
   /// Refresh question counts from backend
   Future<void> refreshQuestionCounts() async {
     await _loadQuestionCountsFromBackend();
+  }
+
+  /// Get session-specific question count from backend
+  Future<int> getSessionQuestionCount(String sessionId) async {
+    try {
+      final response = await _apiService.dio.get('/billing/session-questions/$sessionId');
+      
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        return data['questions'] as int? ?? 0;
+      }
+    } catch (e) {
+      appLogger.error('Failed to get session question count', {
+        'error': e.toString(),
+        'sessionId': sessionId,
+      });
+    }
+    return 0;
   }
 }
 
