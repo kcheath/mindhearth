@@ -57,11 +57,17 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar>
   }
 
   Future<void> _initializeSpeech() async {
-    bool available = await _speech.initialize();
-    if (mounted) {
-      setState(() {
-        // Speech is available
-      });
+    try {
+      bool available = await _speech.initialize();
+      if (mounted) {
+        setState(() {
+          // Speech is available
+        });
+      }
+    } catch (e) {
+      // Handle speech-to-text initialization errors gracefully
+      print('Speech-to-text initialization failed: $e');
+      // Continue without speech functionality
     }
   }
 
@@ -194,40 +200,54 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar>
   }
 
   void _startRecording() async {
-    // Request microphone permission
-    final status = await Permission.microphone.request();
-    if (status != PermissionStatus.granted) {
+    try {
+      // Request microphone permission
+      final status = await Permission.microphone.request();
+      if (status != PermissionStatus.granted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Microphone permission is required for speech-to-text'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      setState(() {
+        _isRecording = true;
+        _isListening = true;
+      });
+      
+      HapticFeedback.lightImpact();
+      
+      // Start listening
+      await _speech.listen(
+        onResult: (result) {
+          setState(() {
+            _recognizedText = result.recognizedWords;
+          });
+        },
+        listenFor: const Duration(seconds: 30),
+        pauseFor: const Duration(seconds: 3),
+        partialResults: true,
+        localeId: 'en_US',
+        onSoundLevelChange: (level) {
+          // Optional: Handle sound level changes for visual feedback
+        },
+      );
+    } catch (e) {
+      setState(() {
+        _isRecording = false;
+        _isListening = false;
+      });
+      
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Microphone permission is required for speech-to-text'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: Text('Speech-to-text not available: ${e.toString()}'),
+          backgroundColor: Colors.orange,
         ),
       );
-      return;
     }
-
-    setState(() {
-      _isRecording = true;
-      _isListening = true;
-    });
-    
-    HapticFeedback.lightImpact();
-    
-    // Start listening
-    await _speech.listen(
-      onResult: (result) {
-        setState(() {
-          _recognizedText = result.recognizedWords;
-        });
-      },
-      listenFor: const Duration(seconds: 30),
-      pauseFor: const Duration(seconds: 3),
-      partialResults: true,
-      localeId: 'en_US',
-      onSoundLevelChange: (level) {
-        // Optional: Handle sound level changes for visual feedback
-      },
-    );
   }
 
   void _stopRecording() async {

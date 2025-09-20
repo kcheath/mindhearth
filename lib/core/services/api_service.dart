@@ -21,8 +21,9 @@ class ApiService {
   ApiService() {
     _dio = Dio(BaseOptions(
       baseUrl: DebugConfig.apiUrl,
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
+      connectTimeout: const Duration(seconds: 60),
+      receiveTimeout: const Duration(seconds: 60),
+      sendTimeout: const Duration(seconds: 60),
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -383,6 +384,14 @@ class ApiService {
       });
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout || 
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.sendTimeout) {
+        return ApiError(
+          message: 'Connection timeout. Please check your internet connection and try again.',
+          statusCode: e.response?.statusCode,
+        );
+      }
       return ApiError(
         message: e.response?.data?['detail'] ?? 'Failed to update onboarded status',
         statusCode: e.response?.statusCode,

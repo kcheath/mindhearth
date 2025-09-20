@@ -200,8 +200,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
           }
         },
         failure: (error) {
-          state = state.setError(error.message);
-          
+          // Don't set error state for onboarding status updates to avoid blocking the user
+          // Just log the error and continue
           if (LoggingConfig.enableAuthLogs) {
             appLogger.auth('Failed to update onboarding status', {
               'error': error.message,
@@ -210,8 +210,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         },
       );
     } catch (e) {
-      state = state.setError('Failed to update onboarding status: ${e.toString()}');
-      
+      // Don't set error state for onboarding status updates to avoid blocking the user
+      // Just log the error and continue
       if (LoggingConfig.enableAuthLogs) {
         appLogger.auth('Onboarding status update error', {
           'error': e.toString(),
