@@ -69,7 +69,7 @@ class UsageAnalyticsWidget extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(context, analytics),
+          _buildHeader(context, analytics, analyticsNotifier),
           const SizedBox(height: 24),
           _buildSummaryCards(context, analytics),
           const SizedBox(height: 24),
@@ -81,7 +81,7 @@ class UsageAnalyticsWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, UsageAnalytics analytics) {
+  Widget _buildHeader(BuildContext context, UsageAnalytics analytics, UsageAnalyticsNotifier analyticsNotifier) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
