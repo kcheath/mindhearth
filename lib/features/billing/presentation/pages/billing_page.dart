@@ -9,6 +9,8 @@ import 'package:mindhearth/features/billing/presentation/widgets/billing_actions
 import 'package:mindhearth/features/billing/presentation/widgets/purchase_dialog.dart';
 import 'package:mindhearth/features/billing/presentation/widgets/gift_dialog.dart';
 import 'package:mindhearth/features/billing/presentation/widgets/support_dialog.dart';
+import 'package:mindhearth/features/billing/presentation/widgets/usage_analytics_widget.dart';
+import 'package:mindhearth/features/billing/presentation/widgets/cost_estimation_widget.dart';
 
 /// Main billing page with trauma-informed design
 /// Provides comprehensive billing information and controls
@@ -26,7 +28,7 @@ class _BillingPageState extends ConsumerState<BillingPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     
     // Load billing data when page initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -69,6 +71,8 @@ class _BillingPageState extends ConsumerState<BillingPage>
             Tab(icon: Icon(Icons.account_balance_wallet), text: 'Overview'),
             Tab(icon: Icon(Icons.history), text: 'Transactions'),
             Tab(icon: Icon(Icons.shopping_cart), text: 'Purchases'),
+            Tab(icon: Icon(Icons.analytics), text: 'Analytics'),
+            Tab(icon: Icon(Icons.calculate), text: 'Costs'),
           ],
         ),
       ),
@@ -117,6 +121,12 @@ class _BillingPageState extends ConsumerState<BillingPage>
                 
                 // Purchases Tab
                 _buildPurchasesTab(context, billingState, billingNotifier),
+                
+                // Analytics Tab
+                _buildAnalyticsTab(context, billingState, billingNotifier),
+                
+                // Costs Tab
+                _buildCostsTab(context, billingState, billingNotifier),
               ],
             ),
           ),
@@ -208,6 +218,45 @@ class _BillingPageState extends ConsumerState<BillingPage>
       MaterialPageRoute(
         builder: (context) => const SupportDialog(),
         fullscreenDialog: true,
+      ),
+    );
+  }
+
+  Widget _buildAnalyticsTab(BuildContext context, billingState, billingNotifier) {
+    return const UsageAnalyticsWidget(periodDays: 30);
+  }
+
+  Widget _buildCostsTab(BuildContext context, billingState, billingNotifier) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Cost Estimation',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: ListView(
+              children: [
+                CostEstimationWidget(
+                  type: 'document',
+                  sizeBytes: 1024 * 1024, // 1MB example
+                ),
+                const SizedBox(height: 16),
+                CostEstimationWidget(
+                  type: 'session_time',
+                  durationSeconds: 300, // 5 minutes example
+                ),
+                const SizedBox(height: 16),
+                CostEstimationWidget(
+                  type: 'ai_summary',
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
