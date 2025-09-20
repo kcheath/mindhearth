@@ -85,22 +85,36 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
       final sessionQuestionNotifier = ref.read(sessionQuestionProvider.notifier);
       final chatState = ref.read(chatProvider);
       
-      if (chatState.currentSessionId != null) {
-        await sessionQuestionNotifier.addQuestions(questions, sessionId: chatState.currentSessionId);
-        await _loadCurrentData();
-        _questionController.clear();
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Added $questions questions')),
-          );
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No active session found')),
-          );
-        }
+      appLogger.info('Adding questions to debug screen', {
+        'questions': questions,
+        'currentSessionId': chatState.currentSessionId,
+      });
+      
+      // Use current session ID or create a debug session ID
+      final sessionId = chatState.currentSessionId ?? 'debug-session-${DateTime.now().millisecondsSinceEpoch}';
+      
+      appLogger.info('Using session ID for questions', {
+        'sessionId': sessionId,
+        'isDebugSession': chatState.currentSessionId == null,
+      });
+      
+      await sessionQuestionNotifier.addQuestions(questions, sessionId: sessionId);
+      
+      // Get the updated state after adding questions
+      final updatedState = ref.read(sessionQuestionProvider);
+      appLogger.info('Session question state after adding questions', {
+        'sessionQuestions': updatedState.sessionQuestions,
+        'globalTotalQuestions': updatedState.globalTotalQuestions,
+        'questionsPerCredit': updatedState.questionsPerCredit,
+      });
+      
+      await _loadCurrentData();
+      _questionController.clear();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Added $questions questions to ${chatState.currentSessionId != null ? 'current session' : 'debug session'}')),
+        );
       }
     } catch (e) {
       appLogger.error('Failed to add questions', e);
@@ -611,7 +625,11 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
                       Text('Session Questions: ${sessionQuestionState.sessionQuestions.values.fold(0, (sum, count) => sum + count)}'),
                       Text('Global Questions: ${sessionQuestionState.globalTotalQuestions}'),
                       Text('Questions per Credit: ${sessionQuestionState.questionsPerCredit}'),
+                      Text('Credits Used: ${sessionQuestionState.creditsUsed}'),
+                      Text('Questions Remaining: ${sessionQuestionState.questionsRemainingInCurrentCredit}'),
                       Text('Status: ${sessionQuestionState.isLoading ? 'Loading' : 'Ready'}'),
+                      if (sessionQuestionState.sessionQuestions.isNotEmpty)
+                        Text('Sessions: ${sessionQuestionState.sessionQuestions.keys.join(', ')}'),
                     ],
                   ),
                 ),
