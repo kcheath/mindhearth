@@ -4,17 +4,32 @@ import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/features/billing/domain/entities/credit_consumption.dart';
 
 /// Usage analytics state
-@freezed
-class UsageAnalyticsState with _$UsageAnalyticsState {
-  const factory UsageAnalyticsState({
-    @Default(false) bool isLoading,
+class UsageAnalyticsState {
+  final bool isLoading;
+  final String? error;
+  final UsageAnalytics? analytics;
+  final int periodDays;
+
+  const UsageAnalyticsState({
+    this.isLoading = false,
+    this.error,
+    this.analytics,
+    this.periodDays = 30,
+  });
+
+  UsageAnalyticsState copyWith({
+    bool? isLoading,
     String? error,
     UsageAnalytics? analytics,
-    @Default(30) int periodDays,
-  }) = _UsageAnalyticsState;
-
-  factory UsageAnalyticsState.fromJson(Map<String, dynamic> json) =>
-      _$UsageAnalyticsStateFromJson(json);
+    int? periodDays,
+  }) {
+    return UsageAnalyticsState(
+      isLoading: isLoading ?? this.isLoading,
+      error: error ?? this.error,
+      analytics: analytics ?? this.analytics,
+      periodDays: periodDays ?? this.periodDays,
+    );
+  }
 }
 
 /// Usage analytics notifier

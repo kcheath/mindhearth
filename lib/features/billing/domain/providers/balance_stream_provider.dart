@@ -4,17 +4,32 @@ import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 
 /// Balance stream state
-@freezed
-class BalanceStreamState with _$BalanceStreamState {
-  const factory BalanceStreamState({
-    @Default(0) int balance,
-    @Default(false) bool isConnected,
-    String? error,
-    @Default(false) bool isLoading,
-  }) = _BalanceStreamState;
+class BalanceStreamState {
+  final int balance;
+  final bool isConnected;
+  final String? error;
+  final bool isLoading;
 
-  factory BalanceStreamState.fromJson(Map<String, dynamic> json) =>
-      _$BalanceStreamStateFromJson(json);
+  const BalanceStreamState({
+    this.balance = 0,
+    this.isConnected = false,
+    this.error,
+    this.isLoading = false,
+  });
+
+  BalanceStreamState copyWith({
+    int? balance,
+    bool? isConnected,
+    String? error,
+    bool? isLoading,
+  }) {
+    return BalanceStreamState(
+      balance: balance ?? this.balance,
+      isConnected: isConnected ?? this.isConnected,
+      error: error ?? this.error,
+      isLoading: isLoading ?? this.isLoading,
+    );
+  }
 }
 
 /// Balance stream notifier

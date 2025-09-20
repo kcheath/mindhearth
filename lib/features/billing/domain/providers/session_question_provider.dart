@@ -4,18 +4,36 @@ import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/features/billing/domain/entities/credit_consumption.dart';
 
 /// Session question tracking state
-@freezed
-class SessionQuestionState with _$SessionQuestionState {
-  const factory SessionQuestionState({
-    @Default({}) Map<String, int> sessionQuestions,
-    @Default(0) int globalTotalQuestions,
-    @Default(10) int questionsPerCredit,
-    @Default(false) bool isLoading,
-    String? error,
-  }) = _SessionQuestionState;
+class SessionQuestionState {
+  final Map<String, int> sessionQuestions;
+  final int globalTotalQuestions;
+  final int questionsPerCredit;
+  final bool isLoading;
+  final String? error;
 
-  factory SessionQuestionState.fromJson(Map<String, dynamic> json) =>
-      _$SessionQuestionStateFromJson(json);
+  const SessionQuestionState({
+    this.sessionQuestions = const {},
+    this.globalTotalQuestions = 0,
+    this.questionsPerCredit = 10,
+    this.isLoading = false,
+    this.error,
+  });
+
+  SessionQuestionState copyWith({
+    Map<String, int>? sessionQuestions,
+    int? globalTotalQuestions,
+    int? questionsPerCredit,
+    bool? isLoading,
+    String? error,
+  }) {
+    return SessionQuestionState(
+      sessionQuestions: sessionQuestions ?? this.sessionQuestions,
+      globalTotalQuestions: globalTotalQuestions ?? this.globalTotalQuestions,
+      questionsPerCredit: questionsPerCredit ?? this.questionsPerCredit,
+      isLoading: isLoading ?? this.isLoading,
+      error: error ?? this.error,
+    );
+  }
 }
 
 /// Session question tracking notifier
