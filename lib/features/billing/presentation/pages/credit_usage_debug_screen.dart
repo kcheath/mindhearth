@@ -656,14 +656,15 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
                 const SizedBox(height: 16),
                 
                 // Session Management
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     ElevatedButton.icon(
                       onPressed: _resetSession,
                       icon: const Icon(Icons.clear),
                       label: const Text('Reset Session'),
                     ),
-                    const SizedBox(width: 8),
                     ElevatedButton.icon(
                       onPressed: _refreshSessionData,
                       icon: const Icon(Icons.refresh),
@@ -733,7 +734,9 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
             const SizedBox(height: 16),
             
             // Document Processing Actions
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 ElevatedButton.icon(
                   onPressed: _simulateDocumentProcessing,
@@ -741,7 +744,6 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
                   label: const Text('Simulate Processing'),
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                 ),
-                const SizedBox(width: 8),
                 ElevatedButton.icon(
                   onPressed: _confirmDocumentProcessing,
                   icon: const Icon(Icons.check),
@@ -802,7 +804,9 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
             const SizedBox(height: 16),
             
             // AI Summary Actions
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 ElevatedButton.icon(
                   onPressed: _simulateAISummary,
@@ -810,7 +814,6 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
                   label: const Text('Simulate AI Summary'),
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
                 ),
-                const SizedBox(width: 8),
                 ElevatedButton.icon(
                   onPressed: _refreshAISummaryConfig,
                   icon: const Icon(Icons.refresh),
