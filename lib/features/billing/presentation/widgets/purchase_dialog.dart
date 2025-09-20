@@ -26,6 +26,7 @@ class _PurchaseDialogState extends ConsumerState<PurchaseDialog> {
   void initState() {
     super.initState();
     _initializeIAP();
+    _loadCreditPackages();
   }
 
   Future<void> _initializeIAP() async {
@@ -42,48 +43,82 @@ class _PurchaseDialogState extends ConsumerState<PurchaseDialog> {
     }
   }
 
-  // Mock credit packages - in production, these would come from the backend
-  final List<CreditPackage> _packages = [
-    const CreditPackage(
-      id: 'starter',
-      name: 'Starter Pack',
-      description: 'Perfect for getting started on your healing journey',
-      credits: 10,
-      price: 4.99,
-      currency: 'USD',
-    ),
-    const CreditPackage(
-      id: 'healer',
-      name: 'Healer Pack',
-      description: 'Great value for regular users',
-      credits: 25,
-      price: 9.99,
-      currency: 'USD',
-      isPopular: true,
-      bonusCredits: 5,
-      bonusDescription: '5 bonus credits included!',
-    ),
-    const CreditPackage(
-      id: 'warrior',
-      name: 'Warrior Pack',
-      description: 'For those committed to deep healing work',
-      credits: 60,
-      price: 19.99,
-      currency: 'USD',
-      bonusCredits: 15,
-      bonusDescription: '15 bonus credits included!',
-    ),
-    const CreditPackage(
-      id: 'champion',
-      name: 'Champion Pack',
-      description: 'Maximum value for dedicated healing warriors',
-      credits: 150,
-      price: 39.99,
-      currency: 'USD',
-      bonusCredits: 50,
-      bonusDescription: '50 bonus credits included!',
-    ),
-  ];
+  Future<void> _loadCreditPackages() async {
+    try {
+      appLogger.info('Loading credit packages from backend');
+      
+      final billingNotifier = ref.read(billingProvider.notifier);
+      final packages = await billingNotifier.getCreditPackages();
+      
+      if (mounted) {
+        setState(() {
+          _packages = packages;
+          _packagesLoaded = true;
+        });
+      }
+      
+      appLogger.info('Credit packages loaded successfully', {
+        'count': packages.length,
+      });
+    } catch (e) {
+      appLogger.error('Failed to load credit packages', {'error': e.toString()});
+      
+      // Fallback to default packages if backend fails
+      if (mounted) {
+        setState(() {
+          _packages = _getDefaultPackages();
+          _packagesLoaded = true;
+        });
+      }
+    }
+  }
+
+  List<CreditPackage> _getDefaultPackages() {
+    return [
+      const CreditPackage(
+        id: 'starter',
+        name: 'Starter Pack',
+        description: 'Perfect for getting started on your healing journey',
+        credits: 10,
+        price: 4.99,
+        currency: 'USD',
+      ),
+      const CreditPackage(
+        id: 'healer',
+        name: 'Healer Pack',
+        description: 'Great value for regular users',
+        credits: 25,
+        price: 9.99,
+        currency: 'USD',
+        isPopular: true,
+        bonusCredits: 5,
+        bonusDescription: '5 bonus credits included!',
+      ),
+      const CreditPackage(
+        id: 'warrior',
+        name: 'Warrior Pack',
+        description: 'For those committed to deep healing work',
+        credits: 60,
+        price: 19.99,
+        currency: 'USD',
+        bonusCredits: 15,
+        bonusDescription: '15 bonus credits included!',
+      ),
+      const CreditPackage(
+        id: 'champion',
+        name: 'Champion Pack',
+        description: 'Maximum value for dedicated healing warriors',
+        credits: 150,
+        price: 39.99,
+        currency: 'USD',
+        bonusCredits: 50,
+        bonusDescription: '50 bonus credits included!',
+      ),
+    ];
+  }
+
+  List<CreditPackage> _packages = [];
+  bool _packagesLoaded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -117,19 +152,30 @@ class _PurchaseDialogState extends ConsumerState<PurchaseDialog> {
               ),
               const SizedBox(height: 16),
               Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      _buildPackageList(),
-                      const SizedBox(height: 16),
-                      _buildPaymentMethodSelector(),
-                      if (_selectedPackage != null) ...[
-                        const SizedBox(height: 16),
-                        _buildPurchaseSummary(),
-                      ],
-                    ],
-                  ),
-                ),
+                child: _packagesLoaded 
+                    ? SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            _buildPackageList(),
+                            const SizedBox(height: 16),
+                            _buildPaymentMethodSelector(),
+                            if (_selectedPackage != null) ...[
+                              const SizedBox(height: 16),
+                              _buildPurchaseSummary(),
+                            ],
+                          ],
+                        ),
+                      )
+                    : const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 16),
+                            Text('Loading credit packages...'),
+                          ],
+                        ),
+                      ),
               ),
               const SizedBox(height: 16),
               _buildActionButtons(context),

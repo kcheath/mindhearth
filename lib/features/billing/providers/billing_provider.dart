@@ -382,6 +382,34 @@ class BillingNotifier extends StateNotifier<BillingState> {
   void clearError() {
     state = state.copyWith(error: null);
   }
+
+  /// Get available credit packages
+  Future<List<CreditPackage>> getCreditPackages() async {
+    try {
+      appLogger.info('Loading credit packages from backend');
+      
+      final response = await _billingService.getCreditPackages();
+      
+      return response.when(
+        success: (packages, statusCode) {
+          appLogger.info('Credit packages loaded successfully', {
+            'count': packages.length,
+          });
+          return packages;
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('Failed to load credit packages', {
+            'error': message,
+            'statusCode': statusCode,
+          });
+          throw Exception('Failed to load credit packages: $message');
+        },
+      );
+    } catch (e) {
+      appLogger.error('Error loading credit packages', {'error': e.toString()});
+      rethrow;
+    }
+  }
 }
 
 /// Riverpod provider for BillingService

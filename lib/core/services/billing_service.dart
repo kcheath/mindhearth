@@ -74,6 +74,40 @@ class BillingService {
     }
   }
 
+  /// Get available credit packages
+  Future<ApiResponse<List<CreditPackage>>> getCreditPackages() async {
+    try {
+      appLogger.info('Getting credit packages');
+      
+      final response = await _apiService.dio.get('/billing/packages');
+      
+      final packagesList = response.data['packages'] as List<dynamic>? ?? [];
+      final packages = packagesList
+          .map((packageData) => CreditPackage.fromJson(packageData as Map<String, dynamic>))
+          .toList();
+      
+      appLogger.info('Credit packages retrieved successfully', {
+        'count': packages.length,
+      });
+      
+      return ApiSuccess(
+        data: packages,
+      );
+    } on DioException catch (e) {
+      appLogger.error('Error getting credit packages', {
+        'error': e.toString(),
+        'response': e.response?.data,
+      });
+      return ApiError(
+        message: e.response?.data['detail'] ?? 'Failed to get credit packages',
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      appLogger.error('Unexpected error getting credit packages', {'error': e.toString()});
+      return ApiError(message: 'An unexpected error occurred: ${e.toString()}');
+    }
+  }
+
   /// Get user's credit ledger with pagination
   Future<ApiResponse<List<LedgerEntry>>> getLedger({
     int limit = 50,

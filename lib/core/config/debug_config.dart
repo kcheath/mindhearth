@@ -16,7 +16,7 @@ class DebugConfig {
   /// Whether fake payment providers are enabled
   static bool get isFakeProviderEnabled => _kDebugMode;
   
-  /// Whether IAP validation is stubbed
+  /// Whether IAP validation is stubbed (only in debug mode)
   static bool get isIAPValidationStubbed => _kDebugMode;
   
   /// Whether ledger is in fake mode
@@ -30,6 +30,14 @@ class DebugConfig {
     'fake_provider_success_rate': 1.0,
     'fake_provider_delay_ms': 100,
     'fake_provider_error_rate': 0.0,
+    'questions_per_credit': 10,
+  };
+
+  /// Production settings for billing
+  static const Map<String, dynamic> billingProductionSettings = {
+    'ledger_mode': 'sql',
+    'iap_validation_mode': 'real',
+    'fake_provider_mode': 'disabled',
     'questions_per_credit': 10,
   };
   
@@ -49,9 +57,7 @@ class DebugConfig {
   
   /// Get debug settings for a specific feature
   static T getDebugSetting<T>(String key, T defaultValue) {
-    if (!isDebugMode) return defaultValue;
-    
-    final settings = billingDebugSettings;
+    final settings = isDebugMode ? billingDebugSettings : billingProductionSettings;
     return settings[key] as T? ?? defaultValue;
   }
   
