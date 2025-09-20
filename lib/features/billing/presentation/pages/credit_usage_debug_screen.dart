@@ -4,8 +4,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
 import 'package:mindhearth/core/providers/chat_provider.dart';
 import 'package:mindhearth/features/billing/domain/providers/session_question_provider.dart';
-import 'package:mindhearth/features/billing/domain/providers/billing_provider.dart';
-import 'package:mindhearth/features/billing/domain/entities/credit_consumption.dart';
+import 'package:mindhearth/features/billing/providers/billing_provider.dart';
+import 'package:mindhearth/features/billing/domain/entities/ledger_entry.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 
 class CreditUsageDebugScreen extends ConsumerStatefulWidget {
@@ -44,16 +44,16 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
   Future<void> _loadCurrentData() async {
     setState(() => _isLoading = true);
     try {
-      final billingApi = ref.read(billingApiProvider);
-      final balance = await billingApi.getBalance();
-      final ledger = await billingApi.getLedger(limit: 10);
+      final billingService = ref.read(billingServiceProvider);
+      final balance = await billingService.getBalance();
+      final ledger = await billingService.getLedger(limit: 10);
       
       setState(() {
         _currentBalance = balance;
         _recentTransactions = ledger;
       });
     } catch (e) {
-      appLogger.error('Failed to load current data', e, null, 'DebugScreen');
+      appLogger.error('Failed to load current data', e);
     } finally {
       setState(() => _isLoading = false);
     }
@@ -96,7 +96,7 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
         }
       }
     } catch (e) {
-      appLogger.error('Failed to add questions', e, null, 'DebugScreen');
+      appLogger.error('Failed to add questions', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
@@ -117,7 +117,7 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
         );
       }
     } catch (e) {
-      appLogger.error('Failed to reset session', e, null, 'DebugScreen');
+      appLogger.error('Failed to reset session', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
@@ -138,7 +138,7 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
         );
       }
     } catch (e) {
-      appLogger.error('Failed to refresh session data', e, null, 'DebugScreen');
+      appLogger.error('Failed to refresh session data', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
@@ -153,8 +153,8 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
     if (sizeBytes == null || sizeBytes <= 0) return;
     
     try {
-      final billingApi = ref.read(billingApiProvider);
-      final cost = await billingApi.estimateDocument(sizeBytes);
+      final billingService = ref.read(billingServiceProvider);
+      final cost = await billingService.estimateDocument(sizeBytes);
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -162,7 +162,7 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
         );
       }
     } catch (e) {
-      appLogger.error('Failed to estimate document cost', e, null, 'DebugScreen');
+      appLogger.error('Failed to estimate document cost', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
@@ -183,8 +183,8 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
     }
     
     try {
-      final billingApi = ref.read(billingApiProvider);
-      await billingApi.confirmDocument('debug-document-${DateTime.now().millisecondsSinceEpoch}', sizeBytes);
+      final billingService = ref.read(billingServiceProvider);
+      await billingService.confirmDocument('debug-document-${DateTime.now().millisecondsSinceEpoch}', sizeBytes);
       await _loadCurrentData();
       
       if (mounted) {
@@ -193,7 +193,7 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
         );
       }
     } catch (e) {
-      appLogger.error('Failed to simulate document processing', e, null, 'DebugScreen');
+      appLogger.error('Failed to simulate document processing', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
@@ -214,8 +214,8 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
     }
     
     try {
-      final billingApi = ref.read(billingApiProvider);
-      await billingApi.confirmDocument('debug-document-${DateTime.now().millisecondsSinceEpoch}', sizeBytes);
+      final billingService = ref.read(billingServiceProvider);
+      await billingService.confirmDocument('debug-document-${DateTime.now().millisecondsSinceEpoch}', sizeBytes);
       await _loadCurrentData();
       
       if (mounted) {
@@ -224,7 +224,7 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
         );
       }
     } catch (e) {
-      appLogger.error('Failed to confirm document processing', e, null, 'DebugScreen');
+      appLogger.error('Failed to confirm document processing', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
@@ -236,21 +236,21 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
   // AI Summary methods
   Future<Map<String, dynamic>> _getAISummaryConfig() async {
     try {
-      final billingApi = ref.read(billingApiProvider);
-      return await billingApi.getAISummaryConfig();
+      final billingService = ref.read(billingServiceProvider);
+      return await billingService.getAISummaryConfig();
     } catch (e) {
-      appLogger.error('Failed to get AI summary config', e, null, 'DebugScreen');
+      appLogger.error('Failed to get AI summary config', e);
       return {};
     }
   }
 
   Future<void> _simulateAISummary() async {
     try {
-      final billingApi = ref.read(billingApiProvider);
+      final billingService = ref.read(billingServiceProvider);
       final chatState = ref.read(chatProvider);
       
       if (chatState.currentSession != null) {
-        await billingApi.generateAISummary(chatState.currentSession!.id);
+        await billingService.generateAISummary(chatState.currentSession!.id);
         await _loadCurrentData();
         
         if (mounted) {
@@ -266,7 +266,7 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
         }
       }
     } catch (e) {
-      appLogger.error('Failed to simulate AI summary', e, null, 'DebugScreen');
+      appLogger.error('Failed to simulate AI summary', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
@@ -284,7 +284,7 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
         );
       }
     } catch (e) {
-      appLogger.error('Failed to refresh AI summary config', e, null, 'DebugScreen');
+      appLogger.error('Failed to refresh AI summary config', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
@@ -296,8 +296,8 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
   // Transaction history methods
   Future<void> _refreshTransactions() async {
     try {
-      final billingApi = ref.read(billingApiProvider);
-      final ledger = await billingApi.getLedger(limit: 20);
+      final billingService = ref.read(billingServiceProvider);
+      final ledger = await billingService.getLedger(limit: 20);
       
       setState(() {
         _recentTransactions = ledger;
@@ -309,7 +309,7 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
         );
       }
     } catch (e) {
-      appLogger.error('Failed to refresh transactions', e, null, 'DebugScreen');
+      appLogger.error('Failed to refresh transactions', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
@@ -324,8 +324,8 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
     if (credits == null) return;
     
     try {
-      final billingApi = ref.read(billingApiProvider);
-      await billingApi.devTopUp(credits);
+      final billingService = ref.read(billingServiceProvider);
+      await billingService.devTopUp(credits);
       await _loadCurrentData();
       _creditController.clear();
       
@@ -335,7 +335,7 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
         );
       }
     } catch (e) {
-      appLogger.error('Failed to set credits', e, null, 'DebugScreen');
+      appLogger.error('Failed to set credits', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
@@ -346,8 +346,8 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
 
   Future<void> _resetLedger() async {
     try {
-      final billingApi = ref.read(billingApiProvider);
-      await billingApi.devReset();
+      final billingService = ref.read(billingServiceProvider);
+      await billingService.devReset();
       await _loadCurrentData();
       
       if (mounted) {
@@ -356,7 +356,7 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
         );
       }
     } catch (e) {
-      appLogger.error('Failed to reset ledger', e, null, 'DebugScreen');
+      appLogger.error('Failed to reset ledger', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
@@ -377,7 +377,7 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
         }
       }
     } catch (e) {
-      appLogger.error('Failed to copy user ID', e, null, 'DebugScreen');
+      appLogger.error('Failed to copy user ID', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
@@ -388,10 +388,10 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
 
   Future<void> _exportDebugData() async {
     try {
-      final billingApi = ref.read(billingApiProvider);
-      final balance = await billingApi.getBalance();
-      final ledger = await billingApi.getLedger(limit: 50);
-      final status = await billingApi.getStatus();
+      final billingService = ref.read(billingServiceProvider);
+      final balance = await billingService.getBalance();
+      final ledger = await billingService.getLedger(limit: 50);
+      final status = await billingService.getStatus();
       
       final debugData = {
         'timestamp': DateTime.now().toIso8601String(),
@@ -407,7 +407,7 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
         );
       }
     } catch (e) {
-      appLogger.error('Failed to export debug data', e, null, 'DebugScreen');
+      appLogger.error('Failed to export debug data', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
@@ -497,15 +497,16 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
             // Credit Status Indicator
             Consumer(
               builder: (context, ref, child) {
-                final creditStatus = ref.watch(creditStatusProvider);
+                final billingState = ref.watch(billingProvider);
+                final status = billingState.billingStatus?.status ?? 'unknown';
                 return Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(creditStatus.status),
+                    color: _getStatusColor(status),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    'Status: ${creditStatus.status.toUpperCase()}',
+                    'Status: ${status.toUpperCase()}',
                     style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                 );
@@ -554,11 +555,10 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Session Questions: ${sessionQuestionState.questionsInSession}'),
+                      Text('Session Questions: ${sessionQuestionState.sessionQuestions.values.fold(0, (sum, count) => sum + count)}'),
                       Text('Global Questions: ${sessionQuestionState.globalTotalQuestions}'),
                       Text('Questions per Credit: ${sessionQuestionState.questionsPerCredit}'),
-                      Text('Credits Used: ${sessionQuestionState.creditsUsed}'),
-                      Text('Status: ${sessionQuestionState.statusText}'),
+                      Text('Status: ${sessionQuestionState.isLoading ? 'Loading' : 'Ready'}'),
                     ],
                   ),
                 ),
@@ -609,8 +609,6 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
                       onPressed: _resetSession,
                       icon: const Icon(Icons.clear),
                       label: const Text('Reset Session'),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                    ),
                     const SizedBox(width: 8),
                     ElevatedButton.icon(
                       onPressed: _refreshSessionData,
