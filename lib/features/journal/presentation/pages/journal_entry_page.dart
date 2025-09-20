@@ -74,8 +74,23 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
         // Parse JSON content if it's in JSON format
         String content = nonNullEntry.originalContent ?? '';
         try {
-          // Check if content is JSON
-          if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
+          // Check if content has markdown code block formatting
+          if (content.trim().startsWith('```json') && content.trim().endsWith('```')) {
+            // Remove markdown code block markers
+            content = content.trim();
+            content = content.substring(7); // Remove ```json
+            content = content.substring(0, content.length - 3); // Remove ```
+            content = content.trim();
+            
+            // Now parse the JSON
+            if (content.startsWith('{') && content.endsWith('}')) {
+              final jsonData = jsonDecode(content);
+              // Extract the summary or content from JSON
+              content = jsonData['summary'] ?? jsonData['content'] ?? content;
+            }
+          }
+          // Check if content is plain JSON (without markdown)
+          else if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
             final jsonData = jsonDecode(content);
             // Extract the summary or content from JSON
             content = jsonData['summary'] ?? jsonData['content'] ?? content;
