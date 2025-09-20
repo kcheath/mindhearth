@@ -744,4 +744,101 @@ class ApiService {
       return ApiError(message: 'An unexpected error occurred: ${e.toString()}');
     }
   }
+
+  // Generic HTTP methods for repositories
+  Future<ApiResponse<dynamic>> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      final response = await _dio.get(path, queryParameters: queryParameters);
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'GET request failed',
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return ApiError(message: 'An unexpected error occurred: ${e.toString()}');
+    }
+  }
+
+  Future<ApiResponse<dynamic>> post(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      final response = await _dio.post(path, data: data, queryParameters: queryParameters);
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'POST request failed',
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return ApiError(message: 'An unexpected error occurred: ${e.toString()}');
+    }
+  }
+
+  Future<ApiResponse<dynamic>> put(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      final response = await _dio.put(path, data: data, queryParameters: queryParameters);
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'PUT request failed',
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return ApiError(message: 'An unexpected error occurred: ${e.toString()}');
+    }
+  }
+
+  Future<ApiResponse<dynamic>> delete(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      final response = await _dio.delete(path, queryParameters: queryParameters);
+      return ApiSuccess(data: response.data);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'DELETE request failed',
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return ApiError(message: 'An unexpected error occurred: ${e.toString()}');
+    }
+  }
+
+  Future<ApiResponse<Stream<dynamic>>> postStream(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      final response = await _dio.post(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: Options(responseType: ResponseType.stream),
+      );
+      
+      // Convert the stream to the expected format
+      final stream = response.data as Stream<dynamic>;
+      return ApiSuccess(data: stream);
+    } on DioException catch (e) {
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Stream request failed',
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return ApiError(message: 'An unexpected error occurred: ${e.toString()}');
+    }
+  }
 }

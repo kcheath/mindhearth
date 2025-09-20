@@ -1,4 +1,5 @@
 import 'package:mindhearth/core/domain/entities/result.dart';
+import 'package:mindhearth/core/domain/entities/app_error.dart';
 import 'package:mindhearth/core/domain/repositories/billing_repository.dart';
 import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/features/billing/domain/entities/ledger_entry.dart';
@@ -19,18 +20,20 @@ class BillingRepositoryImpl implements BillingRepository {
 
       final response = await _apiService.get('/billing/balance');
 
-      if (response.isSuccess) {
-        final data = response.data as Map<String, dynamic>;
-        final balance = data['balance'] as int;
-        appLogger.info('✅ Retrieved balance: $balance credits');
-        return Result.success(balance);
-      } else {
-        appLogger.error('❌ Failed to get balance: ${response.error}');
-        return Result.failure(response.error ?? 'Failed to get balance');
-      }
+      return response.when(
+        success: (data, message) {
+          final balance = data['balance'] as int;
+          appLogger.info('✅ Retrieved balance: $balance credits');
+          return Result.success(balance);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to get balance: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
     } catch (e) {
       appLogger.error('💥 Exception getting balance: $e');
-      return Result.failure('Failed to get balance: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to get balance: $e'));
     }
   }
 
@@ -41,17 +44,20 @@ class BillingRepositoryImpl implements BillingRepository {
 
       final response = await _apiService.get('/billing/status');
 
-      if (response.isSuccess) {
-        final status = BillingStatus.fromJson(response.data as Map<String, dynamic>);
-        appLogger.info('✅ Retrieved billing status: ${status.status}');
-        return Result.success(status);
-      } else {
-        appLogger.error('❌ Failed to get billing status: ${response.error}');
-        return Result.failure(response.error ?? 'Failed to get billing status');
-      }
+      return response.when(
+        success: (data, message) {
+          final status = BillingStatus.fromJson(data as Map<String, dynamic>);
+          appLogger.info('✅ Retrieved billing status: ${status.status}');
+          return Result.success(status);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to get billing status: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
     } catch (e) {
       appLogger.error('💥 Exception getting billing status: $e');
-      return Result.failure('Failed to get billing status: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to get billing status: $e'));
     }
   }
 
@@ -61,10 +67,7 @@ class BillingRepositoryImpl implements BillingRepository {
     int? offset,
   }) async {
     try {
-      appLogger.info('📋 Getting ledger history', extra: {
-        'limit': limit,
-        'offset': offset,
-      });
+      appLogger.info('📋 Getting ledger history');
 
       final response = await _apiService.get(
         '/billing/ledger',
@@ -74,20 +77,22 @@ class BillingRepositoryImpl implements BillingRepository {
         },
       );
 
-      if (response.isSuccess) {
-        final data = response.data as Map<String, dynamic>;
-        final entries = (data['entries'] as List)
-            .map((json) => LedgerEntry.fromJson(json as Map<String, dynamic>))
-            .toList();
-        appLogger.info('✅ Retrieved ${entries.length} ledger entries');
-        return Result.success(entries);
-      } else {
-        appLogger.error('❌ Failed to get ledger history: ${response.error}');
-        return Result.failure(response.error ?? 'Failed to get ledger history');
-      }
+      return response.when(
+        success: (data, message) {
+          final entries = (data['entries'] as List)
+              .map((json) => LedgerEntry.fromJson(json as Map<String, dynamic>))
+              .toList();
+          appLogger.info('✅ Retrieved ${entries.length} ledger entries');
+          return Result.success(entries);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to get ledger history: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
     } catch (e) {
       appLogger.error('💥 Exception getting ledger history: $e');
-      return Result.failure('Failed to get ledger history: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to get ledger history: $e'));
     }
   }
 
@@ -97,10 +102,7 @@ class BillingRepositoryImpl implements BillingRepository {
     int? offset,
   }) async {
     try {
-      appLogger.info('🛒 Getting purchase history', extra: {
-        'limit': limit,
-        'offset': offset,
-      });
+      appLogger.info('🛒 Getting purchase history');
 
       final response = await _apiService.get(
         '/billing/purchases',
@@ -110,20 +112,22 @@ class BillingRepositoryImpl implements BillingRepository {
         },
       );
 
-      if (response.isSuccess) {
-        final data = response.data as Map<String, dynamic>;
-        final purchases = (data['purchases'] as List)
-            .map((json) => Purchase.fromJson(json as Map<String, dynamic>))
-            .toList();
-        appLogger.info('✅ Retrieved ${purchases.length} purchases');
-        return Result.success(purchases);
-      } else {
-        appLogger.error('❌ Failed to get purchase history: ${response.error}');
-        return Result.failure(response.error ?? 'Failed to get purchase history');
-      }
+      return response.when(
+        success: (data, message) {
+          final purchases = (data['purchases'] as List)
+              .map((json) => Purchase.fromJson(json as Map<String, dynamic>))
+              .toList();
+          appLogger.info('✅ Retrieved ${purchases.length} purchases');
+          return Result.success(purchases);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to get purchase history: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
     } catch (e) {
       appLogger.error('💥 Exception getting purchase history: $e');
-      return Result.failure('Failed to get purchase history: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to get purchase history: $e'));
     }
   }
 
@@ -134,20 +138,22 @@ class BillingRepositoryImpl implements BillingRepository {
 
       final response = await _apiService.get('/billing/packages');
 
-      if (response.isSuccess) {
-        final data = response.data as Map<String, dynamic>;
-        final packages = (data['packages'] as List)
-            .map((json) => CreditPackage.fromJson(json as Map<String, dynamic>))
-            .toList();
-        appLogger.info('✅ Retrieved ${packages.length} credit packages');
-        return Result.success(packages);
-      } else {
-        appLogger.error('❌ Failed to get credit packages: ${response.error}');
-        return Result.failure(response.error ?? 'Failed to get credit packages');
-      }
+      return response.when(
+        success: (data, message) {
+          final packages = (data['packages'] as List)
+              .map((json) => CreditPackage.fromJson(json as Map<String, dynamic>))
+              .toList();
+          appLogger.info('✅ Retrieved ${packages.length} credit packages');
+          return Result.success(packages);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to get credit packages: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
     } catch (e) {
       appLogger.error('💥 Exception getting credit packages: $e');
-      return Result.failure('Failed to get credit packages: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to get credit packages: $e'));
     }
   }
 
@@ -158,10 +164,7 @@ class BillingRepositoryImpl implements BillingRepository {
     Map<String, dynamic>? paymentData,
   }) async {
     try {
-      appLogger.info('💳 Purchasing credits', extra: {
-        'packageId': packageId,
-        'paymentMethod': paymentMethod,
-      });
+      appLogger.info('💳 Purchasing credits for package: $packageId');
 
       final response = await _apiService.post(
         '/billing/purchase',
@@ -172,17 +175,20 @@ class BillingRepositoryImpl implements BillingRepository {
         },
       );
 
-      if (response.isSuccess) {
-        final purchase = Purchase.fromJson(response.data as Map<String, dynamic>);
-        appLogger.info('✅ Purchased credits: ${purchase.id}');
-        return Result.success(purchase);
-      } else {
-        appLogger.error('❌ Failed to purchase credits: ${response.error}');
-        return Result.failure(response.error ?? 'Failed to purchase credits');
-      }
+      return response.when(
+        success: (data, message) {
+          final purchase = Purchase.fromJson(data as Map<String, dynamic>);
+          appLogger.info('✅ Purchased credits: ${purchase.id}');
+          return Result.success(purchase);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to purchase credits: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
     } catch (e) {
       appLogger.error('💥 Exception purchasing credits: $e');
-      return Result.failure('Failed to purchase credits: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to purchase credits: $e'));
     }
   }
 
@@ -193,10 +199,7 @@ class BillingRepositoryImpl implements BillingRepository {
     String? message,
   }) async {
     try {
-      appLogger.info('🎁 Gifting credits', extra: {
-        'recipientId': recipientId,
-        'amount': amount,
-      });
+      appLogger.info('🎁 Gifting $amount credits to user: $recipientId');
 
       final response = await _apiService.post(
         '/billing/gift',
@@ -207,16 +210,19 @@ class BillingRepositoryImpl implements BillingRepository {
         },
       );
 
-      if (response.isSuccess) {
-        appLogger.info('✅ Gifted $amount credits to $recipientId');
-        return Result.success(null);
-      } else {
-        appLogger.error('❌ Failed to gift credits: ${response.error}');
-        return Result.failure(response.error ?? 'Failed to gift credits');
-      }
+      return response.when(
+        success: (data, message) {
+          appLogger.info('✅ Gifted $amount credits to $recipientId');
+          return Result.success(null);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to gift credits: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
     } catch (e) {
       appLogger.error('💥 Exception gifting credits: $e');
-      return Result.failure('Failed to gift credits: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to gift credits: $e'));
     }
   }
 
@@ -227,10 +233,7 @@ class BillingRepositoryImpl implements BillingRepository {
     required String receipt,
   }) async {
     try {
-      appLogger.info('✅ Validating purchase', extra: {
-        'transactionId': transactionId,
-        'productId': productId,
-      });
+      appLogger.info('✅ Validating purchase');
 
       final response = await _apiService.post(
         '/billing/validate-purchase',
@@ -241,18 +244,20 @@ class BillingRepositoryImpl implements BillingRepository {
         },
       );
 
-      if (response.isSuccess) {
-        final data = response.data as Map<String, dynamic>;
-        final isValid = data['valid'] as bool;
-        appLogger.info('✅ Purchase validation result: $isValid');
-        return Result.success(isValid);
-      } else {
-        appLogger.error('❌ Failed to validate purchase: ${response.error}');
-        return Result.failure(response.error ?? 'Failed to validate purchase');
-      }
+      return response.when(
+        success: (data, message) {
+          final isValid = data['valid'] as bool;
+          appLogger.info('✅ Purchase validation result: $isValid');
+          return Result.success(isValid);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to validate purchase: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
     } catch (e) {
       appLogger.error('💥 Exception validating purchase: $e');
-      return Result.failure('Failed to validate purchase: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to validate purchase: $e'));
     }
   }
 
@@ -263,16 +268,19 @@ class BillingRepositoryImpl implements BillingRepository {
 
       final response = await _apiService.get('/billing/usage-analytics');
 
-      if (response.isSuccess) {
-        appLogger.info('✅ Retrieved usage analytics');
-        return Result.success(response.data as Map<String, dynamic>);
-      } else {
-        appLogger.error('❌ Failed to get usage analytics: ${response.error}');
-        return Result.failure(response.error ?? 'Failed to get usage analytics');
-      }
+      return response.when(
+        success: (data, message) {
+          appLogger.info('✅ Retrieved usage analytics');
+          return Result.success(data as Map<String, dynamic>);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to get usage analytics: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
     } catch (e) {
       appLogger.error('💥 Exception getting usage analytics: $e');
-      return Result.failure('Failed to get usage analytics: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to get usage analytics: $e'));
     }
   }
 
@@ -282,10 +290,7 @@ class BillingRepositoryImpl implements BillingRepository {
     required int estimatedCost,
   }) async {
     try {
-      appLogger.info('🔍 Checking operation allowance', extra: {
-        'operationType': operationType,
-        'estimatedCost': estimatedCost,
-      });
+      appLogger.info('🔍 Checking operation allowance');
 
       final response = await _apiService.post(
         '/billing/check-operation',
@@ -295,18 +300,20 @@ class BillingRepositoryImpl implements BillingRepository {
         },
       );
 
-      if (response.isSuccess) {
-        final data = response.data as Map<String, dynamic>;
-        final isAllowed = data['allowed'] as bool;
-        appLogger.info('✅ Operation allowance: $isAllowed');
-        return Result.success(isAllowed);
-      } else {
-        appLogger.error('❌ Failed to check operation: ${response.error}');
-        return Result.failure(response.error ?? 'Failed to check operation');
-      }
+      return response.when(
+        success: (data, message) {
+          final isAllowed = data['allowed'] as bool;
+          appLogger.info('✅ Operation allowance: $isAllowed');
+          return Result.success(isAllowed);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to check operation: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
     } catch (e) {
       appLogger.error('💥 Exception checking operation: $e');
-      return Result.failure('Failed to check operation: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to check operation: $e'));
     }
   }
 
@@ -317,11 +324,7 @@ class BillingRepositoryImpl implements BillingRepository {
     String? description,
   }) async {
     try {
-      appLogger.info('💸 Consuming credits', extra: {
-        'operationType': operationType,
-        'amount': amount,
-        'description': description,
-      });
+      appLogger.info('💸 Consuming credits');
 
       final response = await _apiService.post(
         '/billing/consume-credits',
@@ -332,16 +335,19 @@ class BillingRepositoryImpl implements BillingRepository {
         },
       );
 
-      if (response.isSuccess) {
-        appLogger.info('✅ Consumed $amount credits for $operationType');
-        return Result.success(null);
-      } else {
-        appLogger.error('❌ Failed to consume credits: ${response.error}');
-        return Result.failure(response.error ?? 'Failed to consume credits');
-      }
+      return response.when(
+        success: (data, message) {
+          appLogger.info('✅ Consumed $amount credits for $operationType');
+          return Result.success(null);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to consume credits: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
     } catch (e) {
       appLogger.error('💥 Exception consuming credits: $e');
-      return Result.failure('Failed to consume credits: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to consume credits: $e'));
     }
   }
 }

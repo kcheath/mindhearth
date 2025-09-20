@@ -1,4 +1,5 @@
 import 'package:mindhearth/core/domain/entities/result.dart';
+import 'package:mindhearth/core/domain/entities/app_error.dart';
 import 'package:mindhearth/core/domain/repositories/journal_repository.dart';
 import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/features/journal/domain/entities/journal_entry.dart';
@@ -16,36 +17,26 @@ class JournalRepositoryImpl implements JournalRepository {
     int? offset,
   }) async {
     try {
-      appLogger.info('📖 Getting journal entries', extra: {
-        'entryType': entryType,
-        'limit': limit,
-        'offset': offset,
-      });
+      appLogger.info('📝 Getting journal entries');
 
-      final response = await _apiService.get(
-        '/journals/',
-        queryParameters: {
-          if (entryType != null) 'entry_type': entryType,
-          if (limit != null) 'limit': limit,
-          if (offset != null) 'offset': offset,
+      final response = await _apiService.get('/journals/');
+
+      return response.when(
+        success: (data, message) {
+          final entries = (data['journal_entries'] as List)
+              .map((json) => JournalEntry.fromJson(json as Map<String, dynamic>))
+              .toList();
+          appLogger.info('✅ Retrieved ${entries.length} journal entries');
+          return Result.success(entries);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to get journal entries: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
         },
       );
-
-      if (response.isSuccess) {
-        final data = response.data as Map<String, dynamic>;
-        final entries = (data['journal_entries'] as List)
-            .map((json) => JournalEntry.fromJson(json as Map<String, dynamic>))
-            .toList();
-
-        appLogger.info('✅ Retrieved ${entries.length} journal entries');
-        return Result.success(entries);
-      } else {
-        appLogger.error('❌ Failed to get journal entries: ${response.error}');
-        return Result.failure(response.error ?? 'Failed to get journal entries');
-      }
     } catch (e) {
       appLogger.error('💥 Exception getting journal entries: $e');
-      return Result.failure('Failed to get journal entries: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to get journal entries: $e'));
     }
   }
 
@@ -56,17 +47,20 @@ class JournalRepositoryImpl implements JournalRepository {
 
       final response = await _apiService.get('/journals/$id');
 
-      if (response.isSuccess) {
-        final entry = JournalEntry.fromJson(response.data as Map<String, dynamic>);
-        appLogger.info('✅ Retrieved journal entry: ${entry.id}');
-        return Result.success(entry);
-      } else {
-        appLogger.error('❌ Failed to get journal entry: ${response.error}');
-        return Result.failure(response.error ?? 'Failed to get journal entry');
-      }
+      return response.when(
+        success: (data, message) {
+          final entry = JournalEntry.fromJson(data as Map<String, dynamic>);
+          appLogger.info('✅ Retrieved journal entry: ${entry.id}');
+          return Result.success(entry);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to get journal entry: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
     } catch (e) {
       appLogger.error('💥 Exception getting journal entry: $e');
-      return Result.failure('Failed to get journal entry: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to get journal entry: $e'));
     }
   }
 
@@ -79,16 +73,12 @@ class JournalRepositoryImpl implements JournalRepository {
     bool? consent,
   }) async {
     try {
-      appLogger.info('📝 Creating journal entry', extra: {
-        'header': header,
-        'entryType': entryType,
-        'hasContent': content.isNotEmpty,
-      });
+      appLogger.info('➕ Creating journal entry');
 
       final response = await _apiService.post(
         '/journals/',
         data: {
-          'original_content': content,
+          'content': content,
           if (header != null) 'header': header,
           if (entryType != null) 'entry_type': entryType,
           if (metaData != null) 'meta_data': metaData,
@@ -96,17 +86,20 @@ class JournalRepositoryImpl implements JournalRepository {
         },
       );
 
-      if (response.isSuccess) {
-        final entry = JournalEntry.fromJson(response.data as Map<String, dynamic>);
-        appLogger.info('✅ Created journal entry: ${entry.id}');
-        return Result.success(entry);
-      } else {
-        appLogger.error('❌ Failed to create journal entry: ${response.error}');
-        return Result.failure(response.error ?? 'Failed to create journal entry');
-      }
+      return response.when(
+        success: (data, message) {
+          final entry = JournalEntry.fromJson(data as Map<String, dynamic>);
+          appLogger.info('✅ Created journal entry: ${entry.id}');
+          return Result.success(entry);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to create journal entry: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
     } catch (e) {
       appLogger.error('💥 Exception creating journal entry: $e');
-      return Result.failure('Failed to create journal entry: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to create journal entry: $e'));
     }
   }
 
@@ -120,15 +113,12 @@ class JournalRepositoryImpl implements JournalRepository {
     bool? consent,
   }) async {
     try {
-      appLogger.info('📝 Updating journal entry: $id', extra: {
-        'header': header,
-        'entryType': entryType,
-      });
+      appLogger.info('✏️ Updating journal entry: $id');
 
       final response = await _apiService.put(
         '/journals/$id',
         data: {
-          if (content != null) 'original_content': content,
+          if (content != null) 'content': content,
           if (header != null) 'header': header,
           if (entryType != null) 'entry_type': entryType,
           if (metaData != null) 'meta_data': metaData,
@@ -136,17 +126,20 @@ class JournalRepositoryImpl implements JournalRepository {
         },
       );
 
-      if (response.isSuccess) {
-        final entry = JournalEntry.fromJson(response.data as Map<String, dynamic>);
-        appLogger.info('✅ Updated journal entry: ${entry.id}');
-        return Result.success(entry);
-      } else {
-        appLogger.error('❌ Failed to update journal entry: ${response.error}');
-        return Result.failure(response.error ?? 'Failed to update journal entry');
-      }
+      return response.when(
+        success: (data, message) {
+          final entry = JournalEntry.fromJson(data as Map<String, dynamic>);
+          appLogger.info('✅ Updated journal entry: ${entry.id}');
+          return Result.success(entry);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to update journal entry: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
     } catch (e) {
       appLogger.error('💥 Exception updating journal entry: $e');
-      return Result.failure('Failed to update journal entry: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to update journal entry: $e'));
     }
   }
 
@@ -157,16 +150,19 @@ class JournalRepositoryImpl implements JournalRepository {
 
       final response = await _apiService.delete('/journals/$id');
 
-      if (response.isSuccess) {
-        appLogger.info('✅ Deleted journal entry: $id');
-        return Result.success(null);
-      } else {
-        appLogger.error('❌ Failed to delete journal entry: ${response.error}');
-        return Result.failure(response.error ?? 'Failed to delete journal entry');
-      }
+      return response.when(
+        success: (data, message) {
+          appLogger.info('✅ Deleted journal entry: $id');
+          return Result.success(null);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to delete journal entry: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
     } catch (e) {
       appLogger.error('💥 Exception deleting journal entry: $e');
-      return Result.failure('Failed to delete journal entry: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to delete journal entry: $e'));
     }
   }
 
@@ -176,9 +172,7 @@ class JournalRepositoryImpl implements JournalRepository {
     String? purpose,
   }) async {
     try {
-      appLogger.info('🤖 Generating AI summary for session: $sessionId', extra: {
-        'purpose': purpose,
-      });
+      appLogger.info('🤖 Generating AI summary for session: $sessionId');
 
       final response = await _apiService.post(
         '/journals/ai-summary',
@@ -188,37 +182,43 @@ class JournalRepositoryImpl implements JournalRepository {
         },
       );
 
-      if (response.isSuccess) {
-        final entry = JournalEntry.fromJson(response.data as Map<String, dynamic>);
-        appLogger.info('✅ Generated AI summary: ${entry.id}');
-        return Result.success(entry);
-      } else {
-        appLogger.error('❌ Failed to generate AI summary: ${response.error}');
-        return Result.failure(response.error ?? 'Failed to generate AI summary');
-      }
+      return response.when(
+        success: (data, message) {
+          final summaryEntry = JournalEntry.fromJson(data as Map<String, dynamic>);
+          appLogger.info('✅ Generated AI summary: ${summaryEntry.id}');
+          return Result.success(summaryEntry);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to generate AI summary: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
     } catch (e) {
       appLogger.error('💥 Exception generating AI summary: $e');
-      return Result.failure('Failed to generate AI summary: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to generate AI summary: $e'));
     }
   }
 
   @override
   Future<Result<Map<String, dynamic>>> getTagsConfig() async {
     try {
-      appLogger.info('🏷️ Getting journal tags configuration');
+      appLogger.info('🏷️ Getting journal tags config');
 
       final response = await _apiService.get('/journals/tags/config');
 
-      if (response.isSuccess) {
-        appLogger.info('✅ Retrieved tags configuration');
-        return Result.success(response.data as Map<String, dynamic>);
-      } else {
-        appLogger.error('❌ Failed to get tags config: ${response.error}');
-        return Result.failure(response.error ?? 'Failed to get tags configuration');
-      }
+      return response.when(
+        success: (data, message) {
+          appLogger.info('✅ Retrieved journal tags config');
+          return Result.success(data as Map<String, dynamic>);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to get journal tags config: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
     } catch (e) {
-      appLogger.error('💥 Exception getting tags config: $e');
-      return Result.failure('Failed to get tags configuration: $e');
+      appLogger.error('💥 Exception getting journal tags config: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to get journal tags config: $e'));
     }
   }
 
@@ -228,9 +228,7 @@ class JournalRepositoryImpl implements JournalRepository {
     required List<String> tags,
   }) async {
     try {
-      appLogger.info('🏷️ Updating journal tags for entry: $id', extra: {
-        'tags': tags,
-      });
+      appLogger.info('🏷️ Updating journal tags for entry: $id');
 
       final response = await _apiService.put(
         '/journals/$id/tags',
@@ -239,16 +237,19 @@ class JournalRepositoryImpl implements JournalRepository {
         },
       );
 
-      if (response.isSuccess) {
-        appLogger.info('✅ Updated journal tags for entry: $id');
-        return Result.success(null);
-      } else {
-        appLogger.error('❌ Failed to update journal tags: ${response.error}');
-        return Result.failure(response.error ?? 'Failed to update journal tags');
-      }
+      return response.when(
+        success: (data, message) {
+          appLogger.info('✅ Updated journal tags for entry: $id');
+          return Result.success(null);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to update journal tags: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
     } catch (e) {
       appLogger.error('💥 Exception updating journal tags: $e');
-      return Result.failure('Failed to update journal tags: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to update journal tags: $e'));
     }
   }
 }
