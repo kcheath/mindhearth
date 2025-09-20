@@ -72,7 +72,7 @@ class SettingsPage extends ConsumerWidget {
                     subtitle: const Text('Manage notification preferences'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
-                      // TODO: Navigate to notifications settings
+                      context.go('/settings/notifications');
                     },
                   ),
                   ListTile(
@@ -90,7 +90,7 @@ class SettingsPage extends ConsumerWidget {
                     subtitle: const Text('Get help and contact support'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
-                      // TODO: Navigate to help page
+                      context.go('/settings/help');
                     },
                   ),
                 ],

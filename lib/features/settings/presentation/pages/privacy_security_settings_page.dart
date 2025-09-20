@@ -44,7 +44,7 @@ class PrivacySecuritySettingsPage extends ConsumerWidget {
                     subtitle: const Text('Control who can see your data'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
-                      // TODO: Navigate to data visibility settings
+                      context.go('/settings/data-visibility');
                     },
                   ),
                   ListTile(
@@ -53,7 +53,7 @@ class PrivacySecuritySettingsPage extends ConsumerWidget {
                     subtitle: const Text('Manage data sharing preferences'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
-                      // TODO: Navigate to data sharing settings
+                      context.go('/settings/data-sharing');
                     },
                   ),
                 ],
@@ -82,7 +82,7 @@ class PrivacySecuritySettingsPage extends ConsumerWidget {
                     subtitle: const Text('Manage your safety code'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
-                      // TODO: Navigate to safety code management
+                      context.go('/settings/safety-code');
                     },
                   ),
                   ListTile(
@@ -91,7 +91,7 @@ class PrivacySecuritySettingsPage extends ConsumerWidget {
                     subtitle: const Text('Update your account password'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
-                      // TODO: Navigate to password change
+                      context.go('/settings/change-password');
                     },
                   ),
                 ],
@@ -127,7 +127,7 @@ class PrivacySecuritySettingsPage extends ConsumerWidget {
                     subtitle: const Text('Permanently delete your account and data'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
-                      // TODO: Navigate to account deletion
+                      context.go('/settings/delete-account');
                     },
                   ),
                 ],

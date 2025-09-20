@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ChatMessageBubble extends StatelessWidget {
   final String message;
@@ -21,6 +22,13 @@ class ChatMessageBubble extends StatelessWidget {
     this.onSave,
     this.onShare,
   });
+
+  void _shareMessage() {
+    Share.share(
+      message,
+      subject: 'Chat Message from Mindhearth',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -218,7 +226,7 @@ class ChatMessageBubble extends StatelessWidget {
           'Share',
           () {
             onShare?.call();
-            // TODO: Implement share functionality
+            _shareMessage();
           },
         ),
       ],

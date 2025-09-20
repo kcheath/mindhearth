@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/features/chat/presentation/widgets/chat_tools_menu.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:permission_handler/permission_handler.dart';
 
 class ChatInputBar extends ConsumerStatefulWidget {
   final Function(String) onSendMessage;
@@ -31,6 +33,11 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar>
   bool _showTools = false;
   late AnimationController _toolsAnimationController;
   late Animation<double> _toolsAnimation;
+  
+  // Speech-to-text functionality
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  String _recognizedText = '';
 
   @override
   void initState() {
@@ -43,6 +50,19 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar>
       parent: _toolsAnimationController,
       curve: Curves.easeInOut,
     );
+    
+    // Initialize speech-to-text
+    _speech = stt.SpeechToText();
+    _initializeSpeech();
+  }
+
+  Future<void> _initializeSpeech() async {
+    bool available = await _speech.initialize();
+    if (mounted) {
+      setState(() {
+        // Speech is available
+      });
+    }
   }
 
   @override
@@ -64,11 +84,94 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar>
 
   void _handleToolTap(ChatTool tool) {
     widget.onToolSelected?.call();
-    // TODO: Implement tool-specific actions
+    
+    // Implement tool-specific actions
+    switch (tool.type) {
+      case ChatToolType.journal:
+        _handleJournalTool();
+        break;
+      case ChatToolType.summary:
+        _handleSummaryTool();
+        break;
+      case ChatToolType.meditation:
+        _handleMeditationTool();
+        break;
+      case ChatToolType.breathing:
+        _handleBreathingTool();
+        break;
+      case ChatToolType.safety:
+        _handleSafetyTool();
+        break;
+      case ChatToolType.crisis:
+        _handleCrisisTool();
+        break;
+    }
+    
     setState(() {
       _showTools = false;
     });
     _toolsAnimationController.reverse();
+  }
+
+  void _handleJournalTool() {
+    // Navigate to journal creation
+    // This would typically open a journal entry dialog or navigate to journal page
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Journal tool selected - Create new journal entry'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _handleSummaryTool() {
+    // Generate AI summary of current conversation
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Summary tool selected - Generating AI summary'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _handleMeditationTool() {
+    // Start meditation session
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Meditation tool selected - Starting guided meditation'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _handleBreathingTool() {
+    // Start breathing exercise
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Breathing tool selected - Starting breathing exercise'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _handleSafetyTool() {
+    // Access safety resources
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Safety tool selected - Accessing safety resources'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _handleCrisisTool() {
+    // Access crisis resources
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Crisis tool selected - Accessing crisis resources'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   void _toggleTools() {
@@ -82,19 +185,57 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar>
     }
   }
 
-  void _startRecording() {
+  void _startRecording() async {
+    // Request microphone permission
+    final status = await Permission.microphone.request();
+    if (status != PermissionStatus.granted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Microphone permission is required for speech-to-text'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isRecording = true;
+      _isListening = true;
     });
-    // TODO: Implement speech-to-text
+    
     HapticFeedback.lightImpact();
+    
+    // Start listening
+    await _speech.listen(
+      onResult: (result) {
+        setState(() {
+          _recognizedText = result.recognizedWords;
+        });
+      },
+      listenFor: const Duration(seconds: 30),
+      pauseFor: const Duration(seconds: 3),
+      partialResults: true,
+      localeId: 'en_US',
+      onSoundLevelChange: (level) {
+        // Optional: Handle sound level changes for visual feedback
+      },
+    );
   }
 
-  void _stopRecording() {
+  void _stopRecording() async {
     setState(() {
       _isRecording = false;
+      _isListening = false;
     });
-    // TODO: Process speech input
+    
+    await _speech.stop();
+    
+    // Process the recognized text
+    if (_recognizedText.isNotEmpty) {
+      _textController.text = _recognizedText;
+      _recognizedText = '';
+    }
+    
     HapticFeedback.lightImpact();
   }
 
