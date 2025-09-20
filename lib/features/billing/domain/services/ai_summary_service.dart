@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/features/billing/domain/entities/credit_consumption.dart';

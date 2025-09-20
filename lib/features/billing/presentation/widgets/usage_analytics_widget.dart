@@ -101,7 +101,7 @@ class UsageAnalyticsWidget extends ConsumerWidget {
           ],
         ),
         IconButton(
-          onPressed: () => ref.read(usageAnalyticsProvider.notifier).refreshAnalytics(),
+          onPressed: () => analyticsNotifier.refreshAnalytics(),
           icon: const Icon(Icons.refresh),
           tooltip: 'Refresh analytics',
         ),
@@ -192,7 +192,6 @@ class UsageAnalyticsWidget extends ConsumerWidget {
             Text(
               'Consumption Breakdown',
               style: Theme.of(context).textTheme.titleMedium,
-              ),
             ),
             const SizedBox(height: 16),
             ...analytics.breakdownByType.entries.map((entry) {
