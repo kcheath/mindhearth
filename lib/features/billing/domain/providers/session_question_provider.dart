@@ -117,7 +117,17 @@ class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
 
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
-        final sessionQuestions = Map<String, int>.from(data['session_questions'] ?? {});
+        
+        // Backend returns questions_in_session as a single value, not a map
+        final questionsInSession = data['questions_in_session'] as int? ?? 0;
+        final sessionId = data['session_id'] as String? ?? 'current';
+        
+        // Create session questions map with current session
+        final sessionQuestions = <String, int>{};
+        if (questionsInSession > 0) {
+          sessionQuestions[sessionId] = questionsInSession;
+        }
+        
         final globalTotalQuestions = data['global_total_questions'] as int? ?? 0;
         final questionsPerCredit = data['questions_per_credit'] as int? ?? 10;
 
