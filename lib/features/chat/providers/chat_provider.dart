@@ -7,6 +7,7 @@ import 'package:mindhearth/core/providers/api_providers.dart';
 import 'package:mindhearth/core/providers/session_provider.dart';
 import 'package:mindhearth/core/models/session_state.dart';
 import 'package:mindhearth/core/utils/logger.dart';
+import 'package:mindhearth/features/billing/domain/providers/session_question_provider.dart';
 
 // Chat state class
 class ChatState {
@@ -48,9 +49,10 @@ class ChatState {
 // Chat notifier following Tsukiyo pattern
 class ChatNotifier extends StateNotifier<ChatState> {
   final ChatService _chatService;
+  final Ref _ref;
   StreamSubscription<String>? _streamSubscription;
 
-  ChatNotifier(this._chatService) : super(const ChatState()) {
+  ChatNotifier(this._chatService, this._ref) : super(const ChatState()) {
     _initializeChat();
   }
 
@@ -237,6 +239,9 @@ class ChatNotifier extends StateNotifier<ChatState> {
         error: null,
       );
       
+      // Track question for session question billing
+      await _trackQuestionForBilling();
+      
       // Try streaming first
       final stream = await _chatService.sendMessageStream(content);
       
@@ -345,6 +350,27 @@ class ChatNotifier extends StateNotifier<ChatState> {
       messages: [],
       isStreaming: false,
     );
+  }
+
+  // Track question for session question billing
+  Future<void> _trackQuestionForBilling() async {
+    try {
+      if (state.currentSessionId != null) {
+        // Get the session question provider and add 1 question
+        final sessionQuestionNotifier = _ref.read(sessionQuestionProvider.notifier);
+        await sessionQuestionNotifier.addQuestions(1, sessionId: state.currentSessionId);
+        
+        appLogger.info('Tracked question for billing', {
+          'sessionId': state.currentSessionId,
+          'questions': 1,
+        });
+      }
+    } catch (e) {
+      appLogger.error('Failed to track question for billing', {
+        'error': e.toString(),
+        'sessionId': state.currentSessionId,
+      });
+    }
   }
 
   // Clear error
@@ -475,7 +501,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
 // Provider for ChatNotifier
 final chatProvider = StateNotifierProvider<ChatNotifier, ChatState>((ref) {
   final chatService = ref.read(chatServiceProvider);
-  final chatNotifier = ChatNotifier(chatService);
+  final chatNotifier = ChatNotifier(chatService, ref);
   
   // Listen to session changes from SessionNotifier
   ref.listen<SessionState>(sessionNotifierProvider, (previous, next) {
