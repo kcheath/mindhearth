@@ -100,7 +100,7 @@ class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
       });
 
       final response = await _apiService.dio.post(
-        '/api/billing/session-questions/add',
+        '/billing/session-questions/add',
         data: {
           'questions': state.globalTotalQuestions,
           'credits_to_deduct': creditsToDeduct,

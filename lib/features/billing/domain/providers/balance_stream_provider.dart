@@ -54,7 +54,7 @@ class BalanceStreamNotifier extends StateNotifier<BalanceStreamState> {
 
       // Start streaming
       _streamSubscription = _apiService.dio.get(
-        '/api/billing/balance-stream',
+        '/billing/balance-stream',
         options: Options(
           responseType: ResponseType.stream,
         ),
@@ -135,7 +135,7 @@ class BalanceStreamNotifier extends StateNotifier<BalanceStreamState> {
   /// Send heartbeat to keep connection alive
   void _sendHeartbeat() {
     try {
-      _apiService.dio.post('/api/billing/heartbeat');
+      _apiService.dio.post('/billing/heartbeat');
     } catch (e) {
       appLogger.error('Heartbeat failed', {
         'error': e.toString(),
@@ -146,7 +146,7 @@ class BalanceStreamNotifier extends StateNotifier<BalanceStreamState> {
   /// Get current balance
   Future<int> getCurrentBalance() async {
     try {
-      final response = await _apiService.dio.get('/api/billing/balance');
+      final response = await _apiService.dio.get('/billing/balance');
       if (response.statusCode == 200) {
         final balance = response.data['balance'] as int;
         

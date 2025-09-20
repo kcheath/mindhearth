@@ -15,7 +15,7 @@ class AISummaryService {
     try {
       appLogger.info('Getting AI summary configuration');
 
-      final response = await _apiService.dio.get('/api/billing/ai-summary-config');
+      final response = await _apiService.dio.get('/billing/ai-summary-config');
 
       if (response.statusCode == 200) {
         final config = response.data as Map<String, dynamic>;
@@ -49,7 +49,7 @@ class AISummaryService {
       });
 
       final response = await _apiService.dio.post(
-        '/api/journals/ai-summary',
+        '/journals/ai-summary',
         data: {
           'session_id': sessionId,
           'title': title,
@@ -87,7 +87,7 @@ class AISummaryService {
       final creditsRequired = config['ai_summary_credits'] ?? 1;
       
       // Get current balance
-      final balanceResponse = await _apiService.dio.get('/api/billing/balance');
+      final balanceResponse = await _apiService.dio.get('/billing/balance');
       if (balanceResponse.statusCode == 200) {
         final balance = balanceResponse.data['balance'] as int;
         return balance >= creditsRequired;
@@ -129,7 +129,7 @@ class AISummaryService {
         'sessionId': sessionId,
       });
 
-      final response = await _apiService.dio.get('/api/sessions/$sessionId/communications');
+      final response = await _apiService.dio.get('/sessions/$sessionId/communications');
 
       if (response.statusCode == 200) {
         final communications = response.data as List;

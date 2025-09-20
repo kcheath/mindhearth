@@ -51,7 +51,7 @@ class UsageAnalyticsNotifier extends StateNotifier<UsageAnalyticsState> {
       });
 
       final response = await _apiService.dio.get(
-        '/api/billing/usage-analytics',
+        '/billing/usage-analytics',
         queryParameters: {
           'days': days,
         },

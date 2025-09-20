@@ -22,7 +22,7 @@ class SessionTimeService {
       });
 
       final response = await _apiService.dio.post(
-        '/api/session-time/$sessionId/consume-credits',
+        '/session-time/$sessionId/consume-credits',
         data: {
           'duration_seconds': durationSeconds,
         },
@@ -85,7 +85,7 @@ class SessionTimeService {
       final cost = calculateSessionCost(durationSeconds);
       
       // Get current balance
-      final balanceResponse = await _apiService.dio.get('/api/billing/balance');
+      final balanceResponse = await _apiService.dio.get('/billing/balance');
       if (balanceResponse.statusCode == 200) {
         final balance = balanceResponse.data['balance'] as int;
         return balance >= cost;

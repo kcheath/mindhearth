@@ -18,7 +18,7 @@ class DocumentCostService {
       });
 
       final response = await _apiService.dio.post(
-        '/api/billing/estimate-document-cost',
+        '/billing/estimate-document-cost',
         data: {
           'size_bytes': sizeBytes,
         },
@@ -57,7 +57,7 @@ class DocumentCostService {
       });
 
       final response = await _apiService.dio.post(
-        '/api/billing/confirm-document',
+        '/billing/confirm-document',
         data: {
           'document_id': documentId,
           'size_bytes': sizeBytes,
@@ -103,7 +103,7 @@ class DocumentCostService {
       final cost = calculateDocumentCost(sizeBytes);
       
       // Get current balance
-      final balanceResponse = await _apiService.dio.get('/api/billing/balance');
+      final balanceResponse = await _apiService.dio.get('/billing/balance');
       if (balanceResponse.statusCode == 200) {
         final balance = balanceResponse.data['balance'] as int;
         return balance >= cost;
