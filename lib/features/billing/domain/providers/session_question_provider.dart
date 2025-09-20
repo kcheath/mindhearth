@@ -54,7 +54,9 @@ class SessionQuestionState {
 class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
   final ApiService _apiService;
 
-  SessionQuestionNotifier(this._apiService) : super(const SessionQuestionState());
+  SessionQuestionNotifier(this._apiService) : super(const SessionQuestionState()) {
+    _loadQuestionCountsFromBackend();
+  }
 
   /// Add questions to session and global counter
   Future<void> addQuestions(int questions, {String? sessionId}) async {
@@ -76,6 +78,9 @@ class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
         globalTotalQuestions: newGlobalQuestions,
         isLoading: false,
       );
+
+      // Persist question counts to backend
+      await _persistQuestionCountsToBackend(sessionId, newSessionQuestions, newGlobalQuestions);
 
       // Check if we should deduct credits
       if (state.shouldDeductCredit) {
@@ -100,6 +105,77 @@ class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
         isLoading: false,
         error: 'Failed to add questions: ${e.toString()}',
       );
+    }
+  }
+
+  /// Load question counts from backend
+  Future<void> _loadQuestionCountsFromBackend() async {
+    try {
+      appLogger.info('Loading question counts from backend');
+
+      final response = await _apiService.dio.get('/billing/session-questions/status');
+
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        final sessionQuestions = Map<String, int>.from(data['session_questions'] ?? {});
+        final globalTotalQuestions = data['global_total_questions'] as int? ?? 0;
+        final questionsPerCredit = data['questions_per_credit'] as int? ?? 10;
+
+        state = state.copyWith(
+          sessionQuestions: sessionQuestions,
+          globalTotalQuestions: globalTotalQuestions,
+          questionsPerCredit: questionsPerCredit,
+        );
+
+        appLogger.info('Question counts loaded from backend', {
+          'sessionQuestions': sessionQuestions,
+          'globalTotalQuestions': globalTotalQuestions,
+          'questionsPerCredit': questionsPerCredit,
+        });
+      }
+    } catch (e) {
+      appLogger.error('Failed to load question counts from backend', {
+        'error': e.toString(),
+      });
+      // Don't throw error - allow app to continue with default state
+    }
+  }
+
+  /// Persist question counts to backend
+  Future<void> _persistQuestionCountsToBackend(String sessionId, int sessionQuestions, int globalQuestions) async {
+    try {
+      appLogger.info('Persisting question counts to backend', {
+        'sessionId': sessionId,
+        'sessionQuestions': sessionQuestions,
+        'globalQuestions': globalQuestions,
+      });
+
+      final response = await _apiService.dio.post(
+        '/billing/session-questions/track',
+        data: {
+          'session_id': sessionId,
+          'session_questions': sessionQuestions,
+          'global_questions': globalQuestions,
+          'questions_per_credit': state.questionsPerCredit,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        appLogger.info('Question counts persisted successfully', {
+          'sessionId': sessionId,
+          'sessionQuestions': sessionQuestions,
+          'globalQuestions': globalQuestions,
+          'response': response.data,
+        });
+      }
+    } catch (e) {
+      appLogger.error('Failed to persist question counts to backend', {
+        'error': e.toString(),
+        'sessionId': sessionId,
+        'sessionQuestions': sessionQuestions,
+        'globalQuestions': globalQuestions,
+      });
+      // Don't throw error - allow local state to continue even if backend persistence fails
     }
   }
 
@@ -175,6 +251,11 @@ class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
     );
     
     appLogger.info('All session questions reset');
+  }
+
+  /// Refresh question counts from backend
+  Future<void> refreshQuestionCounts() async {
+    await _loadQuestionCountsFromBackend();
   }
 }
 
