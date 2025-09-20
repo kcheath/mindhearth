@@ -229,8 +229,8 @@ class CostEstimation {
   factory CostEstimation.fromJson(Map<String, dynamic> json) {
     return CostEstimation(
       sizeBytes: json['size_bytes'] as int,
-      estimatedCost: json['estimated_cost'] as int,
-      currency: json['currency'] as String,
+      estimatedCost: json['estimated_cost_credits'] as int,
+      currency: json['currency'] as String? ?? 'credits',
       notes: json['notes'] as String?,
     );
   }
