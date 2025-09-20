@@ -3,6 +3,7 @@ import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/features/billing/domain/entities/credit_consumption.dart';
+import 'package:mindhearth/features/billing/providers/billing_provider.dart';
 
 /// Session question tracking state
 class SessionQuestionState {
@@ -53,8 +54,9 @@ class SessionQuestionState {
 /// Session question tracking notifier
 class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
   final ApiService _apiService;
+  final ProviderRef _ref;
 
-  SessionQuestionNotifier(this._apiService) : super(const SessionQuestionState()) {
+  SessionQuestionNotifier(this._apiService, this._ref) : super(const SessionQuestionState()) {
     _loadQuestionCountsFromBackend();
   }
 
@@ -199,11 +201,12 @@ class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
         'globalQuestions': state.globalTotalQuestions,
       });
 
+      // Use the correct endpoint with proper request body
       final response = await _apiService.dio.post(
         '/billing/session-questions/add',
-        queryParameters: {
+        data: {
+          'session_id': 'global', // Use a global session ID for global questions
           'questions': state.globalTotalQuestions,
-          'credits_to_deduct': creditsToDeduct,
         },
       );
 
@@ -212,6 +215,17 @@ class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
           'creditsDeducted': creditsToDeduct,
           'response': response.data,
         });
+        
+        // Refresh billing data to update UI
+        try {
+          final billingNotifier = _ref.read(billingProvider.notifier);
+          await billingNotifier.refreshAll();
+          appLogger.info('Billing data refreshed after credit deduction');
+        } catch (e) {
+          appLogger.error('Failed to refresh billing data after credit deduction', {
+            'error': e.toString(),
+          });
+        }
       }
     } catch (e) {
       appLogger.error('Failed to deduct credits for questions', {
@@ -289,7 +303,7 @@ class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
 
 /// Session question provider
 final sessionQuestionProvider = StateNotifierProvider<SessionQuestionNotifier, SessionQuestionState>(
-  (ref) => SessionQuestionNotifier(ref.watch(apiServiceProvider)),
+  (ref) => SessionQuestionNotifier(ref.watch(apiServiceProvider), ref),
 );
 
 /// Session question tracking provider

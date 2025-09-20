@@ -104,6 +104,15 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
       
       await sessionQuestionNotifier.addQuestions(questions, sessionId: sessionId);
       
+      // Refresh billing data to update balance
+      try {
+        final billingNotifier = ref.read(billingProvider.notifier);
+        await billingNotifier.refreshAll();
+        appLogger.info('Billing data refreshed after adding questions');
+      } catch (e) {
+        appLogger.error('Failed to refresh billing data', e);
+      }
+      
       // Get the updated state after adding questions
       final updatedState = ref.read(sessionQuestionProvider);
       appLogger.info('Session question state after adding questions', {
