@@ -186,7 +186,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final result = await updateOnboardingStatusUseCase(isOnboarded);
       
       result.when(
-        success: (data) {
+        success: (_) {
           // Update the user's onboarding status in the state
           if (state.user != null) {
             final updatedUser = state.user!.copyWith(isOnboarded: isOnboarded);
@@ -199,10 +199,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
             });
           }
           
-          // If the status is pending, start a background retry
-          if (data != null && data['status'] == 'pending') {
-            _retryOnboardingStatusUpdate(isOnboarded);
-          }
+          // Start a background retry to ensure the status is properly synced
+          _retryOnboardingStatusUpdate(isOnboarded);
         },
         failure: (error) {
           // Don't set error state for onboarding status updates to avoid blocking the user
