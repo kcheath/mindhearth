@@ -366,7 +366,7 @@ class ApiService {
   // User Management
   Future<ApiResponse<Map<String, dynamic>>> getCurrentUser() async {
     try {
-      final response = await _dio.get('/api/users/me');
+      final response = await _dio.get('/users/me');
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
       return ApiError(
