@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import 'package:mindhearth/core/providers/api_providers.dart';
 import 'package:mindhearth/core/models/journal_state.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/core/services/chat_service.dart';
+import 'package:mindhearth/features/journal/domain/entities/journal_entry.dart';
 
 class JournalEntryPage extends ConsumerStatefulWidget {
   final String entryId;
@@ -68,10 +70,25 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
       final nonNullEntry = entry;
       setState(() {
         _entry = nonNullEntry;
-        _headerController.text = nonNullEntry.header;
-        _contentController.text = nonNullEntry.originalContent ?? '';
-        _selectedType = nonNullEntry.entryType;
-        _selectedTags = List<String>.from(nonNullEntry.keywords);
+        _headerController.text = nonNullEntry.header ?? '';
+        
+        // Parse JSON content if it's in JSON format
+        String content = nonNullEntry.originalContent ?? '';
+        try {
+          // Check if content is JSON
+          if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
+            final jsonData = jsonDecode(content);
+            // Extract the summary or content from JSON
+            content = jsonData['summary'] ?? jsonData['content'] ?? content;
+          }
+        } catch (e) {
+          // If JSON parsing fails, use original content
+          appLogger.debug('Failed to parse JSON content: $e');
+        }
+        
+        _contentController.text = content;
+        _selectedType = nonNullEntry.entryType ?? 'general';
+        _selectedTags = List<String>.from(nonNullEntry.tags ?? []);
       });
     }
   }
