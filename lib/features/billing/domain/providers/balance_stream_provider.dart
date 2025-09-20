@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import 'package:mindhearth/core/services/api_service.dart';
+import 'package:mindhearth/core/providers/api_providers.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 
 /// Balance stream state
@@ -109,7 +111,7 @@ class BalanceStreamNotifier extends StateNotifier<BalanceStreamState> {
   }
 
   /// Handle stream response
-  void _handleStreamResponse(Response response) {
+  void _handleStreamResponse(Response<dynamic> response) {
     try {
       final data = response.data;
       if (data is Map<String, dynamic> && data.containsKey('balance')) {

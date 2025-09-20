@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mindhearth/core/services/api_service.dart';
+import 'package:mindhearth/core/providers/api_providers.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/features/billing/domain/entities/credit_consumption.dart';
 
@@ -10,6 +11,8 @@ class SessionQuestionState {
   final int questionsPerCredit;
   final bool isLoading;
   final String? error;
+  final int creditsUsed;
+  final int questionsRemainingInCurrentCredit;
 
   const SessionQuestionState({
     this.sessionQuestions = const {},
@@ -17,6 +20,8 @@ class SessionQuestionState {
     this.questionsPerCredit = 10,
     this.isLoading = false,
     this.error,
+    this.creditsUsed = 0,
+    this.questionsRemainingInCurrentCredit = 0,
   });
 
   SessionQuestionState copyWith({
@@ -25,6 +30,8 @@ class SessionQuestionState {
     int? questionsPerCredit,
     bool? isLoading,
     String? error,
+    int? creditsUsed,
+    int? questionsRemainingInCurrentCredit,
   }) {
     return SessionQuestionState(
       sessionQuestions: sessionQuestions ?? this.sessionQuestions,
@@ -32,7 +39,14 @@ class SessionQuestionState {
       questionsPerCredit: questionsPerCredit ?? this.questionsPerCredit,
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error,
+      creditsUsed: creditsUsed ?? this.creditsUsed,
+      questionsRemainingInCurrentCredit: questionsRemainingInCurrentCredit ?? this.questionsRemainingInCurrentCredit,
     );
+  }
+
+  /// Check if we should deduct credits based on questions per credit
+  bool get shouldDeductCredit {
+    return globalTotalQuestions > 0 && globalTotalQuestions % questionsPerCredit == 0;
   }
 }
 
@@ -92,7 +106,7 @@ class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
   /// Deduct credits for questions when threshold is reached
   Future<void> _deductCreditsForQuestions() async {
     try {
-      final creditsToDeduct = state.creditsUsed;
+      final creditsToDeduct = state.globalTotalQuestions ~/ state.questionsPerCredit;
       
       appLogger.info('Deducting credits for questions', {
         'creditsToDeduct': creditsToDeduct,
@@ -116,7 +130,7 @@ class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
     } catch (e) {
       appLogger.error('Failed to deduct credits for questions', {
         'error': e.toString(),
-        'creditsToDeduct': state.creditsUsed,
+        'globalQuestions': state.globalTotalQuestions,
       });
     }
   }
