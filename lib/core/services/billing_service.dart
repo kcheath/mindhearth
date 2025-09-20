@@ -4,6 +4,7 @@ import 'package:mindhearth/core/models/api_response.dart';
 import 'package:mindhearth/features/billing/domain/entities/ledger_entry.dart';
 import 'package:mindhearth/features/billing/domain/entities/purchase.dart';
 import 'package:mindhearth/features/billing/domain/entities/billing_status.dart';
+import 'package:mindhearth/features/billing/domain/entities/credit_package.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 
 /// Billing service for managing credits, purchases, and billing operations

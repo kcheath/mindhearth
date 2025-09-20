@@ -5,8 +5,14 @@ import 'package:mindhearth/core/services/chat_service.dart';
 import 'package:mindhearth/core/config/app_config.dart';
 import 'package:mindhearth/core/domain/repositories/auth_repository.dart';
 import 'package:mindhearth/core/domain/repositories/onboarding_repository.dart';
+import 'package:mindhearth/core/domain/repositories/journal_repository.dart';
+import 'package:mindhearth/core/domain/repositories/billing_repository.dart';
+import 'package:mindhearth/core/domain/repositories/chat_repository.dart';
 import 'package:mindhearth/core/data/repositories/auth_repository_impl.dart';
 import 'package:mindhearth/core/data/repositories/onboarding_repository_impl.dart';
+import 'package:mindhearth/core/data/repositories/journal_repository_impl.dart';
+import 'package:mindhearth/core/data/repositories/billing_repository_impl.dart';
+import 'package:mindhearth/core/data/repositories/chat_repository_impl.dart';
 import 'package:mindhearth/core/domain/usecases/auth_usecases.dart';
 import 'package:mindhearth/core/domain/usecases/onboarding_usecases.dart';
 
@@ -68,6 +74,27 @@ class ServiceLocator {
     // Onboarding Repository
     serviceLocator.registerLazySingleton<OnboardingRepository>(
       () => OnboardingRepositoryImpl(
+        serviceLocator<ApiService>(),
+      ),
+    );
+
+    // Journal Repository
+    serviceLocator.registerLazySingleton<JournalRepository>(
+      () => JournalRepositoryImpl(
+        serviceLocator<ApiService>(),
+      ),
+    );
+
+    // Billing Repository
+    serviceLocator.registerLazySingleton<BillingRepository>(
+      () => BillingRepositoryImpl(
+        serviceLocator<ApiService>(),
+      ),
+    );
+
+    // Chat Repository
+    serviceLocator.registerLazySingleton<ChatRepository>(
+      () => ChatRepositoryImpl(
         serviceLocator<ApiService>(),
       ),
     );
@@ -249,6 +276,9 @@ extension ServiceLocatorExtension on GetIt {
   // Repositories
   AuthRepository get authRepository => get<AuthRepository>();
   OnboardingRepository get onboardingRepository => get<OnboardingRepository>();
+  JournalRepository get journalRepository => get<JournalRepository>();
+  BillingRepository get billingRepository => get<BillingRepository>();
+  ChatRepository get chatRepository => get<ChatRepository>();
   
   // Auth Use Cases
   LoginUseCase get loginUseCase => get<LoginUseCase>();

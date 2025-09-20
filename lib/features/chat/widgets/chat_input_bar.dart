@@ -85,26 +85,34 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar>
   void _handleToolTap(ChatTool tool) {
     widget.onToolSelected?.call();
     
-    // Implement tool-specific actions
-    switch (tool.type) {
-      case ChatToolType.journal:
+    // Implement tool-specific actions based on tool ID
+    switch (tool.id) {
+      case 'journal':
         _handleJournalTool();
         break;
-      case ChatToolType.summary:
+      case 'summary':
         _handleSummaryTool();
         break;
-      case ChatToolType.meditation:
+      case 'meditation':
         _handleMeditationTool();
         break;
-      case ChatToolType.breathing:
+      case 'breathing':
         _handleBreathingTool();
         break;
-      case ChatToolType.safety:
+      case 'safety':
         _handleSafetyTool();
         break;
-      case ChatToolType.crisis:
+      case 'crisis':
         _handleCrisisTool();
         break;
+      default:
+        // Handle other tools or show generic message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${tool.label} tool selected'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
     }
     
     setState(() {

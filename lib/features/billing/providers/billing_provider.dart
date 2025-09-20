@@ -4,6 +4,7 @@ import 'package:mindhearth/core/providers/api_providers.dart';
 import 'package:mindhearth/features/billing/domain/entities/ledger_entry.dart';
 import 'package:mindhearth/features/billing/domain/entities/purchase.dart';
 import 'package:mindhearth/features/billing/domain/entities/billing_status.dart';
+import 'package:mindhearth/features/billing/domain/entities/credit_package.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 
 /// Billing state class for managing billing-related state
