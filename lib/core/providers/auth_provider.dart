@@ -186,7 +186,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final result = await updateOnboardingStatusUseCase(isOnboarded);
       
       result.when(
-        success: (_) {
+        success: (data) {
           // Update the user's onboarding status in the state
           if (state.user != null) {
             final updatedUser = state.user!.copyWith(isOnboarded: isOnboarded);
@@ -198,6 +198,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
               'isOnboarded': isOnboarded,
             });
           }
+          
+          // If the status is pending, start a background retry
+          if (data != null && data['status'] == 'pending') {
+            _retryOnboardingStatusUpdate(isOnboarded);
+          }
         },
         failure: (error) {
           // Don't set error state for onboarding status updates to avoid blocking the user
@@ -207,6 +212,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
               'error': error.message,
             });
           }
+          
+          // Start a background retry
+          _retryOnboardingStatusUpdate(isOnboarded);
         },
       );
     } catch (e) {
@@ -217,7 +225,44 @@ class AuthNotifier extends StateNotifier<AuthState> {
           'error': e.toString(),
         });
       }
+      
+      // Start a background retry
+      _retryOnboardingStatusUpdate(isOnboarded);
     }
+  }
+  
+  /// Retry onboarding status update in the background
+  void _retryOnboardingStatusUpdate(bool isOnboarded) {
+    // Retry after 5 seconds
+    Future.delayed(const Duration(seconds: 5), () async {
+      try {
+        final updateOnboardingStatusUseCase = serviceLocator.get<UpdateOnboardingStatusUseCase>();
+        final result = await updateOnboardingStatusUseCase(isOnboarded);
+        
+        result.when(
+          success: (_) {
+            if (LoggingConfig.enableAuthLogs) {
+              appLogger.auth('Onboarding status retry successful', {
+                'isOnboarded': isOnboarded,
+              });
+            }
+          },
+          failure: (error) {
+            if (LoggingConfig.enableAuthLogs) {
+              appLogger.auth('Onboarding status retry failed', {
+                'error': error.message,
+              });
+            }
+          },
+        );
+      } catch (e) {
+        if (LoggingConfig.enableAuthLogs) {
+          appLogger.auth('Onboarding status retry error', {
+            'error': e.toString(),
+          });
+        }
+      }
+    });
   }
 
   /// Set loading state
