@@ -54,7 +54,7 @@ class SessionQuestionState {
 /// Session question tracking notifier
 class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
   final ApiService _apiService;
-  final ProviderRef _ref;
+  final StateNotifierProviderRef<SessionQuestionNotifier, SessionQuestionState> _ref;
 
   SessionQuestionNotifier(this._apiService, this._ref) : super(const SessionQuestionState()) {
     _loadQuestionCountsFromBackend();
