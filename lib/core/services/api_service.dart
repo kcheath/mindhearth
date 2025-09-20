@@ -105,7 +105,7 @@ class ApiService {
         appLogger.auth('Login attempt', {'email': email});
       }
       
-      final response = await _dio.post('/api/auth/login', data: {
+      final response = await _dio.post('/auth/login', data: {
         'email': email,
         'password': password,
       });
@@ -134,7 +134,7 @@ class ApiService {
   // Health check
   Future<ApiResponse<Map<String, dynamic>>> healthCheck() async {
     try {
-      final response = await _dio.get('/api/health');
+      final response = await _dio.get('/health');
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
       return ApiError(
@@ -162,7 +162,7 @@ class ApiService {
       appLogger.debug('sendChatMessage - sending request to /chat/', 'ApiService');
       appLogger.debug('sendChatMessage - request data: $requestData', 'ApiService');
       
-      final response = await _dio.post('/api/chat/', data: requestData);
+      final response = await _dio.post('/chat/', data: requestData);
       
       appLogger.debug('sendChatMessage - response status: ${response.statusCode}', 'ApiService');
       appLogger.debug('sendChatMessage - response data: ${response.data}', 'ApiService');
@@ -185,7 +185,7 @@ class ApiService {
     required String message,
   }) async {
     try {
-      final response = await _dio.post('/api/chat/simple', data: {
+      final response = await _dio.post('/chat/simple', data: {
         'message': message,
       });
       
@@ -205,7 +205,7 @@ class ApiService {
     String? purpose,
   }) async {
     try {
-      final response = await _dio.post('/api/sessions/', data: {
+      final response = await _dio.post('/sessions/', data: {
         if (name != null) 'name': name,
         'session_type': sessionType,
         if (purpose != null) 'purpose': purpose,
@@ -234,7 +234,7 @@ class ApiService {
         queryParams['session_type'] = sessionType;
       }
       
-      final response = await _dio.get('/api/sessions/', queryParameters: queryParams);
+      final response = await _dio.get('/sessions/', queryParameters: queryParams);
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
       return ApiError(
@@ -253,7 +253,7 @@ class ApiService {
       appLogger.debug('updateSessionName - sending request to /sessions/$sessionId', 'ApiService');
       appLogger.debug('updateSessionName - query parameter: name=$name', 'ApiService');
       
-      final response = await _dio.put('/api/sessions/$sessionId', queryParameters: {
+      final response = await _dio.put('/sessions/$sessionId', queryParameters: {
         'name': name,
       });
       
@@ -280,7 +280,7 @@ class ApiService {
     try {
       appLogger.debug('deleteSession - sending request to /sessions/$sessionId', 'ApiService');
       
-      final response = await _dio.delete('/api/sessions/$sessionId');
+      final response = await _dio.delete('/sessions/$sessionId');
       
       appLogger.debug('deleteSession - response status: ${response.statusCode}', 'ApiService');
       appLogger.debug('deleteSession - response data: ${response.data}', 'ApiService');
@@ -322,7 +322,7 @@ class ApiService {
     bool consent = false,
   }) async {
     try {
-      final response = await _dio.post('/api/communications/', data: {
+      final response = await _dio.post('/communications/', data: {
         'session_id': sessionId,
         'item_type': itemType,
         'role': role,
@@ -347,7 +347,7 @@ class ApiService {
     int offset = 0,
   }) async {
     try {
-      final response = await _dio.get('/api/communications/', queryParameters: {
+      final response = await _dio.get('/communications/', queryParameters: {
         if (sessionId != null) 'session_id': sessionId,
         if (itemType != null) 'item_type': itemType,
         'limit': limit,
@@ -366,7 +366,7 @@ class ApiService {
   // User Management
   Future<ApiResponse<Map<String, dynamic>>> getCurrentUser() async {
     try {
-      final response = await _dio.get('/api/api/users/me');
+      final response = await _dio.get('/api/users/me');
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
       return ApiError(
@@ -378,7 +378,7 @@ class ApiService {
 
   Future<ApiResponse<Map<String, dynamic>>> updateOnboardedStatus(bool onboarded) async {
     try {
-      final response = await _dio.put('/api/users/onboarded', data: {
+      final response = await _dio.put('/users/onboarded', data: {
         'onboarded': onboarded,
       });
       return ApiSuccess(data: response.data);
@@ -392,7 +392,7 @@ class ApiService {
 
   Future<ApiResponse<Map<String, dynamic>>> validateSafetyCode(String code, String passphrase) async {
     try {
-      final response = await _dio.post('/api/users/safety-codes/validate', data: {
+      final response = await _dio.post('/users/safety-codes/validate', data: {
         'code': code,
         'passphrase': passphrase,
       });
@@ -407,7 +407,7 @@ class ApiService {
 
   Future<ApiResponse<Map<String, dynamic>>> saveSafetyCodes(Map<String, String> codes, String passphrase) async {
     try {
-      final response = await _dio.post('/api/users/safety-codes', data: {
+      final response = await _dio.post('/users/safety-codes', data: {
         'codes': codes,
         'passphrase': passphrase,
       });
@@ -422,7 +422,7 @@ class ApiService {
 
   Future<ApiResponse<Map<String, dynamic>>> clearSafetyCodes() async {
     try {
-      final response = await _dio.delete('/api/users/safety-codes');
+      final response = await _dio.delete('/users/safety-codes');
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
       return ApiError(
@@ -435,8 +435,8 @@ class ApiService {
   // Onboarding Data Management - Using user data approach like kch_dev
   Future<ApiResponse<Map<String, dynamic>>> getOnboardingData() async {
     try {
-      // Use /api/users/me to get user data including onboarding information
-      final response = await _dio.get('/api/users/me');
+      // Use /users/me to get user data including onboarding information
+      final response = await _dio.get('/users/me');
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
       return ApiError(
@@ -449,7 +449,7 @@ class ApiService {
   Future<ApiResponse<Map<String, dynamic>>> saveSituationData(Map<String, dynamic> situationData) async {
     try {
       // Update user's relationship context
-      final response = await _dio.put('/api/users/relationship-context', data: {
+      final response = await _dio.put('/users/relationship-context', data: {
         'relationship_context': situationData,
       });
       return ApiSuccess(data: response.data);
@@ -468,14 +468,14 @@ class ApiService {
       
       // Try to create new profile first
       try {
-        final response = await _dio.post('/api/redaction-profiles/', data: {
+        final response = await _dio.post('/redaction-profiles/', data: {
           'encrypted_profile_data': profileDataString, // Backend expects a string
         });
         return ApiSuccess(data: response.data);
       } on DioException catch (e) {
         // If profile already exists (409), try to update it
         if (e.response?.statusCode == 409) {
-          final updateResponse = await _dio.put('/api/redaction-profiles/', data: {
+          final updateResponse = await _dio.put('/redaction-profiles/', data: {
             'encrypted_profile_data': profileDataString,
           });
           return ApiSuccess(data: updateResponse.data);
@@ -494,7 +494,7 @@ class ApiService {
   Future<ApiResponse<Map<String, dynamic>>> saveConsentForm(bool accepted) async {
     try {
       // Update consent for LLM training
-      final response = await _dio.post('/api/redaction-profiles/consent', data: {
+      final response = await _dio.post('/redaction-profiles/consent', data: {
         'consent': accepted,
       });
       return ApiSuccess(data: response.data);
@@ -509,7 +509,7 @@ class ApiService {
   Future<ApiResponse<Map<String, dynamic>>> clearOnboardingData() async {
     try {
       // Clear onboarding data by updating user data
-      final response = await _dio.put('/api/users/me', data: {
+      final response = await _dio.put('/users/me', data: {
         'relationship_context': null,
         'redaction_profile': null,
         'llm_training_consent': null,
@@ -526,7 +526,7 @@ class ApiService {
   // Update onboarding status
   Future<ApiResponse<Map<String, dynamic>>> updateOnboardingStatus(bool isOnboarded) async {
     try {
-      final response = await _dio.put('/api/users/onboarded', data: {
+      final response = await _dio.put('/users/onboarded', data: {
         'onboarded': isOnboarded,
       });
       return ApiSuccess(data: response.data);
@@ -542,7 +542,7 @@ class ApiService {
   Future<ApiResponse<Map<String, dynamic>>> updateRedactionProfile(Map<String, dynamic> profileData) async {
     try {
       final profileDataString = jsonEncode(profileData);
-      final response = await _dio.put('/api/redaction-profiles/', data: {
+      final response = await _dio.put('/redaction-profiles/', data: {
         'encrypted_profile_data': profileDataString,
       });
       return ApiSuccess(data: response.data);
@@ -569,7 +569,7 @@ class ApiService {
         queryParams['entry_type'] = entryType;
       }
       
-      final response = await _dio.get('/api/journals/', queryParameters: queryParams);
+      final response = await _dio.get('/journals/', queryParameters: queryParams);
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
       return ApiError(
@@ -581,7 +581,7 @@ class ApiService {
 
   Future<ApiResponse<Map<String, dynamic>>> getJournalEntry(String entryId) async {
     try {
-      final response = await _dio.get('/api/journals/$entryId');
+      final response = await _dio.get('/journals/$entryId');
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
       return ApiError(
@@ -600,7 +600,7 @@ class ApiService {
     bool consent = false,
   }) async {
     try {
-      final response = await _dio.post('/api/journals/', data: {
+      final response = await _dio.post('/journals/', data: {
         'header': header,
         'entry_type': entryType,
         if (sessionId != null) 'session_id': sessionId,
@@ -637,10 +637,10 @@ class ApiService {
       appLogger.debug('createAIJournalEntry - request data: $requestData', 'ApiService');
       
       // Add more detailed logging for debugging
-      appLogger.apiRequest('POST', '/api/journals/ai-summary', requestData);
+      appLogger.apiRequest('POST', '/journals/ai-summary', requestData);
       
       final response = await _dio.post(
-        '/api/journals/ai-summary',
+        '/journals/ai-summary',
         data: requestData,
         options: Options(
           headers: {
@@ -660,7 +660,7 @@ class ApiService {
       if (response.statusCode == 200) {
         return ApiSuccess(data: response.data);
       } else {
-        appLogger.apiError('POST', '/api/journals/ai-summary', response.statusCode ?? 500, response.data);
+        appLogger.apiError('POST', '/journals/ai-summary', response.statusCode ?? 500, response.data);
         return ApiError(
           message: response.data?['detail'] ?? 'Failed to create AI journal entry',
           statusCode: response.statusCode,
@@ -693,7 +693,7 @@ class ApiService {
       if (metaData != null) data['meta_data'] = metaData;
       if (consent != null) data['consent'] = consent;
       
-      final response = await _dio.put('/api/journals/$entryId', data: data);
+      final response = await _dio.put('/journals/$entryId', data: data);
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
       return ApiError(
@@ -705,7 +705,7 @@ class ApiService {
 
   Future<ApiResponse<Map<String, dynamic>>> deleteJournalEntry(String entryId) async {
     try {
-      final response = await _dio.delete('/api/journals/$entryId');
+      final response = await _dio.delete('/journals/$entryId');
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
       return ApiError(
@@ -718,7 +718,7 @@ class ApiService {
   // Get user balance
   Future<ApiResponse<int>> getBalance() async {
     try {
-      final response = await _dio.get('/api/billing/balance');
+      final response = await _dio.get('/billing/balance');
       return ApiSuccess(data: response.data['balance'] as int);
     } on DioException catch (e) {
       return ApiError(
@@ -733,7 +733,7 @@ class ApiService {
   // Get billing status
   Future<ApiResponse<Map<String, dynamic>>> getBillingStatus() async {
     try {
-      final response = await _dio.get('/api/billing/status');
+      final response = await _dio.get('/billing/status');
       return ApiSuccess(data: response.data);
     } on DioException catch (e) {
       return ApiError(

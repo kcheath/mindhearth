@@ -105,7 +105,7 @@ class DebugConfig {
   }
   
   /// API URL for development
-  static String get apiUrl => 'http://localhost:8000';
+  static String get apiUrl => 'http://localhost:8000/api';
   
   /// Test email for development
   static String get testEmail => 'test@tsukiyo.dev';
