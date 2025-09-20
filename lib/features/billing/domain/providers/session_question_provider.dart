@@ -101,7 +101,7 @@ class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
 
       final response = await _apiService.dio.post(
         '/billing/session-questions/add',
-        data: {
+        queryParameters: {
           'questions': state.globalTotalQuestions,
           'credits_to_deduct': creditsToDeduct,
         },

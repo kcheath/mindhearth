@@ -19,8 +19,9 @@ class DocumentCostService {
 
       final response = await _apiService.dio.post(
         '/billing/estimate-document-cost',
-        data: {
+        queryParameters: {
           'size_bytes': sizeBytes,
+          'file_type': 'pdf', // Default file type
         },
       );
 
@@ -58,7 +59,7 @@ class DocumentCostService {
 
       final response = await _apiService.dio.post(
         '/billing/confirm-document',
-        data: {
+        queryParameters: {
           'document_id': documentId,
           'size_bytes': sizeBytes,
         },

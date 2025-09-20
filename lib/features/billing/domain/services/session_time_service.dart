@@ -23,7 +23,7 @@ class SessionTimeService {
 
       final response = await _apiService.dio.post(
         '/session-time/$sessionId/consume-credits',
-        data: {
+        queryParameters: {
           'duration_seconds': durationSeconds,
         },
       );
