@@ -11,6 +11,7 @@ import 'package:mindhearth/features/billing/presentation/widgets/gift_dialog.dar
 import 'package:mindhearth/features/billing/presentation/widgets/support_dialog.dart';
 import 'package:mindhearth/features/billing/presentation/widgets/usage_analytics_widget.dart';
 import 'package:mindhearth/features/billing/presentation/widgets/cost_estimation_widget.dart';
+import 'package:mindhearth/features/billing/presentation/pages/credit_usage_debug_screen.dart';
 
 /// Main billing page with trauma-informed design
 /// Provides comprehensive billing information and controls
@@ -155,10 +156,33 @@ class _BillingPageState extends ConsumerState<BillingPage>
             // Credit Actions - Bottom 2/3
             Expanded(
               flex: 2,
-              child: BillingActionsWidget(
-                onPurchaseCredits: () => _showPurchaseDialog(context),
-                onGiftCredits: () => _showGiftDialog(context),
-                onContactSupport: () => _showSupportDialog(context),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: BillingActionsWidget(
+                      onPurchaseCredits: () => _showPurchaseDialog(context),
+                      onGiftCredits: () => _showGiftDialog(context),
+                      onContactSupport: () => _showSupportDialog(context),
+                    ),
+                  ),
+                  
+                  // Debug Button
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showDebugScreen(context),
+                        icon: const Icon(Icons.bug_report),
+                        label: const Text('Debug Credit Usage'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -217,6 +241,16 @@ class _BillingPageState extends ConsumerState<BillingPage>
       context,
       MaterialPageRoute(
         builder: (context) => const SupportDialog(),
+        fullscreenDialog: true,
+      ),
+    );
+  }
+
+  void _showDebugScreen(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CreditUsageDebugScreen(),
         fullscreenDialog: true,
       ),
     );
