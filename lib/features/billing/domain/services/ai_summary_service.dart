@@ -129,14 +129,32 @@ class AISummaryService {
         'sessionId': sessionId,
       });
 
-      // For now, assume all sessions can generate AI summaries
-      // This avoids the 404 error from the non-existent endpoint
-      appLogger.info('AI summary generation check completed', {
-        'sessionId': sessionId,
-        'canGenerate': true,
-      });
-      
-      return true;
+      final response = await _apiService.dio.get(
+        '/communications/',
+        queryParameters: {
+          'session_id': sessionId,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        final communications = data['communications'] as List;
+        final canGenerate = communications.isNotEmpty;
+        
+        appLogger.info('AI summary generation check completed', {
+          'sessionId': sessionId,
+          'canGenerate': canGenerate,
+          'communicationCount': communications.length,
+        });
+        
+        return canGenerate;
+      } else {
+        appLogger.warning('Failed to check session communications', {
+          'sessionId': sessionId,
+          'statusCode': response.statusCode,
+        });
+        return false;
+      }
     } catch (e) {
       appLogger.error('Failed to check AI summary generation capability', {
         'error': e.toString(),
