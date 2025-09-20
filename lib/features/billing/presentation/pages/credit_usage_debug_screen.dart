@@ -49,9 +49,8 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
       final balanceResponse = await billingService.getBalance();
       final ledgerResponse = await billingService.getLedger(limit: 10);
       
-      // Refresh question counts from backend
-      final sessionQuestionNotifier = ref.read(sessionQuestionProvider.notifier);
-      await sessionQuestionNotifier.refreshQuestionCounts();
+      // Note: Backend persistence for question counts is not implemented yet
+      // Questions are tracked locally only
       
       setState(() {
         _currentBalance = balanceResponse.when(
