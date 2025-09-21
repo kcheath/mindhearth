@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/services/api_service.dart';
-import 'package:mindhearth/features/chat/widgets/chat_message_bubble.dart';
+import 'package:mindhearth/features/chat/domain/entities/chat_message.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/features/billing/domain/services/credit_validator.dart';
