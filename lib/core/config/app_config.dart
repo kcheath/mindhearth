@@ -7,7 +7,7 @@ class AppConfig {
   // API Configuration
   static String get apiBaseUrl => const String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://api.mindhearth.com',
+    defaultValue: 'http://localhost:8000',
   );
 
   static String get apiVersion => const String.fromEnvironment(

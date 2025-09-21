@@ -11,7 +11,7 @@ class ApiService {
   
   // Backend API keys from debug config
   static const String _tenantId = '1aca2ef7-b1fa-46bb-af08-a8fdb449b1f9';
-  static const String _applicationId = 'c8f67708-8f15-4205-be08-ebc676205d1d';
+  static const String _applicationId = '2852276f-16ca-462f-aa46-5e191880eb33';
   
   late final Dio _dio;
   late final FlutterSecureStorage _storage;
