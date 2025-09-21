@@ -491,6 +491,32 @@ class ChatNotifier extends StateNotifier<ChatState> {
     state = state.copyWith(error: null);
   }
 
+  // Get current session
+  Session? get currentSession {
+    if (state.currentSessionId != null) {
+      // Find session in sessions list
+      final sessionData = state.sessions.firstWhere(
+        (session) => session['id'] == state.currentSessionId,
+        orElse: () => {},
+      );
+      if (sessionData.isNotEmpty) {
+        return Session.fromJson(sessionData);
+      }
+    }
+    return null;
+  }
+
+  // Retry the last action (resend last message)
+  Future<void> retryLastAction() async {
+    if (state.messages.isNotEmpty) {
+      final lastMessage = state.messages.last;
+      if (lastMessage.isUser) {
+        // Resend the last user message
+        await sendMessage(lastMessage.message);
+      }
+    }
+  }
+
   @override
   void dispose() {
     _streamSubscription?.cancel();

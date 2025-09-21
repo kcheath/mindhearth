@@ -81,7 +81,7 @@ class ContextualErrorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (title, message, icon) = _getContextualError(context, customMessage);
+    final (title, message, icon) = _getContextualError(this.context, customMessage);
     
     return AppErrorWidget(
       title: title,

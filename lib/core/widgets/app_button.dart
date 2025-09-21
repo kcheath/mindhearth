@@ -210,14 +210,14 @@ class IconButton extends StatelessWidget {
   }
 }
 
-class FloatingActionButton extends StatelessWidget {
+class AppFloatingActionButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onPressed;
   final String? tooltip;
   final Color? backgroundColor;
   final Color? foregroundColor;
 
-  const FloatingActionButton({
+  const AppFloatingActionButton({
     super.key,
     required this.icon,
     this.onPressed,

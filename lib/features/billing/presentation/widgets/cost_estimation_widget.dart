@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/features/billing/domain/entities/credit_consumption.dart';
 import 'package:mindhearth/features/billing/domain/services/document_cost_service.dart';
 import 'package:mindhearth/features/billing/domain/services/session_time_service.dart';

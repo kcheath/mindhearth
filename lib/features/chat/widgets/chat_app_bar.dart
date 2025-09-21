@@ -21,7 +21,7 @@ class ChatAppBar extends ConsumerWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final chatState = ref.watch(chatProvider);
-    final currentSession = chatState.currentSession;
+    final currentSession = ref.read(chatProvider.notifier).currentSession;
 
     return AppBar(
       title: Column(

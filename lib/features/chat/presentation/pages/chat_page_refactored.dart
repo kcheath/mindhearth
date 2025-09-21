@@ -229,8 +229,6 @@ class _ChatPageRefactoredState extends ConsumerState<ChatPageRefactored> {
             // Input bar
             ChatInputBar(
               onSendMessage: _handleSendMessage,
-              onStartNewSession: _startNewSession,
-              onShowSessionHistory: _showSessionHistory,
             ),
           ],
         ),

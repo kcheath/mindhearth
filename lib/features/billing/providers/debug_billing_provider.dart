@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
 import 'package:mindhearth/core/services/debug_billing_service.dart';
 import 'package:mindhearth/core/services/api_service.dart';
