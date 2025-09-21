@@ -25,7 +25,7 @@ class SendMessageUseCase {
     }
     
     // Check billing status
-    final billingResult = await _billingRepository.checkBillingStatus();
+    final billingResult = await _billingRepository.getBillingStatus();
     if (billingResult.isFailure) {
       return Result.failure(billingResult.error!);
     }
@@ -156,7 +156,7 @@ class StartStreamingChatUseCase {
     }
     
     // Check billing status
-    final billingResult = await _billingRepository.checkBillingStatus();
+    final billingResult = await _billingRepository.getBillingStatus();
     if (billingResult.isFailure) {
       return Result.failure(billingResult.error!);
     }

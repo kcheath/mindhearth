@@ -94,10 +94,10 @@ class ChatService {
             final commData = comm as Map<String, dynamic>;
             return ChatMessage(
               id: commData['id'] as String,
-              message: commData['original_content'] as String? ?? '',
-              isUser: commData['role'] == 'user',
+              sessionId: commData['session_id'] as String? ?? '',
+              content: commData['original_content'] as String? ?? '',
+              role: commData['role'] as String? ?? 'user',
               timestamp: DateTime.parse(commData['created_at'] as String),
-              sessionId: commData['session_id'] as String?,
             );
           }).toList();
           
@@ -158,10 +158,10 @@ class ChatService {
         return [
           ChatMessage(
             id: 'insufficient_credits_${DateTime.now().millisecondsSinceEpoch}',
-            message: 'You don\'t have enough credits to send a chat message. This is completely normal - healing takes time and resources. You can purchase more credits or wait for your monthly grant.',
-            isUser: false,
+            sessionId: _currentSessionId ?? '',
+            content: 'You don\'t have enough credits to send a chat message. This is completely normal - healing takes time and resources. You can purchase more credits or wait for your monthly grant.',
+            role: 'assistant',
             timestamp: DateTime.now(),
-            sessionId: _currentSessionId,
           ),
         ];
       }
@@ -196,10 +196,10 @@ class ChatService {
           // Add user message
           chatMessages.add(ChatMessage(
             id: 'user_${DateTime.now().millisecondsSinceEpoch}',
-            message: message,
-            isUser: true,
+            sessionId: _currentSessionId ?? '',
+            content: message,
+            role: 'user',
             timestamp: DateTime.now(),
-            sessionId: _currentSessionId,
           ));
 
           // Add AI response
@@ -207,10 +207,10 @@ class ChatService {
           if (aiMessage.isNotEmpty) {
             chatMessages.add(ChatMessage(
               id: 'ai_${DateTime.now().millisecondsSinceEpoch}',
-              message: aiMessage,
-              isUser: false,
+              sessionId: _currentSessionId ?? '',
+              content: aiMessage,
+              role: 'assistant',
               timestamp: DateTime.now(),
-              sessionId: _currentSessionId,
             ));
           }
 
@@ -328,10 +328,10 @@ class ChatService {
           // Add user message
           chatMessages.add(ChatMessage(
             id: data['id'] as String,
-            message: message,
-            isUser: true,
+            sessionId: _currentSessionId ?? '',
+            content: message,
+            role: 'user',
             timestamp: DateTime.parse(data['created_at'] as String),
-            sessionId: _currentSessionId,
           ));
 
           // Generate a contextual AI response (not using journal endpoint)
@@ -351,10 +351,10 @@ class ChatService {
               // Add AI response
               chatMessages.add(ChatMessage(
                 id: aiData['id'] as String,
-                message: aiMessage,
-                isUser: false,
+                sessionId: _currentSessionId ?? '',
+                content: aiMessage,
+                role: 'assistant',
                 timestamp: DateTime.parse(aiData['created_at'] as String),
-                sessionId: _currentSessionId,
               ));
               return chatMessages;
             },

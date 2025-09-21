@@ -32,8 +32,8 @@ class ChatMessageList extends ConsumerWidget {
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: ChatMessageBubble(
-            message: message.message,
-            isUser: message.isUser,
+            message: message.content,
+            isUser: message.role == 'user',
             onShare: () => _handleShare(context, message),
             onCopy: () => _handleCopy(context, message),
           ),

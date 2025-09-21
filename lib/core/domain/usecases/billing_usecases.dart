@@ -26,7 +26,7 @@ class PurchaseCreditsUseCase {
   Future<Result<Purchase>> call({
     required String packageId,
     required String paymentMethod,
-    Map<String, dynamic>? metadata,
+    Map<String, dynamic>? paymentData,
   }) async {
     // Validate input
     if (packageId.trim().isEmpty) {
@@ -44,7 +44,7 @@ class PurchaseCreditsUseCase {
     return await _billingRepository.purchaseCredits(
       packageId: packageId,
       paymentMethod: paymentMethod,
-      metadata: metadata,
+      paymentData: paymentData,
     );
   }
 }
@@ -69,14 +69,10 @@ class GetPurchaseHistoryUseCase {
   Future<Result<List<Purchase>>> call({
     int? limit,
     int? offset,
-    DateTime? fromDate,
-    DateTime? toDate,
   }) async {
     return await _billingRepository.getPurchaseHistory(
       limit: limit,
       offset: offset,
-      fromDate: fromDate,
-      toDate: toDate,
     );
   }
 }
@@ -90,14 +86,10 @@ class GetLedgerEntriesUseCase {
   Future<Result<List<LedgerEntry>>> call({
     int? limit,
     int? offset,
-    DateTime? fromDate,
-    DateTime? toDate,
   }) async {
-    return await _billingRepository.getLedgerEntries(
+    return await _billingRepository.getLedgerHistory(
       limit: limit,
       offset: offset,
-      fromDate: fromDate,
-      toDate: toDate,
     );
   }
 }
@@ -109,15 +101,15 @@ class CheckBillingStatusUseCase {
   CheckBillingStatusUseCase(this._billingRepository);
   
   Future<Result<bool>> call() async {
-    final result = await _billingRepository.checkBillingStatus();
+    final result = await _billingRepository.getBillingStatus();
     
     if (result.isFailure) {
       return Result.failure(result.error!);
     }
     
-    // Return true if billing is active and user has credits
+    // Return true if billing is healthy and user has credits
     final status = result.data!;
-    return Result.success(status.isActive && status.currentBalance > 0);
+    return Result.success(status.isHealthy && status.currentBalance > 0);
   }
 }
 
@@ -127,13 +119,7 @@ class GetUsageAnalyticsUseCase {
   
   GetUsageAnalyticsUseCase(this._billingRepository);
   
-  Future<Result<Map<String, dynamic>>> call({
-    DateTime? fromDate,
-    DateTime? toDate,
-  }) async {
-    return await _billingRepository.getUsageAnalytics(
-      fromDate: fromDate,
-      toDate: toDate,
-    );
+  Future<Result<Map<String, dynamic>>> call() async {
+    return await _billingRepository.getUsageAnalytics();
   }
 }

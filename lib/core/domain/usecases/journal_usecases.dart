@@ -1,6 +1,7 @@
 import 'package:mindhearth/core/domain/entities/result.dart';
 import 'package:mindhearth/core/domain/entities/app_error.dart';
 import 'package:mindhearth/core/domain/repositories/journal_repository.dart';
+import 'package:mindhearth/core/domain/repositories/chat_repository.dart';
 import 'package:mindhearth/features/journal/domain/entities/journal_entry.dart';
 
 /// Use case for creating a journal entry
@@ -9,21 +10,27 @@ class CreateJournalEntryUseCase {
   
   CreateJournalEntryUseCase(this._journalRepository);
   
-  Future<Result<JournalEntry>> call(JournalEntry entry) async {
+  Future<Result<JournalEntry>> call({
+    required String content,
+    String? header,
+    String? entryType,
+    Map<String, dynamic>? metaData,
+    bool? consent,
+  }) async {
     // Validate entry
-    if (entry.title.trim().isEmpty) {
-      return Result.failure(AppErrorFactory.validation(
-        message: 'Journal entry title is required',
-      ));
-    }
-    
-    if (entry.content.trim().isEmpty) {
+    if (content.trim().isEmpty) {
       return Result.failure(AppErrorFactory.validation(
         message: 'Journal entry content is required',
       ));
     }
     
-    return await _journalRepository.createEntry(entry);
+    return await _journalRepository.createJournalEntry(
+      content: content,
+      header: header,
+      entryType: entryType,
+      metaData: metaData,
+      consent: consent,
+    );
   }
 }
 
@@ -36,15 +43,11 @@ class GetJournalEntriesUseCase {
   Future<Result<List<JournalEntry>>> call({
     int? limit,
     int? offset,
-    DateTime? fromDate,
-    DateTime? toDate,
     String? entryType,
   }) async {
-    return await _journalRepository.getEntries(
+    return await _journalRepository.getJournalEntries(
       limit: limit,
       offset: offset,
-      fromDate: fromDate,
-      toDate: toDate,
       entryType: entryType,
     );
   }
@@ -57,7 +60,7 @@ class GetJournalEntryUseCase {
   GetJournalEntryUseCase(this._journalRepository);
   
   Future<Result<JournalEntry?>> call(String id) async {
-    return await _journalRepository.getEntry(id);
+    return await _journalRepository.getJournalEntry(id);
   }
 }
 
@@ -67,21 +70,22 @@ class UpdateJournalEntryUseCase {
   
   UpdateJournalEntryUseCase(this._journalRepository);
   
-  Future<Result<JournalEntry>> call(String id, JournalEntry entry) async {
-    // Validate entry
-    if (entry.title.trim().isEmpty) {
-      return Result.failure(AppErrorFactory.validation(
-        message: 'Journal entry title is required',
-      ));
-    }
-    
-    if (entry.content.trim().isEmpty) {
-      return Result.failure(AppErrorFactory.validation(
-        message: 'Journal entry content is required',
-      ));
-    }
-    
-    return await _journalRepository.updateEntry(id, entry);
+  Future<Result<JournalEntry>> call({
+    required String id,
+    String? content,
+    String? header,
+    String? entryType,
+    Map<String, dynamic>? metaData,
+    bool? consent,
+  }) async {
+    return await _journalRepository.updateJournalEntry(
+      id: id,
+      content: content,
+      header: header,
+      entryType: entryType,
+      metaData: metaData,
+      consent: consent,
+    );
   }
 }
 
@@ -92,50 +96,25 @@ class DeleteJournalEntryUseCase {
   DeleteJournalEntryUseCase(this._journalRepository);
   
   Future<Result<void>> call(String id) async {
-    return await _journalRepository.deleteEntry(id);
+    return await _journalRepository.deleteJournalEntry(id);
   }
 }
 
 /// Use case for creating AI journal summary
 class CreateAIJournalSummaryUseCase {
   final JournalRepository _journalRepository;
-  final ChatRepository _chatRepository;
   
   CreateAIJournalSummaryUseCase({
     required JournalRepository journalRepository,
-    required ChatRepository chatRepository,
-  }) : _journalRepository = journalRepository,
-       _chatRepository = chatRepository;
+  }) : _journalRepository = journalRepository;
   
   Future<Result<JournalEntry>> call({
     required String sessionId,
-    String? title,
+    String? purpose,
   }) async {
-    // Get session messages for context
-    final messagesResult = await _chatRepository.getSessionMessages(
+    return await _journalRepository.generateAISummary(
       sessionId: sessionId,
+      purpose: purpose,
     );
-    
-    if (messagesResult.isFailure) {
-      return Result.failure(messagesResult.error!);
-    }
-    
-    // Create AI summary entry
-    final summaryEntry = JournalEntry(
-      id: '', // Will be set by repository
-      title: title ?? 'AI Summary from Chat',
-      content: 'AI-generated summary from chat session',
-      entryType: 'ai_summary',
-      sessionId: sessionId,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      metadata: {
-        'source': 'ai_summary',
-        'session_id': sessionId,
-        'message_count': messagesResult.data!.length,
-      },
-    );
-    
-    return await _journalRepository.createEntry(summaryEntry);
   }
 }

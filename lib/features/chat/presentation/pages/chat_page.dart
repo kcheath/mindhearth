@@ -239,8 +239,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       itemBuilder: (context, index) {
                         final message = chatState.messages[index];
                         return ChatMessageBubble(
-                          message: message.message,
-                          isUser: message.isUser,
+                          message: message.content,
+                          isUser: message.role == 'user',
                           timestamp: message.timestamp,
                           key: ValueKey(message.id),
                         );

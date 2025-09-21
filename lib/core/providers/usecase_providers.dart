@@ -66,7 +66,6 @@ final deleteJournalEntryUseCaseProvider = Provider<DeleteJournalEntryUseCase>((r
 final createAIJournalSummaryUseCaseProvider = Provider<CreateAIJournalSummaryUseCase>((ref) {
   return CreateAIJournalSummaryUseCase(
     journalRepository: ref.watch(journalRepositoryProvider),
-    chatRepository: ref.watch(chatRepositoryProvider),
   );
 });
 

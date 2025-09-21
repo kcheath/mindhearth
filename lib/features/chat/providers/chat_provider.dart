@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/services/chat_service.dart';
-import 'package:mindhearth/features/chat/widgets/chat_message_bubble.dart';
+import 'package:mindhearth/features/chat/domain/entities/chat_message.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
 import 'package:mindhearth/core/providers/session_provider.dart';
 import 'package:mindhearth/core/models/session_state.dart';
@@ -175,10 +175,10 @@ class ChatNotifier extends StateNotifier<ChatState> {
       final messages = history.map((comm) {
         return ChatMessage(
           id: comm['id'] as String,
-          message: comm['original_content'] as String? ?? '',
-          isUser: comm['role'] == 'user',
+          sessionId: comm['session_id'] as String? ?? '',
+          content: comm['original_content'] as String? ?? '',
+          role: comm['role'] as String? ?? 'user',
           timestamp: DateTime.parse(comm['created_at'] as String),
-          sessionId: comm['session_id'] as String?,
         );
       }).toList();
       
@@ -205,8 +205,8 @@ class ChatNotifier extends StateNotifier<ChatState> {
       try {
         final history = state.messages.map((msg) => {
           'id': msg.id,
-          'original_content': msg.message,
-          'role': msg.isUser ? 'user' : 'assistant',
+          'original_content': msg.content,
+          'role': msg.role,
           'created_at': msg.timestamp.toIso8601String(),
           'session_id': msg.sessionId,
         }).toList();
@@ -227,10 +227,10 @@ class ChatNotifier extends StateNotifier<ChatState> {
       // Add user message immediately
       final userMessage = ChatMessage(
         id: 'user_${DateTime.now().millisecondsSinceEpoch}',
-        message: content,
-        isUser: true,
+        sessionId: state.currentSessionId ?? '',
+        content: content,
+        role: 'user',
         timestamp: DateTime.now(),
-        sessionId: state.currentSessionId,
       );
       
       state = state.copyWith(
@@ -250,10 +250,10 @@ class ChatNotifier extends StateNotifier<ChatState> {
         String aiMessageContent = '';
         final aiMessage = ChatMessage(
           id: 'ai_${DateTime.now().millisecondsSinceEpoch}',
-          message: '',
-          isUser: false,
+          sessionId: state.currentSessionId ?? '',
+          content: '',
+          role: 'assistant',
           timestamp: DateTime.now(),
-          sessionId: state.currentSessionId,
         );
         
         // Add empty AI message to start
@@ -270,10 +270,10 @@ class ChatNotifier extends StateNotifier<ChatState> {
             if (updatedMessages.isNotEmpty) {
               updatedMessages.last = ChatMessage(
                 id: updatedMessages.last.id,
-                message: aiMessageContent,
-                isUser: false,
-                timestamp: updatedMessages.last.timestamp,
                 sessionId: updatedMessages.last.sessionId,
+                content: aiMessageContent,
+                role: 'assistant',
+                timestamp: updatedMessages.last.timestamp,
               );
               state = state.copyWith(messages: updatedMessages);
             }
@@ -316,7 +316,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
         if (updatedMessages.isNotEmpty) {
           updatedMessages.removeLast(); // Remove the user message we added
         }
-        updatedMessages.addAll(messages); // Add both user and AI messages
+        updatedMessages.addAll(messages!); // Add both user and AI messages
         
         state = state.copyWith(
           messages: updatedMessages,
@@ -510,9 +510,9 @@ class ChatNotifier extends StateNotifier<ChatState> {
   Future<void> retryLastAction() async {
     if (state.messages.isNotEmpty) {
       final lastMessage = state.messages.last;
-      if (lastMessage.isUser) {
+      if (lastMessage.role == 'user') {
         // Resend the last user message
-        await sendMessage(lastMessage.message);
+        await sendMessage(lastMessage.content);
       }
     }
   }
