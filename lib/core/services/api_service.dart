@@ -96,6 +96,11 @@ class ApiService {
     return await _storage.read(key: _tokenKey);
   }
 
+  // Clear authentication state
+  Future<void> clearAuth() async {
+    await _storage.delete(key: _tokenKey);
+  }
+
   // Auth endpoints
   Future<ApiResponse<Map<String, dynamic>>> login({
     required String email,
@@ -106,12 +111,36 @@ class ApiService {
         appLogger.auth('Login attempt', {'email': email});
       }
       
-      final response = await _dio.post('/auth/login', data: {
+      // Clear any existing authentication state
+      await clearAuth();
+      
+      // Create a separate Dio instance for login without auth headers
+      final loginDio = Dio(BaseOptions(
+        baseUrl: DebugConfig.apiUrl,
+        connectTimeout: const Duration(seconds: 60),
+        receiveTimeout: const Duration(seconds: 60),
+        sendTimeout: const Duration(seconds: 60),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Tenant-ID': _tenantId,
+          'X-App-ID': _applicationId,
+        },
+      ));
+      
+      final requestData = {
         'email': email,
         'password': password,
         'tenant_id': _tenantId,
         'application_id': _applicationId,
-      });
+      };
+      
+      if (LoggingConfig.enableApiLogs) {
+        appLogger.debug('Login request data: $requestData', 'ApiService');
+        appLogger.debug('Login request headers: ${loginDio.options.headers}', 'ApiService');
+      }
+      
+      final response = await loginDio.post('/auth/login', data: requestData);
       
       if (LoggingConfig.enableAuthLogs) {
         appLogger.auth('Login successful', {'email': email});
