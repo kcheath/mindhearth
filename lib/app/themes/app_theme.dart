@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const Color _primaryColor = Color(0xFF6750A4);
-  static const Color _secondaryColor = Color(0xFF625B71);
-  static const Color _tertiaryColor = Color(0xFF7D5260);
-  static const Color _errorColor = Color(0xFFBA1A1A);
+  // Darker, more sophisticated color palette
+  static const Color _primaryColor = Color(0xFF8B5CF6); // Purple-violet
+  static const Color _secondaryColor = Color(0xFF6366F1); // Indigo
+  static const Color _tertiaryColor = Color(0xFFEC4899); // Pink-rose
+  static const Color _errorColor = Color(0xFFEF4444); // Red
   
-  static const Color _surfaceColor = Color(0xFFFFFBFE);
-  static const Color _surfaceVariantColor = Color(0xFFE7E0EC);
-  static const Color _outlineColor = Color(0xFF49454F);
+  // Dark theme colors
+  static const Color _darkSurfaceColor = Color(0xFF0F0F23); // Very dark navy
+  static const Color _darkSurfaceVariantColor = Color(0xFF1E1E3F); // Dark navy
+  static const Color _darkOutlineColor = Color(0xFF4B5563); // Gray
+  
+  // Light theme colors (keeping for contrast)
+  static const Color _surfaceColor = Color(0xFFF8FAFC); // Very light gray
+  static const Color _surfaceVariantColor = Color(0xFFE2E8F0); // Light gray
+  static const Color _outlineColor = Color(0xFF64748B); // Slate gray
   
   static ThemeData get lightTheme {
     return ThemeData(
@@ -82,30 +89,30 @@ class AppTheme {
         secondary: _secondaryColor,
         tertiary: _tertiaryColor,
         error: _errorColor,
-        surface: Color(0xFF1C1B1F),
-        surfaceContainerHighest: Color(0xFF49454F),
-        outline: Color(0xFF938F99),
+        surface: _darkSurfaceColor,
+        surfaceContainerHighest: _darkSurfaceVariantColor,
+        outline: _darkOutlineColor,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
         onTertiary: Colors.white,
         onError: Colors.white,
         onSurface: Colors.white,
-        onSurfaceVariant: Color(0xFFCAC4D0),
+        onSurfaceVariant: Color(0xFFE2E8F0),
       ),
       fontFamily: 'Inter',
       appBarTheme: const AppBarTheme(
         centerTitle: true,
         elevation: 0,
         scrolledUnderElevation: 0,
-        backgroundColor: Color(0xFF1C1B1F),
+        backgroundColor: _darkSurfaceColor,
         foregroundColor: Colors.white,
       ),
       cardTheme: CardThemeData(
-        elevation: 1,
+        elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        color: const Color(0xFF1C1B1F),
+        color: _darkSurfaceVariantColor,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(

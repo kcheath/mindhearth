@@ -84,10 +84,26 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               // Add top spacing to move content higher
               SizedBox(height: MediaQuery.of(context).size.height * 0.15),
               // Content positioned higher without Expanded
-              Icon(
-                Icons.psychology,
-                size: 100,
-                color: Theme.of(context).primaryColor,
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).primaryColor.withOpacity(0.3),
+                      blurRadius: 20,
+                      spreadRadius: 5,
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset(
+                    'assets/images/mindhearth_logo.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
               const SizedBox(height: 32),
               Text(

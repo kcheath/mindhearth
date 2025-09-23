@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
+import 'package:mindhearth/core/providers/session_provider.dart';
 import 'package:mindhearth/features/chat/providers/chat_provider.dart';
 import 'package:mindhearth/features/billing/domain/providers/session_question_provider.dart';
 import 'package:mindhearth/features/billing/providers/billing_provider.dart';
@@ -94,13 +95,41 @@ class _CreditUsageDebugScreenState extends ConsumerState<CreditUsageDebugScreen>
         'currentSessionId': chatState.currentSessionId,
       });
       
-      // Use current session ID or create a debug session ID
-      final sessionId = chatState.currentSessionId ?? 'debug-session-${DateTime.now().millisecondsSinceEpoch}';
-      
-      appLogger.info('Using session ID for questions', {
-        'sessionId': sessionId,
-        'isDebugSession': chatState.currentSessionId == null,
-      });
+      // Use current session ID or create a proper UUID session
+      String sessionId;
+      if (chatState.currentSessionId != null) {
+        sessionId = chatState.currentSessionId!;
+        appLogger.info('Using existing session ID for questions', {
+          'sessionId': sessionId,
+          'isExistingSession': true,
+        });
+      } else {
+        // Create a proper session via the API instead of using string IDs
+        appLogger.info('No current session, creating new session for questions');
+        try {
+          final sessionNotifier = ref.read(sessionNotifierProvider.notifier);
+          final newSession = await sessionNotifier.createSession(
+            name: 'Debug Session ${DateTime.now().toIso8601String()}',
+            sessionType: 'conversation',
+            purpose: 'debug_billing',
+          );
+          
+          if (newSession != null) {
+            sessionId = newSession.id;
+            appLogger.info('Created new session for questions', {
+              'sessionId': sessionId,
+              'sessionName': newSession.name,
+            });
+          } else {
+            throw Exception('Failed to create new session');
+          }
+        } catch (e) {
+          appLogger.error('Failed to create session for questions', {'error': e.toString()});
+          // Fallback to a UUID-like format (still not ideal but better than string)
+          sessionId = 'debug-${DateTime.now().millisecondsSinceEpoch}-${DateTime.now().microsecondsSinceEpoch}';
+          appLogger.warning('Using fallback session ID', {'sessionId': sessionId});
+        }
+      }
       
       await sessionQuestionNotifier.addQuestions(questions, sessionId: sessionId);
       

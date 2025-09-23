@@ -47,10 +47,10 @@ class ChatMessageBubble extends StatelessWidget {
                 color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(
-                Icons.psychology,
-                color: Theme.of(context).colorScheme.onPrimary,
-                size: 20,
+              child: Image.asset(
+                'assets/images/mindhearth_logo.png',
+                width: 20,
+                height: 20,
               ),
             ),
           ],

@@ -6,7 +6,7 @@ import 'package:mindhearth/core/models/safety_code_state.dart';
 import 'package:mindhearth/core/config/logging_config.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
-import 'package:mindhearth/core/services/encryption_service.dart';
+import 'package:mindhearth/core/providers/usecase_providers.dart';
 import 'package:go_router/go_router.dart';
 
 class SafetyCodePage extends ConsumerStatefulWidget {
@@ -101,43 +101,52 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
             ),
             if (DebugConfig.isDebugMode) ...[
               SizedBox(height: 8),
-              FutureBuilder<Map<String, String>?>(
-                future: EncryptionService.getSafetyCodes(),
-                builder: (context, snapshot) {
-                  final storedCodes = snapshot.data;
-                  final codesText = storedCodes != null && storedCodes.isNotEmpty
-                      ? 'Stored codes: ${storedCodes.values.join(', ')}'
-                      : 'No safety codes stored';
+              Consumer(
+                builder: (context, ref, child) {
+                  final getSafetyCodesUseCase = ref.watch(getSafetyCodesUseCaseProvider);
                   
-                  return Container(
-                    padding: EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.orange.withOpacity(0.3)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '🐛 Debug: $codesText',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.orange[700],
-                            fontFamily: 'monospace',
-                          ),
+                  return FutureBuilder<Map<String, String>?>(
+                    future: getSafetyCodesUseCase.call().then((result) => result.when(
+                      success: (data) => data,
+                      failure: (error) => null,
+                    )),
+                    builder: (context, snapshot) {
+                      final storedCodes = snapshot.data;
+                      final codesText = storedCodes != null && storedCodes.isNotEmpty
+                          ? 'Stored codes: ${storedCodes.values.join(', ')}'
+                          : 'No safety codes stored';
+                      
+                      return Container(
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: Colors.orange.withOpacity(0.3)),
                         ),
-                        SizedBox(height: 4),
-                        Text(
-                          '🐛 Current text field value: "${_safetyCodeController.text}"',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.orange[700],
-                            fontFamily: 'monospace',
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '🐛 Debug: $codesText',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.orange[700],
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              '🐛 Current text field value: "${_safetyCodeController.text}"',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.orange[700],
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   );
                 },
               ),
@@ -213,39 +222,46 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
             ),
             if (DebugConfig.isDebugMode) ...[
               SizedBox(height: 16),
-              FutureBuilder<Map<String, String>?>(
-                future: EncryptionService.getSafetyCodes(),
-                builder: (context, snapshot) {
-                  final storedCodes = snapshot.data;
+              Consumer(
+                builder: (context, ref, child) {
+                  final getSafetyCodesUseCase = ref.watch(getSafetyCodesUseCaseProvider);
                   
-                  return Column(
-                    children: [
-                      if (storedCodes != null && storedCodes.isNotEmpty) ...[
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              final firstCode = storedCodes.values.first;
-                              _safetyCodeController.text = firstCode;
-                              if (LoggingConfig.enableSafetyCodeLogs) {
-                                appLogger.safetyCode('debug_fill_first_code', null);
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange,
-                              foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(vertical: 12),
+                  return FutureBuilder<Map<String, String>?>(
+                    future: getSafetyCodesUseCase.call().then((result) => result.when(
+                      success: (data) => data,
+                      failure: (error) => null,
+                    )),
+                    builder: (context, snapshot) {
+                      final storedCodes = snapshot.data;
+                      
+                      return Column(
+                        children: [
+                          if (storedCodes != null && storedCodes.isNotEmpty) ...[
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  final firstCode = storedCodes.values.first;
+                                  _safetyCodeController.text = firstCode;
+                                  if (LoggingConfig.enableSafetyCodeLogs) {
+                                    appLogger.safetyCode('debug_fill_first_code', null);
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.orange,
+                                  foregroundColor: Colors.white,
+                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                ),
+                                child: Text('🐛 Debug: Fill First Stored Code'),
+                              ),
                             ),
-                            child: Text('🐛 Debug: Fill First Stored Code'),
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                      ],
-                      SizedBox(height: 8),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () async {
+                            SizedBox(height: 8),
+                          ],
+                          SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () async {
                             // Show confirmation dialog
                             final confirmed = await showDialog<bool>(
                               context: context,
@@ -325,8 +341,10 @@ class _SafetyCodePageState extends ConsumerState<SafetyCodePage> {
                     ],
                   );
                 },
-              ),
-            ],
+              );
+            },
+          ),
+        ],
             
 
           ],

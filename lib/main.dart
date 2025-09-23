@@ -71,7 +71,7 @@ class _MindhearthAppState extends ConsumerState<MindhearthApp> with WidgetsBindi
       title: 'Mindhearth',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.dark, // Default to dark theme
       routerConfig: router,
       debugShowCheckedModeBanner: DebugConfig.showDebugBanner,
       showPerformanceOverlay: DebugConfig.enablePerformanceOverlay,

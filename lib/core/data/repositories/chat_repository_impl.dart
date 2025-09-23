@@ -170,15 +170,84 @@ class ChatRepositoryImpl implements ChatRepository {
     try {
       appLogger.info('💬 Getting messages for session: $sessionId');
 
-      final response = await _apiService.get('/chat/$sessionId/messages');
+      // FIXED: Use the correct communications endpoint instead of /chat/{sessionId}/messages
+      final response = await _apiService.get(
+        '/communications/',
+        queryParameters: {
+          'session_id': sessionId,
+          'item_type': 'chat',
+          if (limit != null) 'limit': limit,
+          if (offset != null) 'offset': offset,
+        },
+      );
 
       return response.when(
         success: (data, message) {
-          final messages = (data['messages'] as List)
-              .map((json) => ChatMessage.fromJson(json as Map<String, dynamic>))
+          // Enhanced logging to debug data structure
+          appLogger.debug('📊 Communications API response data structure:', {'data': data});
+          
+          // FIXED: Parse communications response format
+          final communicationsList = data['communications'] as List? ?? [];
+          appLogger.debug('📊 Communications list length: ${communicationsList.length}');
+          
+          if (communicationsList.isNotEmpty) {
+            appLogger.debug('📊 First communication item structure:', {'item': communicationsList.first});
+          }
+          
+          final communications = communicationsList
+              .map((json) {
+                try {
+                  final item = json as Map<String, dynamic>;
+                  
+                  // Handle different field names from communications endpoint
+                  final chatMessage = ChatMessage(
+                    id: (item['id'] as String?)?.isNotEmpty == true 
+                        ? item['id'] as String 
+                        : 'comm_${DateTime.now().millisecondsSinceEpoch}',
+                    sessionId: (item['session_id'] as String?)?.isNotEmpty == true 
+                        ? item['session_id'] as String 
+                        : sessionId,
+                    content: (item['original_content'] as String?)?.isNotEmpty == true 
+                        ? item['original_content'] as String 
+                        : (item['content'] as String?)?.isNotEmpty == true 
+                            ? item['content'] as String 
+                            : '',
+                    role: (item['role'] as String?)?.isNotEmpty == true 
+                        ? item['role'] as String 
+                        : 'user',
+                    timestamp: item['created_at'] != null 
+                        ? DateTime.tryParse(item['created_at'] as String) ?? DateTime.now()
+                        : DateTime.now(),
+                    messageType: item['item_type'] as String?,
+                    metadata: {
+                      'redacted_content': item['redacted_content'],
+                      'consent': item['consent'],
+                      'created_at': item['created_at'],
+                      'updated_at': item['updated_at'],
+                    },
+                  );
+                  
+                  appLogger.debug('📊 Parsed communication item:', {
+                    'id': chatMessage.id,
+                    'role': chatMessage.role,
+                    'content_length': chatMessage.content.length,
+                  });
+                  
+                  return chatMessage;
+                } catch (e) {
+                  appLogger.error('❌ Failed to parse communication item:', {'item': json, 'error': e.toString()});
+                  return null;
+                }
+              })
+              .where((item) => item != null)
+              .cast<ChatMessage>()
               .toList();
-          appLogger.info('✅ Retrieved ${messages.length} messages for session: $sessionId');
-          return Result.success(messages);
+              
+          // Sort messages chronologically (oldest first) for proper conversation flow
+          communications.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+          
+          appLogger.info('✅ Retrieved ${communications.length} messages for session: $sessionId (sorted chronologically)');
+          return Result.success(communications);
         },
         error: (message, statusCode, errors) {
           appLogger.error('❌ Failed to get messages: $message');
@@ -196,6 +265,7 @@ class ChatRepositoryImpl implements ChatRepository {
     required String sessionId,
     required String content,
     String? messageType,
+    List<Map<String, String>>? conversationHistory,
   }) async {
     try {
       appLogger.info('💬 Sending message to session: $sessionId');
@@ -206,12 +276,33 @@ class ChatRepositoryImpl implements ChatRepository {
           'session_id': sessionId,
           'message': content,
           if (messageType != null) 'message_type': messageType,
+          if (conversationHistory != null) 'messages': conversationHistory, // NEW: Send full conversation context
+          'purpose': 'chat', // NEW: Explicit purpose
         },
       );
 
       return response.when(
         success: (data, message) {
-          final chatMessage = ChatMessage.fromJson(data as Map<String, dynamic>);
+          // Map API response to ChatMessage format
+          final responseData = data as Map<String, dynamic>;
+          final chatMessage = ChatMessage(
+            id: 'ai_${DateTime.now().millisecondsSinceEpoch}',
+            sessionId: responseData['session_id'] as String? ?? sessionId,
+            content: responseData['message'] as String? ?? '',
+            role: 'assistant',
+            timestamp: DateTime.now(),
+            messageType: responseData['session_type'] as String?,
+            metadata: {
+              'purpose': responseData['purpose'],
+              'specialist_type': responseData['specialist_type'],
+              'specialist_display_name': responseData['specialist_display_name'],
+              'confidence': responseData['confidence'],
+              'rag_enabled': responseData['rag_enabled'],
+              'sources': responseData['sources'],
+              'matched_rule': responseData['matched_rule'],
+              'suggestions': responseData['suggestions'],
+            },
+          );
           appLogger.info('✅ Message sent successfully: ${chatMessage.id}');
           return Result.success(chatMessage);
         },
@@ -231,6 +322,7 @@ class ChatRepositoryImpl implements ChatRepository {
     required String sessionId,
     required String content,
     String? messageType,
+    List<Map<String, String>>? conversationHistory,
   }) async {
     try {
       appLogger.info('💬 Sending streaming message to session: $sessionId');
@@ -241,6 +333,8 @@ class ChatRepositoryImpl implements ChatRepository {
           'session_id': sessionId,
           'message': content,
           if (messageType != null) 'message_type': messageType,
+          if (conversationHistory != null) 'messages': conversationHistory, // NEW: Send full conversation context
+          'purpose': 'chat', // NEW: Explicit purpose
         },
       );
 

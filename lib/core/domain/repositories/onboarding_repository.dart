@@ -14,4 +14,7 @@ abstract class OnboardingRepository {
   Future<Result<Map<String, String>?>> getSafetyCodes();
   Future<Result<bool>> validateSafetyCode(String code);
   Future<Result<void>> clearPassphrase();
+  
+  /// Verify safety code
+  Future<Result<bool>> verifySafetyCode(String code);
 }

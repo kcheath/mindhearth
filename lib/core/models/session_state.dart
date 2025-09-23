@@ -135,13 +135,15 @@ class Session {
 
   factory Session.fromJson(Map<String, dynamic> json) {
     return Session(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      sessionType: json['session_type'] as String,
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? 'Unnamed Session',
+      sessionType: json['session_type'] as String? ?? 'conversation',
       purpose: json['purpose'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: json['created_at'] != null 
+          ? DateTime.tryParse(json['created_at'] as String) ?? DateTime.now()
+          : DateTime.now(),
       updatedAt: json['updated_at'] != null 
-          ? DateTime.parse(json['updated_at'] as String)
+          ? DateTime.tryParse(json['updated_at'] as String)
           : null,
       messageCount: json['message_count'] as int? ?? 0,
     );

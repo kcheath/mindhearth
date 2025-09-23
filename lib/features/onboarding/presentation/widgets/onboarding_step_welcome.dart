@@ -9,10 +9,26 @@ class OnboardingStepWelcome extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.psychology,
-            size: 100,
-            color: Color(0xFF6750A4),
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF6750A4).withOpacity(0.3),
+                  blurRadius: 20,
+                  spreadRadius: 5,
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Image.asset(
+                'assets/images/mindhearth_logo.png',
+                fit: BoxFit.cover,
+              ),
+            ),
           ),
           SizedBox(height: 32),
           Text(
@@ -56,7 +72,7 @@ class OnboardingStepWelcome extends StatelessWidget {
                 ),
                 SizedBox(height: 16),
                 _buildFeatureItem(
-                  Icons.psychology_outlined,
+                  Image.asset('assets/images/mindhearth_logo.png', width: 24, height: 24),
                   'Professional Tools',
                   'Access to therapeutic techniques and exercises',
                 ),
@@ -77,15 +93,17 @@ class OnboardingStepWelcome extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureItem(IconData icon, String title, String description) {
+  Widget _buildFeatureItem(dynamic icon, String title, String description) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          color: Color(0xFF6750A4),
-          size: 24,
-        ),
+        icon is IconData 
+          ? Icon(
+              icon,
+              color: Color(0xFF6750A4),
+              size: 24,
+            )
+          : icon,
         SizedBox(width: 12),
         Expanded(
           child: Column(

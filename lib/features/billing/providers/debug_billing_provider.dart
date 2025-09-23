@@ -1,7 +1,7 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/config/debug_config.dart';
-import 'package:mindhearth/core/services/debug_billing_service.dart';
-import 'package:mindhearth/core/services/api_service.dart';
+import 'package:mindhearth/core/providers/usecase_providers.dart';
+import 'package:mindhearth/core/domain/usecases/debug_billing_usecases.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 
 /// Debug billing state
@@ -39,9 +39,30 @@ class DebugBillingState {
 
 /// Debug billing notifier
 class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
-  final DebugBillingService _debugService;
+  final SeedCreditsUseCase _seedCreditsUseCase;
+  final TopUpCreditsUseCase _topUpCreditsUseCase;
+  final SimulatePurchaseUseCase _simulatePurchaseUseCase;
+  final ResetBillingDataUseCase _resetBillingDataUseCase;
+  final GetBillingHealthUseCase _getBillingHealthUseCase;
+  final GetBillingModeUseCase _getBillingModeUseCase;
+  final CheckOperationUseCase _checkOperationUseCase;
 
-  DebugBillingNotifier(this._debugService) : super(const DebugBillingState());
+  DebugBillingNotifier({
+    required SeedCreditsUseCase seedCreditsUseCase,
+    required TopUpCreditsUseCase topUpCreditsUseCase,
+    required SimulatePurchaseUseCase simulatePurchaseUseCase,
+    required ResetBillingDataUseCase resetBillingDataUseCase,
+    required GetBillingHealthUseCase getBillingHealthUseCase,
+    required GetBillingModeUseCase getBillingModeUseCase,
+    required CheckOperationUseCase checkOperationUseCase,
+  }) : _seedCreditsUseCase = seedCreditsUseCase,
+       _topUpCreditsUseCase = topUpCreditsUseCase,
+       _simulatePurchaseUseCase = simulatePurchaseUseCase,
+       _resetBillingDataUseCase = resetBillingDataUseCase,
+       _getBillingHealthUseCase = getBillingHealthUseCase,
+       _getBillingModeUseCase = getBillingModeUseCase,
+       _checkOperationUseCase = checkOperationUseCase,
+       super(const DebugBillingState());
 
   /// Check if debug mode is available
   bool get isDebugMode => DebugConfig.isDebugMode;
@@ -58,12 +79,10 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
 
-      final response = await _debugService.seedCredits(
-        credits: credits,
-      );
+      final result = await _seedCreditsUseCase.call(credits);
 
-      return response.when(
-        success: (data, statusCode) {
+      return result.when(
+        success: (data) {
           state = state.copyWith(isLoading: false);
           appLogger.info('Credits seeded successfully', {
             'credits': credits,
@@ -71,13 +90,13 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
           });
           return true;
         },
-        error: (message, statusCode, errors) {
+        failure: (error) {
           state = state.copyWith(
             isLoading: false,
-            error: message,
+            error: error.message,
           );
           appLogger.error('Failed to seed credits', {
-            'error': message,
+            'error': error.message,
             'credits': credits,
           });
           return false;
@@ -103,10 +122,10 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
 
-      final response = await _debugService.topUpCredits(credits: credits);
+      final result = await _topUpCreditsUseCase.call(credits);
 
-      return response.when(
-        success: (data, statusCode) {
+      return result.when(
+        success: (data) {
           state = state.copyWith(isLoading: false);
           appLogger.info('Credits topped up successfully', {
             'credits': credits,
@@ -114,13 +133,13 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
           });
           return true;
         },
-        error: (message, statusCode, errors) {
+        failure: (error) {
           state = state.copyWith(
             isLoading: false,
-            error: message,
+            error: error.message,
           );
           appLogger.error('Failed to top up credits', {
-            'error': message,
+            'error': error.message,
             'credits': credits,
           });
           return false;
@@ -148,12 +167,10 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
 
-      final response = await _debugService.simulatePurchase(
-        credits: credits,
-      );
+      final result = await _simulatePurchaseUseCase.call(credits);
 
-      return response.when(
-        success: (data, statusCode) {
+      return result.when(
+        success: (data) {
           state = state.copyWith(isLoading: false);
           appLogger.info('Purchase simulated successfully', {
             'credits': credits,
@@ -161,13 +178,13 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
           });
           return true;
         },
-        error: (message, statusCode, errors) {
+        failure: (error) {
           state = state.copyWith(
             isLoading: false,
-            error: message,
+            error: error.message,
           );
           appLogger.error('Failed to simulate purchase', {
-            'error': message,
+            'error': error.message,
             'credits': credits,
           });
           return false;
@@ -194,23 +211,23 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
 
-      final response = await _debugService.resetBillingData();
+      final result = await _resetBillingDataUseCase.call();
 
-      return response.when(
-        success: (data, statusCode) {
+      return result.when(
+        success: (data) {
           state = state.copyWith(isLoading: false);
           appLogger.info('Billing data reset successfully', {
             'response': data,
           });
           return true;
         },
-        error: (message, statusCode, errors) {
+        failure: (error) {
           state = state.copyWith(
             isLoading: false,
-            error: message,
+            error: error.message,
           );
           appLogger.error('Failed to reset billing data', {
-            'error': message,
+            'error': error.message,
           });
           return false;
         },
@@ -235,10 +252,10 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
 
-      final response = await _debugService.getBillingHealth();
+      final result = await _getBillingHealthUseCase.call();
 
-      response.when(
-        success: (data, statusCode) {
+      result.when(
+        success: (data) {
           state = state.copyWith(
             isLoading: false,
             healthStatus: data,
@@ -247,13 +264,13 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
             'response': data,
           });
         },
-        error: (message, statusCode, errors) {
+        failure: (error) {
           state = state.copyWith(
             isLoading: false,
-            error: message,
+            error: error.message,
           );
           appLogger.error('Failed to load billing health', {
-            'error': message,
+            'error': error.message,
           });
         },
       );
@@ -276,10 +293,10 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
 
-      final response = await _debugService.getBillingMode();
+      final result = await _getBillingModeUseCase.call();
 
-      response.when(
-        success: (data, statusCode) {
+      result.when(
+        success: (data) {
           state = state.copyWith(
             isLoading: false,
             billingMode: data,
@@ -288,13 +305,13 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
             'response': data,
           });
         },
-        error: (message, statusCode, errors) {
+        failure: (error) {
           state = state.copyWith(
             isLoading: false,
-            error: message,
+            error: error.message,
           );
           appLogger.error('Failed to load billing mode', {
-            'error': message,
+            'error': error.message,
           });
         },
       );
@@ -317,12 +334,10 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
 
-      final response = await _debugService.checkOperation(
-        operationType: operationType,
-      );
+      final result = await _checkOperationUseCase.call(operationType);
 
-      response.when(
-        success: (data, statusCode) {
+      result.when(
+        success: (data) {
           final updatedChecks = List<Map<String, dynamic>>.from(
             state.operationChecks,
           );
@@ -341,13 +356,13 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
             'response': data,
           });
         },
-        error: (message, statusCode, errors) {
+        failure: (error) {
           state = state.copyWith(
             isLoading: false,
-            error: message,
+            error: error.message,
           );
           appLogger.error('Failed to check operation', {
-            'error': message,
+            'error': error.message,
             'operationType': operationType,
           });
         },
@@ -367,14 +382,15 @@ class DebugBillingNotifier extends StateNotifier<DebugBillingState> {
   }
 }
 
-/// Debug billing service provider
-final debugBillingServiceProvider = Provider<DebugBillingService>((ref) {
-  final apiService = ApiService();
-  return DebugBillingService(apiService);
-});
-
 /// Debug billing provider
 final debugBillingProvider = StateNotifierProvider<DebugBillingNotifier, DebugBillingState>((ref) {
-  final debugService = ref.read(debugBillingServiceProvider);
-  return DebugBillingNotifier(debugService);
+  return DebugBillingNotifier(
+    seedCreditsUseCase: ref.watch(seedCreditsUseCaseProvider),
+    topUpCreditsUseCase: ref.watch(topUpCreditsUseCaseProvider),
+    simulatePurchaseUseCase: ref.watch(simulatePurchaseUseCaseProvider),
+    resetBillingDataUseCase: ref.watch(resetBillingDataUseCaseProvider),
+    getBillingHealthUseCase: ref.watch(getBillingHealthUseCaseProvider),
+    getBillingModeUseCase: ref.watch(getBillingModeUseCaseProvider),
+    checkOperationUseCase: ref.watch(checkOperationUseCaseProvider),
+  );
 });

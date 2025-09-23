@@ -483,7 +483,7 @@ class ChatTools {
       id: 'edit',
     ),
     ChatTool(
-      icon: Icons.psychology,
+      icon: Icons.analytics,
       label: 'Analyze',
       id: 'analyze',
     ),

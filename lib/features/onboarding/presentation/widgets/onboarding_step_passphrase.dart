@@ -66,7 +66,7 @@ class _OnboardingStepPassphraseState extends ConsumerState<OnboardingStepPassphr
         Icon(
           Icons.lock_outline,
           size: 60,
-          color: Color(0xFF6750A4),
+          color: Theme.of(context).colorScheme.primary,
         ),
         SizedBox(height: 16),
         Text(
@@ -74,7 +74,7 @@ class _OnboardingStepPassphraseState extends ConsumerState<OnboardingStepPassphr
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF6750A4),
+            color: Theme.of(context).colorScheme.primary,
           ),
           textAlign: TextAlign.center,
         ),
@@ -83,7 +83,7 @@ class _OnboardingStepPassphraseState extends ConsumerState<OnboardingStepPassphr
           'This will encrypt your data and create your safety codes',
           style: TextStyle(
             fontSize: 14,
-            color: Colors.grey[600],
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           textAlign: TextAlign.center,
         ),
@@ -91,9 +91,9 @@ class _OnboardingStepPassphraseState extends ConsumerState<OnboardingStepPassphr
         Container(
           padding: EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.grey[50],
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[200]!),
+            border: Border.all(color: Theme.of(context).colorScheme.outline),
           ),
           child: Column(
             children: [
@@ -151,15 +151,15 @@ class _OnboardingStepPassphraseState extends ConsumerState<OnboardingStepPassphr
         Container(
           padding: EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.orange[50],
+            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: Colors.orange[200]!),
+            border: Border.all(color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3)),
           ),
           child: Row(
             children: [
               Icon(
                 Icons.warning_amber_outlined,
-                color: Colors.orange[700],
+                color: Theme.of(context).colorScheme.tertiary,
                 size: 14,
               ),
               SizedBox(width: 6),
@@ -168,7 +168,7 @@ class _OnboardingStepPassphraseState extends ConsumerState<OnboardingStepPassphr
                   'Your passphrase encrypts all your data. Write it down and keep it safe - we cannot recover it if you forget it.',
                   style: TextStyle(
                     fontSize: 11,
-                    color: Colors.orange[700],
+                    color: Theme.of(context).colorScheme.tertiary,
                   ),
                 ),
               ),
@@ -180,17 +180,23 @@ class _OnboardingStepPassphraseState extends ConsumerState<OnboardingStepPassphr
           Container(
             padding: EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: _isValid ? Colors.green[50] : Colors.red[50],
+              color: _isValid 
+                ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                : Theme.of(context).colorScheme.error.withOpacity(0.1),
               borderRadius: BorderRadius.circular(4),
               border: Border.all(
-                color: _isValid ? Colors.green[200]! : Colors.red[200]!,
+                color: _isValid 
+                  ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
+                  : Theme.of(context).colorScheme.error.withOpacity(0.3),
               ),
             ),
             child: Row(
               children: [
                 Icon(
                   _isValid ? Icons.check_circle : Icons.error,
-                  color: _isValid ? Colors.green[700] : Colors.red[700],
+                  color: _isValid 
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.error,
                   size: 14,
                 ),
                 SizedBox(width: 4),
@@ -203,7 +209,9 @@ class _OnboardingStepPassphraseState extends ConsumerState<OnboardingStepPassphr
                         : 'Passphrases do not match',
                     style: TextStyle(
                       fontSize: 11,
-                      color: _isValid ? Colors.green[700] : Colors.red[700],
+                      color: _isValid 
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.error,
                     ),
                   ),
                 ),

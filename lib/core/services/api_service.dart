@@ -21,9 +21,9 @@ class ApiService {
   ApiService() {
     _dio = Dio(BaseOptions(
       baseUrl: DebugConfig.apiUrl,
-      connectTimeout: const Duration(seconds: 60),
-      receiveTimeout: const Duration(seconds: 60),
-      sendTimeout: const Duration(seconds: 60),
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 15),
+      sendTimeout: const Duration(seconds: 15),
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -312,34 +312,34 @@ class ApiService {
     try {
       appLogger.debug('deleteSession - sending request to /sessions/$sessionId', 'ApiService');
       
-      final response = await _dio.delete('/sessions/$sessionId');
+      final response = await delete('/sessions/$sessionId');
       
-      appLogger.debug('deleteSession - response status: ${response.statusCode}', 'ApiService');
-      appLogger.debug('deleteSession - response data: ${response.data}', 'ApiService');
-      
-      // Handle 204 No Content (successful deletion)
-      if (response.statusCode == 204) {
-        return ApiSuccess(data: {'deleted': true});
-      }
-      
-      // Handle other success status codes
-      return ApiSuccess(data: response.data ?? {'deleted': true});
-    } on DioException catch (e) {
-      appLogger.debug('deleteSession - error: ${e.toString()}', 'ApiService');
-      appLogger.debug('deleteSession - error response: ${e.response?.data}', 'ApiService');
-      appLogger.debug('deleteSession - error status code: ${e.response?.statusCode}', 'ApiService');
-      
-      // Handle specific error cases
-      if (e.response?.statusCode == 404) {
-        return ApiError(
-          message: 'Session not found',
-          statusCode: 404,
-        );
-      }
-      
+      return response.when(
+        success: (data, message) {
+          appLogger.debug('deleteSession - success: $data', 'ApiService');
+          return ApiSuccess(data: data as Map<String, dynamic>? ?? {'deleted': true});
+        },
+        error: (message, statusCode, errors) {
+          appLogger.debug('deleteSession - error: $message', 'ApiService');
+          
+          // Handle specific error cases
+          if (statusCode == 404) {
+            return ApiError(
+              message: 'Session not found',
+              statusCode: 404,
+            );
+          }
+          
+          return ApiError(
+            message: message,
+            statusCode: statusCode,
+          );
+        },
+      );
+    } catch (e) {
+      appLogger.debug('deleteSession - exception: ${e.toString()}', 'ApiService');
       return ApiError(
-        message: e.response?.data?['detail'] ?? 'Failed to delete session',
-        statusCode: e.response?.statusCode,
+        message: 'Failed to delete session: ${e.toString()}',
       );
     }
   }

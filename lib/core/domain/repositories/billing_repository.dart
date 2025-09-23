@@ -48,7 +48,7 @@ abstract class BillingRepository {
   });
 
   /// Get usage analytics
-  Future<Result<Map<String, dynamic>>> getUsageAnalytics();
+  Future<Result<Map<String, dynamic>>> getUsageAnalytics(int periodDays);
 
   /// Check if operation is allowed (sufficient credits)
   Future<Result<bool>> checkOperationAllowed({
@@ -62,4 +62,44 @@ abstract class BillingRepository {
     required int amount,
     String? description,
   });
+
+  // Debug methods for development
+  /// Seed credits for testing
+  Future<Result<Map<String, dynamic>>> seedCredits(int credits);
+  
+  /// Top up credits for current user
+  Future<Result<Map<String, dynamic>>> topUpCredits(int credits);
+  
+  /// Simulate a purchase for testing
+  Future<Result<Map<String, dynamic>>> simulatePurchase(int credits);
+  
+  /// Reset all billing data
+  Future<Result<Map<String, dynamic>>> resetBillingData();
+  
+  /// Get billing system health
+  Future<Result<Map<String, dynamic>>> getBillingHealth();
+  
+  /// Get billing mode information
+  Future<Result<Map<String, dynamic>>> getBillingMode();
+  
+  /// Check operation permission
+  Future<Result<Map<String, dynamic>>> checkOperation(String operationType);
+  
+  /// Get current balance (for balance stream)
+  Future<Result<int>> getCurrentBalance();
+  
+  /// Send heartbeat to keep connection alive
+  Future<Result<void>> sendHeartbeat();
+  
+  /// Add session questions
+  Future<Result<void>> addSessionQuestions({
+    required String sessionId,
+    required int questions,
+  });
+  
+  /// Get session question count
+  Future<Result<int>> getSessionQuestionCount(String sessionId);
+  
+  /// Get session question status
+  Future<Result<Map<String, dynamic>>> getSessionQuestionStatus();
 }

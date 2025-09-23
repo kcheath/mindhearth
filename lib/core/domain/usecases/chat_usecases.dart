@@ -16,7 +16,11 @@ class SendMessageUseCase {
   }) : _chatRepository = chatRepository,
        _billingRepository = billingRepository;
   
-  Future<Result<ChatMessage>> call(String content, String sessionId) async {
+  Future<Result<ChatMessage>> call(
+    String content, 
+    String sessionId, {
+    List<Map<String, String>>? conversationHistory,
+  }) async {
     // Validate input
     if (content.trim().isEmpty) {
       return Result.failure(AppErrorFactory.validation(
@@ -30,10 +34,11 @@ class SendMessageUseCase {
       return Result.failure(billingResult.error!);
     }
     
-    // Send message
+    // Send message with conversation history
     return await _chatRepository.sendMessage(
       sessionId: sessionId,
       content: content,
+      conversationHistory: conversationHistory,
     );
   }
 }
@@ -147,6 +152,7 @@ class StartStreamingChatUseCase {
     required String sessionId,
     required String content,
     String? messageType,
+    List<Map<String, String>>? conversationHistory,
   }) async {
     // Validate input
     if (content.trim().isEmpty) {
@@ -161,11 +167,12 @@ class StartStreamingChatUseCase {
       return Result.failure(billingResult.error!);
     }
     
-    // Start streaming
+    // Start streaming with conversation history
     return await _chatRepository.sendStreamingMessage(
       sessionId: sessionId,
       content: content,
       messageType: messageType,
+      conversationHistory: conversationHistory,
     );
   }
 }

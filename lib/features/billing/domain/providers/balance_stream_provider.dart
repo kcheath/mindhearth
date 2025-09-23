@@ -3,6 +3,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
+import 'package:mindhearth/core/providers/usecase_providers.dart';
+import 'package:mindhearth/core/domain/usecases/balance_stream_usecases.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 
 /// Balance stream state
@@ -37,10 +39,19 @@ class BalanceStreamState {
 /// Balance stream notifier
 class BalanceStreamNotifier extends StateNotifier<BalanceStreamState> {
   final ApiService _apiService;
+  final GetCurrentBalanceUseCase _getCurrentBalanceUseCase;
+  final SendHeartbeatUseCase _sendHeartbeatUseCase;
   StreamSubscription? _streamSubscription;
   Timer? _heartbeatTimer;
 
-  BalanceStreamNotifier(this._apiService) : super(const BalanceStreamState());
+  BalanceStreamNotifier({
+    required ApiService apiService,
+    required GetCurrentBalanceUseCase getCurrentBalanceUseCase,
+    required SendHeartbeatUseCase sendHeartbeatUseCase,
+  }) : _apiService = apiService,
+       _getCurrentBalanceUseCase = getCurrentBalanceUseCase,
+       _sendHeartbeatUseCase = sendHeartbeatUseCase,
+       super(const BalanceStreamState());
 
   /// Start balance streaming
   Future<void> startStreaming() async {
@@ -137,7 +148,18 @@ class BalanceStreamNotifier extends StateNotifier<BalanceStreamState> {
   /// Send heartbeat to keep connection alive
   void _sendHeartbeat() {
     try {
-      _apiService.dio.post('/billing/heartbeat');
+      _sendHeartbeatUseCase.call().then((result) {
+        result.when(
+          success: (data) {
+            appLogger.info('Heartbeat sent successfully');
+          },
+          failure: (error) {
+            appLogger.error('Heartbeat failed', {
+              'error': error.message,
+            });
+          },
+        );
+      });
     } catch (e) {
       appLogger.error('Heartbeat failed', {
         'error': e.toString(),
@@ -148,19 +170,25 @@ class BalanceStreamNotifier extends StateNotifier<BalanceStreamState> {
   /// Get current balance
   Future<int> getCurrentBalance() async {
     try {
-      final response = await _apiService.dio.get('/billing/balance');
-      if (response.statusCode == 200) {
-        final balance = response.data['balance'] as int;
-        
-        state = state.copyWith(balance: balance);
-        
-        appLogger.info('Current balance retrieved', {
-          'balance': balance,
-        });
-        
-        return balance;
-      }
-      return 0;
+      final result = await _getCurrentBalanceUseCase.call();
+      
+      return result.when(
+        success: (balance) {
+          state = state.copyWith(balance: balance);
+          
+          appLogger.info('Current balance retrieved', {
+            'balance': balance,
+          });
+          
+          return balance;
+        },
+        failure: (error) {
+          appLogger.error('Failed to get current balance', {
+            'error': error.message,
+          });
+          return 0;
+        },
+      );
     } catch (e) {
       appLogger.error('Failed to get current balance', {
         'error': e.toString(),
@@ -178,7 +206,11 @@ class BalanceStreamNotifier extends StateNotifier<BalanceStreamState> {
 
 /// Balance stream provider
 final balanceStreamProvider = StateNotifierProvider<BalanceStreamNotifier, BalanceStreamState>(
-  (ref) => BalanceStreamNotifier(ref.watch(apiServiceProvider)),
+  (ref) => BalanceStreamNotifier(
+    apiService: ref.watch(apiServiceProvider),
+    getCurrentBalanceUseCase: ref.watch(getCurrentBalanceUseCaseProvider),
+    sendHeartbeatUseCase: ref.watch(sendHeartbeatUseCaseProvider),
+  ),
 );
 
 /// Live balance provider

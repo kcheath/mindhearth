@@ -110,7 +110,7 @@ class _OnboardingStepSafetyCodeState extends ConsumerState<OnboardingStepSafetyC
         Icon(
           Icons.security,
           size: 60,
-          color: Color(0xFF6750A4),
+          color: Theme.of(context).colorScheme.primary,
         ),
         SizedBox(height: 16),
         Text(
@@ -118,7 +118,7 @@ class _OnboardingStepSafetyCodeState extends ConsumerState<OnboardingStepSafetyC
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF6750A4),
+            color: Theme.of(context).colorScheme.primary,
           ),
           textAlign: TextAlign.center,
         ),
@@ -127,7 +127,7 @@ class _OnboardingStepSafetyCodeState extends ConsumerState<OnboardingStepSafetyC
           'You can set up safety codes to access security features. These are optional and can be added later.',
           style: TextStyle(
             fontSize: 14,
-            color: Colors.grey[600],
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           textAlign: TextAlign.center,
         ),
@@ -137,15 +137,15 @@ class _OnboardingStepSafetyCodeState extends ConsumerState<OnboardingStepSafetyC
         Container(
           padding: EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.grey[50],
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[200]!),
+            border: Border.all(color: Theme.of(context).colorScheme.outline),
           ),
           child: Row(
             children: [
               Icon(
                 Icons.security,
-                color: Colors.grey[700],
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 size: 18,
               ),
               SizedBox(width: 8),
@@ -155,7 +155,7 @@ class _OnboardingStepSafetyCodeState extends ConsumerState<OnboardingStepSafetyC
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey[800],
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ),
@@ -174,7 +174,7 @@ class _OnboardingStepSafetyCodeState extends ConsumerState<OnboardingStepSafetyC
                     }
                   });
                 },
-                activeColor: Color(0xFF6750A4),
+                activeColor: Theme.of(context).colorScheme.primary,
               ),
             ],
           ),
@@ -186,9 +186,9 @@ class _OnboardingStepSafetyCodeState extends ConsumerState<OnboardingStepSafetyC
           Container(
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.blue[50],
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.blue[200]!),
+              border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,7 +198,7 @@ class _OnboardingStepSafetyCodeState extends ConsumerState<OnboardingStepSafetyC
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.blue[700],
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
                 SizedBox(height: 8),
@@ -241,15 +241,15 @@ class _OnboardingStepSafetyCodeState extends ConsumerState<OnboardingStepSafetyC
         Container(
           padding: EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.orange[50],
+            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: Colors.orange[200]!),
+            border: Border.all(color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3)),
           ),
           child: Row(
             children: [
               Icon(
                 Icons.warning_amber_outlined,
-                color: Colors.orange[700],
+                color: Theme.of(context).colorScheme.tertiary,
                 size: 14,
               ),
               SizedBox(width: 6),
@@ -260,7 +260,7 @@ class _OnboardingStepSafetyCodeState extends ConsumerState<OnboardingStepSafetyC
                     : 'Safety codes are optional. You can add them later in settings if needed.',
                   style: TextStyle(
                     fontSize: 11,
-                    color: Colors.orange[700],
+                    color: Theme.of(context).colorScheme.tertiary,
                   ),
                 ),
               ),

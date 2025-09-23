@@ -143,10 +143,26 @@ class _AdaptiveNavigationState extends ConsumerState<AdaptiveNavigation> {
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.psychology,
-                color: Theme.of(context).colorScheme.primary,
-                size: 24,
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: Image.asset(
+                    'assets/images/mindhearth_logo.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
               Text(
@@ -194,10 +210,26 @@ class _AdaptiveNavigationState extends ConsumerState<AdaptiveNavigation> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.psychology,
-                color: Theme.of(context).colorScheme.primary,
-                size: 32,
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    'assets/images/mindhearth_logo.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
               Text(
@@ -303,10 +335,10 @@ class _AdaptiveNavigationState extends ConsumerState<AdaptiveNavigation> {
                 // App logo and name
                 Row(
                   children: [
-                    Icon(
-                      Icons.psychology,
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      size: 32,
+                    Image.asset(
+                      'assets/images/mindhearth_logo.png',
+                      width: 32,
+                      height: 32,
                     ),
                     const SizedBox(width: 12),
                     Text(

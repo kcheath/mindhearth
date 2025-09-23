@@ -1,30 +1,97 @@
-// This is a basic Flutter widget test.
+// MindHearth widget tests
 //
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// This file contains widget tests for the MindHearth application.
+// These tests verify that UI components render correctly and respond to user interactions.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import 'package:mindhearth/main.dart';
+import 'package:mindhearth/core/widgets/app_button.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MindhearthApp());
+  group('MindHearth Widget Tests', () {
+    testWidgets('AppButton should render correctly', (WidgetTester tester) async {
+      // Build a simple button widget
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AppButton(
+              text: 'Test Button',
+              onPressed: () {},
+            ),
+          ),
+        ),
+      );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+      // Verify that the button renders
+      expect(find.text('Test Button'), findsOneWidget);
+      expect(find.byType(AppButton), findsOneWidget);
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    testWidgets('AppButton should be tappable', (WidgetTester tester) async {
+      var buttonPressed = false;
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+      // Build a button with onPressed callback
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AppButton(
+              text: 'Tap Me',
+              onPressed: () {
+                buttonPressed = true;
+              },
+            ),
+          ),
+        ),
+      );
+
+      // Tap the button
+      await tester.tap(find.text('Tap Me'));
+      await tester.pump();
+
+      // Verify the callback was called
+      expect(buttonPressed, true);
+    });
+
+    testWidgets('AppButton should show loading state', (WidgetTester tester) async {
+      // Build a button in loading state
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AppButton(
+              text: 'Loading',
+              onPressed: () {},
+              isLoading: true,
+            ),
+          ),
+        ),
+      );
+
+      // Verify loading indicator is shown
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    });
+
+    testWidgets('AppButton should be disabled when onPressed is null', (WidgetTester tester) async {
+      // Build a disabled button (onPressed is null)
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AppButton(
+              text: 'Disabled',
+              onPressed: null, // This makes the button disabled
+            ),
+          ),
+        ),
+      );
+
+      // Verify the button is disabled (should not be tappable)
+      final button = find.byType(ElevatedButton);
+      expect(button, findsOneWidget);
+      
+      // The button should be disabled (onPressed is null)
+      final elevatedButton = tester.widget<ElevatedButton>(button);
+      expect(elevatedButton.onPressed, isNull);
+    });
   });
 }

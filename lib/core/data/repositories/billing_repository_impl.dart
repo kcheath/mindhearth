@@ -261,28 +261,6 @@ class BillingRepositoryImpl implements BillingRepository {
     }
   }
 
-  @override
-  Future<Result<Map<String, dynamic>>> getUsageAnalytics() async {
-    try {
-      appLogger.info('📊 Getting usage analytics');
-
-      final response = await _apiService.get('/billing/usage-analytics');
-
-      return response.when(
-        success: (data, message) {
-          appLogger.info('✅ Retrieved usage analytics');
-          return Result.success(data as Map<String, dynamic>);
-        },
-        error: (message, statusCode, errors) {
-          appLogger.error('❌ Failed to get usage analytics: $message');
-          return Result.failure(AppErrorFactory.network(message: message));
-        },
-      );
-    } catch (e) {
-      appLogger.error('💥 Exception getting usage analytics: $e');
-      return Result.failure(AppErrorFactory.network(message: 'Failed to get usage analytics: $e'));
-    }
-  }
 
   @override
   Future<Result<bool>> checkOperationAllowed({
@@ -348,6 +326,332 @@ class BillingRepositoryImpl implements BillingRepository {
     } catch (e) {
       appLogger.error('💥 Exception consuming credits: $e');
       return Result.failure(AppErrorFactory.network(message: 'Failed to consume credits: $e'));
+    }
+  }
+
+  // Debug methods for development
+  @override
+  Future<Result<Map<String, dynamic>>> seedCredits(int credits) async {
+    try {
+      appLogger.info('🌱 Seeding $credits credits for testing');
+
+      final response = await _apiService.post(
+        '/billing/debug/seed-credits',
+        data: {'credits': credits},
+      );
+
+      return response.when(
+        success: (data, message) {
+          appLogger.info('✅ Seeded $credits credits');
+          return Result.success(data as Map<String, dynamic>);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to seed credits: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
+    } catch (e) {
+      appLogger.error('💥 Exception seeding credits: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to seed credits: $e'));
+    }
+  }
+
+  @override
+  Future<Result<Map<String, dynamic>>> topUpCredits(int credits) async {
+    try {
+      appLogger.info('⬆️ Topping up $credits credits');
+
+      final response = await _apiService.post(
+        '/billing/debug/top-up',
+        data: {'credits': credits},
+      );
+
+      return response.when(
+        success: (data, message) {
+          appLogger.info('✅ Topped up $credits credits');
+          return Result.success(data as Map<String, dynamic>);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to top up credits: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
+    } catch (e) {
+      appLogger.error('💥 Exception topping up credits: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to top up credits: $e'));
+    }
+  }
+
+  @override
+  Future<Result<Map<String, dynamic>>> simulatePurchase(int credits) async {
+    try {
+      appLogger.info('🛒 Simulating purchase of $credits credits');
+
+      final response = await _apiService.post(
+        '/billing/debug/simulate-purchase',
+        data: {'credits': credits},
+      );
+
+      return response.when(
+        success: (data, message) {
+          appLogger.info('✅ Simulated purchase of $credits credits');
+          return Result.success(data as Map<String, dynamic>);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to simulate purchase: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
+    } catch (e) {
+      appLogger.error('💥 Exception simulating purchase: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to simulate purchase: $e'));
+    }
+  }
+
+  @override
+  Future<Result<Map<String, dynamic>>> resetBillingData() async {
+    try {
+      appLogger.info('🔄 Resetting billing data');
+
+      final response = await _apiService.post('/billing/debug/reset');
+
+      return response.when(
+        success: (data, message) {
+          appLogger.info('✅ Reset billing data');
+          return Result.success(data as Map<String, dynamic>);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to reset billing data: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
+    } catch (e) {
+      appLogger.error('💥 Exception resetting billing data: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to reset billing data: $e'));
+    }
+  }
+
+  @override
+  Future<Result<Map<String, dynamic>>> getBillingHealth() async {
+    try {
+      appLogger.info('🏥 Getting billing health');
+
+      final response = await _apiService.get('/billing/debug/health');
+
+      return response.when(
+        success: (data, message) {
+          appLogger.info('✅ Retrieved billing health');
+          return Result.success(data as Map<String, dynamic>);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to get billing health: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
+    } catch (e) {
+      appLogger.error('💥 Exception getting billing health: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to get billing health: $e'));
+    }
+  }
+
+  @override
+  Future<Result<Map<String, dynamic>>> getBillingMode() async {
+    try {
+      appLogger.info('🔧 Getting billing mode');
+
+      final response = await _apiService.get('/billing/debug/mode');
+
+      return response.when(
+        success: (data, message) {
+          appLogger.info('✅ Retrieved billing mode');
+          return Result.success(data as Map<String, dynamic>);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to get billing mode: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
+    } catch (e) {
+      appLogger.error('💥 Exception getting billing mode: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to get billing mode: $e'));
+    }
+  }
+
+  @override
+  Future<Result<Map<String, dynamic>>> checkOperation(String operationType) async {
+    try {
+      appLogger.info('🔍 Checking operation: $operationType');
+
+      final response = await _apiService.post(
+        '/billing/debug/check-operation',
+        data: {'operation_type': operationType},
+      );
+
+      return response.when(
+        success: (data, message) {
+          appLogger.info('✅ Checked operation: $operationType');
+          return Result.success(data as Map<String, dynamic>);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to check operation: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
+    } catch (e) {
+      appLogger.error('💥 Exception checking operation: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to check operation: $e'));
+    }
+  }
+
+  @override
+  Future<Result<int>> getCurrentBalance() async {
+    try {
+      appLogger.info('💰 Getting current balance');
+
+      final response = await _apiService.get('/billing/balance');
+
+      return response.when(
+        success: (data, message) {
+          final balance = data['balance'] as int;
+          appLogger.info('✅ Retrieved current balance: $balance');
+          return Result.success(balance);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to get current balance: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
+    } catch (e) {
+      appLogger.error('💥 Exception getting current balance: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to get current balance: $e'));
+    }
+  }
+
+  @override
+  Future<Result<void>> sendHeartbeat() async {
+    try {
+      appLogger.info('💓 Sending heartbeat');
+
+      final response = await _apiService.post('/billing/heartbeat');
+
+      return response.when(
+        success: (data, message) {
+          appLogger.info('✅ Heartbeat sent');
+          return Result.success(null);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to send heartbeat: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
+    } catch (e) {
+      appLogger.error('💥 Exception sending heartbeat: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to send heartbeat: $e'));
+    }
+  }
+
+  @override
+  Future<Result<void>> addSessionQuestions({
+    required String sessionId,
+    required int questions,
+  }) async {
+    try {
+      appLogger.info('📝 Adding $questions questions to session: $sessionId');
+
+      final response = await _apiService.post(
+        '/billing/session-questions/add',
+        data: {
+          'session_id': sessionId,
+          'questions': questions,
+        },
+      );
+
+      return response.when(
+        success: (data, message) {
+          appLogger.info('✅ Added $questions questions to session: $sessionId');
+          return Result.success(null);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to add session questions: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
+    } catch (e) {
+      appLogger.error('💥 Exception adding session questions: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to add session questions: $e'));
+    }
+  }
+
+  @override
+  Future<Result<int>> getSessionQuestionCount(String sessionId) async {
+    try {
+      appLogger.info('📊 Getting question count for session: $sessionId');
+
+      final response = await _apiService.get('/billing/session-questions/$sessionId');
+
+      return response.when(
+        success: (data, message) {
+          final count = data['questions'] as int;
+          appLogger.info('✅ Retrieved question count: $count');
+          return Result.success(count);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to get session question count: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
+    } catch (e) {
+      appLogger.error('💥 Exception getting session question count: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to get session question count: $e'));
+    }
+  }
+
+  @override
+  Future<Result<Map<String, dynamic>>> getSessionQuestionStatus() async {
+    try {
+      appLogger.info('📊 Getting session question status');
+
+      final response = await _apiService.get('/billing/session-questions/status');
+
+      return response.when(
+        success: (data, message) {
+          appLogger.info('✅ Retrieved session question status');
+          return Result.success(data as Map<String, dynamic>);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to get session question status: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
+    } catch (e) {
+      appLogger.error('💥 Exception getting session question status: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to get session question status: $e'));
+    }
+  }
+
+  @override
+  Future<Result<Map<String, dynamic>>> getUsageAnalytics(int periodDays) async {
+    try {
+      appLogger.info('📊 Getting usage analytics for $periodDays days');
+
+      final response = await _apiService.get(
+        '/billing/usage-analytics',
+        queryParameters: {'days': periodDays},
+      );
+
+      return response.when(
+        success: (data, message) {
+          appLogger.info('✅ Retrieved usage analytics');
+          return Result.success(data as Map<String, dynamic>);
+        },
+        error: (message, statusCode, errors) {
+          appLogger.error('❌ Failed to get usage analytics: $message');
+          return Result.failure(AppErrorFactory.network(message: message));
+        },
+      );
+    } catch (e) {
+      appLogger.error('💥 Exception getting usage analytics: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to get usage analytics: $e'));
     }
   }
 }

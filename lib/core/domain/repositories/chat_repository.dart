@@ -43,6 +43,7 @@ abstract class ChatRepository {
     required String sessionId,
     required String content,
     String? messageType,
+    List<Map<String, String>>? conversationHistory,
   });
 
   /// Send a streaming message to a session
@@ -50,6 +51,7 @@ abstract class ChatRepository {
     required String sessionId,
     required String content,
     String? messageType,
+    List<Map<String, String>>? conversationHistory,
   });
 
   /// Get communication history for a session

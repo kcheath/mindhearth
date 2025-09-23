@@ -2,6 +2,11 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/domain/usecases/chat_usecases.dart';
 import 'package:mindhearth/core/domain/usecases/journal_usecases.dart';
 import 'package:mindhearth/core/domain/usecases/billing_usecases.dart';
+import 'package:mindhearth/core/domain/usecases/safety_usecases.dart';
+import 'package:mindhearth/core/domain/usecases/debug_billing_usecases.dart';
+import 'package:mindhearth/core/domain/usecases/balance_stream_usecases.dart';
+import 'package:mindhearth/core/domain/usecases/session_question_usecases.dart';
+import 'package:mindhearth/core/domain/usecases/usage_analytics_usecases.dart';
 import 'package:mindhearth/core/providers/repository_providers.dart';
 
 /// Use case providers for dependency injection
@@ -96,4 +101,64 @@ final checkBillingStatusUseCaseProvider = Provider<CheckBillingStatusUseCase>((r
 
 final getUsageAnalyticsUseCaseProvider = Provider<GetUsageAnalyticsUseCase>((ref) {
   return GetUsageAnalyticsUseCase(ref.watch(billingRepositoryProvider));
+});
+
+// Safety Use Cases
+final getSafetyCodesUseCaseProvider = Provider<GetSafetyCodesUseCase>((ref) {
+  return GetSafetyCodesUseCase(ref.watch(onboardingRepositoryProvider));
+});
+
+final verifySafetyCodeUseCaseProvider = Provider<VerifySafetyCodeUseCase>((ref) {
+  return VerifySafetyCodeUseCase(ref.watch(onboardingRepositoryProvider));
+});
+
+// Debug Billing Use Cases
+final seedCreditsUseCaseProvider = Provider<SeedCreditsUseCase>((ref) {
+  return SeedCreditsUseCase(ref.watch(billingRepositoryProvider));
+});
+
+final topUpCreditsUseCaseProvider = Provider<TopUpCreditsUseCase>((ref) {
+  return TopUpCreditsUseCase(ref.watch(billingRepositoryProvider));
+});
+
+final simulatePurchaseUseCaseProvider = Provider<SimulatePurchaseUseCase>((ref) {
+  return SimulatePurchaseUseCase(ref.watch(billingRepositoryProvider));
+});
+
+final resetBillingDataUseCaseProvider = Provider<ResetBillingDataUseCase>((ref) {
+  return ResetBillingDataUseCase(ref.watch(billingRepositoryProvider));
+});
+
+final getBillingHealthUseCaseProvider = Provider<GetBillingHealthUseCase>((ref) {
+  return GetBillingHealthUseCase(ref.watch(billingRepositoryProvider));
+});
+
+final getBillingModeUseCaseProvider = Provider<GetBillingModeUseCase>((ref) {
+  return GetBillingModeUseCase(ref.watch(billingRepositoryProvider));
+});
+
+final checkOperationUseCaseProvider = Provider<CheckOperationUseCase>((ref) {
+  return CheckOperationUseCase(ref.watch(billingRepositoryProvider));
+});
+
+// Balance Stream Use Cases
+final getCurrentBalanceUseCaseProvider = Provider<GetCurrentBalanceUseCase>((ref) {
+  return GetCurrentBalanceUseCase(ref.watch(billingRepositoryProvider));
+});
+
+final sendHeartbeatUseCaseProvider = Provider<SendHeartbeatUseCase>((ref) {
+  return SendHeartbeatUseCase(ref.watch(billingRepositoryProvider));
+});
+
+// Session Question Use Cases
+final addSessionQuestionsUseCaseProvider = Provider<AddSessionQuestionsUseCase>((ref) {
+  return AddSessionQuestionsUseCase(ref.watch(billingRepositoryProvider));
+});
+
+final getSessionQuestionCountUseCaseProvider = Provider<GetSessionQuestionCountUseCase>((ref) {
+  return GetSessionQuestionCountUseCase(ref.watch(billingRepositoryProvider));
+});
+
+final getSessionQuestionStatusUseCaseProvider = Provider<GetSessionQuestionStatusUseCase>((ref) {
+  return GetSessionQuestionStatusUseCase(ref.watch(billingRepositoryProvider));
 });

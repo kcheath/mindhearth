@@ -99,10 +99,26 @@ class _OnboardingStepCurrentSituationState extends ConsumerState<OnboardingStepC
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         // Header
-        Icon(
-          Icons.person,
-          size: 80,
-          color: Color(0xFF6750A4),
+        Container(
+          width: 100,
+          height: 100,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                blurRadius: 15,
+                spreadRadius: 3,
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Image.asset(
+              'assets/images/mindhearth_logo.png',
+              fit: BoxFit.cover,
+            ),
+          ),
         ),
         SizedBox(height: 24),
         Text(
@@ -110,7 +126,7 @@ class _OnboardingStepCurrentSituationState extends ConsumerState<OnboardingStepC
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
+            color: Theme.of(context).colorScheme.onSurface,
           ),
           textAlign: TextAlign.center,
         ),
@@ -119,7 +135,7 @@ class _OnboardingStepCurrentSituationState extends ConsumerState<OnboardingStepC
           'This information helps us provide more personalized support. All fields are optional.',
           style: TextStyle(
             fontSize: 16,
-            color: Colors.grey[600],
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           textAlign: TextAlign.center,
         ),

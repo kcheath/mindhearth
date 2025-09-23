@@ -1,6 +1,8 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
+import 'package:mindhearth/core/providers/usecase_providers.dart';
+import 'package:mindhearth/core/domain/usecases/usage_analytics_usecases.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/features/billing/domain/entities/credit_consumption.dart';
 
@@ -36,8 +38,14 @@ class UsageAnalyticsState {
 /// Usage analytics notifier
 class UsageAnalyticsNotifier extends StateNotifier<UsageAnalyticsState> {
   final ApiService _apiService;
+  final GetUsageAnalyticsUseCase _getUsageAnalyticsUseCase;
 
-  UsageAnalyticsNotifier(this._apiService) : super(const UsageAnalyticsState());
+  UsageAnalyticsNotifier({
+    required ApiService apiService,
+    required GetUsageAnalyticsUseCase getUsageAnalyticsUseCase,
+  }) : _apiService = apiService,
+       _getUsageAnalyticsUseCase = getUsageAnalyticsUseCase,
+       super(const UsageAnalyticsState());
 
   /// Load usage analytics
   Future<void> loadAnalytics({int? periodDays}) async {
@@ -50,31 +58,35 @@ class UsageAnalyticsNotifier extends StateNotifier<UsageAnalyticsState> {
         'periodDays': days,
       });
 
-      final response = await _apiService.dio.get(
-        '/billing/usage-analytics',
-        queryParameters: {
-          'days': days,
+      final result = await _getUsageAnalyticsUseCase.call(days);
+
+      result.when(
+        success: (analyticsData) {
+          final analytics = UsageAnalytics.fromJson(analyticsData);
+          state = state.copyWith(
+            isLoading: false,
+            analytics: analytics,
+            periodDays: days,
+          );
+
+          appLogger.info('Usage analytics loaded successfully', {
+            'periodDays': days,
+            'totalConsumed': analytics.totalConsumed,
+            'totalGranted': analytics.totalGranted,
+            'netUsage': analytics.netUsage,
+          });
+        },
+        failure: (error) {
+          state = state.copyWith(
+            isLoading: false,
+            error: 'Failed to load usage analytics: ${error.message}',
+          );
+          appLogger.error('Failed to load usage analytics', {
+            'error': error.message,
+            'periodDays': periodDays,
+          });
         },
       );
-
-      if (response.statusCode == 200) {
-        final analytics = UsageAnalytics.fromJson(response.data);
-        
-        state = state.copyWith(
-          isLoading: false,
-          analytics: analytics,
-          periodDays: days,
-        );
-
-        appLogger.info('Usage analytics loaded successfully', {
-          'periodDays': days,
-          'totalConsumed': analytics.totalConsumed,
-          'totalGranted': analytics.totalGranted,
-          'netUsage': analytics.netUsage,
-        });
-      } else {
-        throw Exception('Failed to load usage analytics: ${response.statusCode}');
-      }
     } catch (e) {
       appLogger.error('Failed to load usage analytics', {
         'error': e.toString(),
@@ -117,7 +129,10 @@ class UsageAnalyticsNotifier extends StateNotifier<UsageAnalyticsState> {
 
 /// Usage analytics provider
 final usageAnalyticsProvider = StateNotifierProvider<UsageAnalyticsNotifier, UsageAnalyticsState>(
-  (ref) => UsageAnalyticsNotifier(ref.watch(apiServiceProvider)),
+  (ref) => UsageAnalyticsNotifier(
+    apiService: ref.watch(apiServiceProvider),
+    getUsageAnalyticsUseCase: ref.watch(getUsageAnalyticsUseCaseProvider),
+  ),
 );
 
 /// Usage analytics data provider

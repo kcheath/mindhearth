@@ -79,11 +79,15 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       if (confirmed != true) return;
     }
     
+    // Use the new startNewConversation method for better conversation management
+    chatNotifier.startNewConversation();
+    
+    // Create a new session for the new conversation
     await chatNotifier.createNewSession();
     
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('New session started')),
+        const SnackBar(content: Text('New conversation started')),
       );
     }
   }
@@ -193,7 +197,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             IconButton(
               icon: const Icon(Icons.add_circle_outline),
               onPressed: _startNewSession,
-              tooltip: 'Start New Session',
+              tooltip: 'Start New Conversation',
             ),
             IconButton(
               icon: const Icon(Icons.info_outline),

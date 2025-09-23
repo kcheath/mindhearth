@@ -55,7 +55,7 @@ class OnboardingStepComplete extends StatelessWidget {
               ),
               SizedBox(height: 8),
               _buildCompletionItem(
-                Icons.psychology,
+                Icons.rocket_launch,
                 'Ready to Start',
                 'You can now begin your mental health journey',
               ),

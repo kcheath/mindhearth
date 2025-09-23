@@ -1,6 +1,8 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
+import 'package:mindhearth/core/providers/usecase_providers.dart';
+import 'package:mindhearth/core/domain/usecases/session_question_usecases.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/features/billing/domain/entities/credit_consumption.dart';
 import 'package:mindhearth/features/billing/providers/billing_provider.dart';
@@ -54,9 +56,23 @@ class SessionQuestionState {
 /// Session question tracking notifier
 class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
   final ApiService _apiService;
+  final AddSessionQuestionsUseCase _addSessionQuestionsUseCase;
+  final GetSessionQuestionCountUseCase _getSessionQuestionCountUseCase;
+  final GetSessionQuestionStatusUseCase _getSessionQuestionStatusUseCase;
   final StateNotifierProviderRef<SessionQuestionNotifier, SessionQuestionState> _ref;
 
-  SessionQuestionNotifier(this._apiService, this._ref) : super(const SessionQuestionState()) {
+  SessionQuestionNotifier({
+    required ApiService apiService,
+    required AddSessionQuestionsUseCase addSessionQuestionsUseCase,
+    required GetSessionQuestionCountUseCase getSessionQuestionCountUseCase,
+    required GetSessionQuestionStatusUseCase getSessionQuestionStatusUseCase,
+    required StateNotifierProviderRef<SessionQuestionNotifier, SessionQuestionState> ref,
+  }) : _apiService = apiService,
+       _addSessionQuestionsUseCase = addSessionQuestionsUseCase,
+       _getSessionQuestionCountUseCase = getSessionQuestionCountUseCase,
+       _getSessionQuestionStatusUseCase = getSessionQuestionStatusUseCase,
+       _ref = ref,
+       super(const SessionQuestionState()) {
     _loadQuestionCountsFromBackend();
   }
 
@@ -115,37 +131,42 @@ class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
     try {
       appLogger.info('Loading question counts from backend');
 
-      // Use the status endpoint to get current question counts
-      final response = await _apiService.dio.get('/billing/session-questions/status');
+      final result = await _getSessionQuestionStatusUseCase.call();
 
-      if (response.statusCode == 200) {
-        final data = response.data as Map<String, dynamic>;
-        
-        // Backend returns questions_in_session as a single value, not a map
-        final questionsInSession = data['questions_in_session'] as int? ?? 0;
-        final sessionId = data['session_id'] as String? ?? 'current';
-        
-        // Create session questions map with current session
-        final sessionQuestions = <String, int>{};
-        if (questionsInSession > 0) {
-          sessionQuestions[sessionId] = questionsInSession;
-        }
-        
-        final globalTotalQuestions = data['global_total_questions'] as int? ?? 0;
-        final questionsPerCredit = data['questions_per_credit'] as int? ?? 10;
+      result.when(
+        success: (data) {
+          // Backend returns questions_in_session as a single value, not a map
+          final questionsInSession = data['questions_in_session'] as int? ?? 0;
+          final sessionId = data['session_id'] as String? ?? 'current';
+          
+          // Create session questions map with current session
+          final sessionQuestions = <String, int>{};
+          if (questionsInSession > 0) {
+            sessionQuestions[sessionId] = questionsInSession;
+          }
+          
+          final globalTotalQuestions = data['global_total_questions'] as int? ?? 0;
+          final questionsPerCredit = data['questions_per_credit'] as int? ?? 10;
 
-        state = state.copyWith(
-          sessionQuestions: sessionQuestions,
-          globalTotalQuestions: globalTotalQuestions,
-          questionsPerCredit: questionsPerCredit,
-        );
+          state = state.copyWith(
+            sessionQuestions: sessionQuestions,
+            globalTotalQuestions: globalTotalQuestions,
+            questionsPerCredit: questionsPerCredit,
+          );
 
-        appLogger.info('Question counts loaded from backend', {
-          'sessionQuestions': sessionQuestions,
-          'globalTotalQuestions': globalTotalQuestions,
-          'questionsPerCredit': questionsPerCredit,
-        });
-      }
+          appLogger.info('Question counts loaded from backend', {
+            'sessionQuestions': sessionQuestions,
+            'globalTotalQuestions': globalTotalQuestions,
+            'questionsPerCredit': questionsPerCredit,
+          });
+        },
+        failure: (error) {
+          appLogger.error('Failed to load question counts from backend', {
+            'error': error.message,
+          });
+          // Don't throw error - allow app to continue with default state
+        },
+      );
     } catch (e) {
       appLogger.error('Failed to load question counts from backend', {
         'error': e.toString(),
@@ -163,23 +184,29 @@ class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
         'globalQuestions': globalQuestions,
       });
 
-      // Use the correct backend endpoint for adding questions
-      final response = await _apiService.dio.post(
-        '/billing/session-questions/add',
-        data: {
-          'session_id': sessionId,
-          'questions': sessionQuestions, // Number of questions to add
-        },
+      final result = await _addSessionQuestionsUseCase.call(
+        sessionId: sessionId,
+        questions: sessionQuestions,
       );
 
-      if (response.statusCode == 200) {
-        appLogger.info('Question counts persisted successfully', {
-          'sessionId': sessionId,
-          'sessionQuestions': sessionQuestions,
-          'globalQuestions': globalQuestions,
-          'response': response.data,
-        });
-      }
+      result.when(
+        success: (_) {
+          appLogger.info('Question counts persisted successfully', {
+            'sessionId': sessionId,
+            'sessionQuestions': sessionQuestions,
+            'globalQuestions': globalQuestions,
+          });
+        },
+        failure: (error) {
+          appLogger.error('Failed to persist question counts to backend', {
+            'error': error.message,
+            'sessionId': sessionId,
+            'sessionQuestions': sessionQuestions,
+            'globalQuestions': globalQuestions,
+          });
+          // Don't throw error - allow local state to continue even if backend persistence fails
+        },
+      );
     } catch (e) {
       appLogger.error('Failed to persist question counts to backend', {
         'error': e.toString(),
@@ -201,32 +228,39 @@ class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
         'globalQuestions': state.globalTotalQuestions,
       });
 
-      // Use the correct endpoint with proper request body
-      final response = await _apiService.dio.post(
-        '/billing/session-questions/add',
-        data: {
-          'session_id': 'global', // Use a global session ID for global questions
-          'questions': state.globalTotalQuestions,
-        },
+      // Use a proper session ID instead of 'global' string
+      // For global questions, we should use a dedicated session or the current session
+      final sessionId = 'global-questions-${DateTime.now().millisecondsSinceEpoch}';
+      
+      final result = await _addSessionQuestionsUseCase.call(
+        sessionId: sessionId,
+        questions: state.globalTotalQuestions,
       );
 
-      if (response.statusCode == 200) {
-        appLogger.info('Credits deducted successfully for questions', {
-          'creditsDeducted': creditsToDeduct,
-          'response': response.data,
-        });
-        
-        // Refresh billing data to update UI
-        try {
-          final billingNotifier = _ref.read(billingProvider.notifier);
-          await billingNotifier.refreshAll();
-          appLogger.info('Billing data refreshed after credit deduction');
-        } catch (e) {
-          appLogger.error('Failed to refresh billing data after credit deduction', {
-            'error': e.toString(),
+      result.when(
+        success: (_) async {
+          appLogger.info('Credits deducted successfully for questions', {
+            'creditsDeducted': creditsToDeduct,
           });
-        }
-      }
+          
+          // Refresh billing data to update UI
+          try {
+            final billingNotifier = _ref.read(billingProvider.notifier);
+            await billingNotifier.refreshAll();
+            appLogger.info('Billing data refreshed after credit deduction');
+          } catch (e) {
+            appLogger.error('Failed to refresh billing data after credit deduction', {
+              'error': e.toString(),
+            });
+          }
+        },
+        failure: (error) {
+          appLogger.error('Failed to deduct credits for questions', {
+            'error': error.message,
+            'globalQuestions': state.globalTotalQuestions,
+          });
+        },
+      );
     } catch (e) {
       appLogger.error('Failed to deduct credits for questions', {
         'error': e.toString(),
@@ -285,25 +319,37 @@ class SessionQuestionNotifier extends StateNotifier<SessionQuestionState> {
   /// Get session-specific question count from backend
   Future<int> getSessionQuestionCount(String sessionId) async {
     try {
-      final response = await _apiService.dio.get('/billing/session-questions/$sessionId');
+      final result = await _getSessionQuestionCountUseCase.call(sessionId);
       
-      if (response.statusCode == 200) {
-        final data = response.data as Map<String, dynamic>;
-        return data['questions'] as int? ?? 0;
-      }
+      return result.when(
+        success: (count) => count,
+        failure: (error) {
+          appLogger.error('Failed to get session question count', {
+            'error': error.message,
+            'sessionId': sessionId,
+          });
+          return 0;
+        },
+      );
     } catch (e) {
       appLogger.error('Failed to get session question count', {
         'error': e.toString(),
         'sessionId': sessionId,
       });
+      return 0;
     }
-    return 0;
   }
 }
 
 /// Session question provider
 final sessionQuestionProvider = StateNotifierProvider<SessionQuestionNotifier, SessionQuestionState>(
-  (ref) => SessionQuestionNotifier(ref.watch(apiServiceProvider), ref),
+  (ref) => SessionQuestionNotifier(
+    apiService: ref.watch(apiServiceProvider),
+    addSessionQuestionsUseCase: ref.watch(addSessionQuestionsUseCaseProvider),
+    getSessionQuestionCountUseCase: ref.watch(getSessionQuestionCountUseCaseProvider),
+    getSessionQuestionStatusUseCase: ref.watch(getSessionQuestionStatusUseCaseProvider),
+    ref: ref,
+  ),
 );
 
 /// Session question tracking provider

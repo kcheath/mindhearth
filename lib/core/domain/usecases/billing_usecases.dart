@@ -113,13 +113,3 @@ class CheckBillingStatusUseCase {
   }
 }
 
-/// Use case for getting usage analytics
-class GetUsageAnalyticsUseCase {
-  final BillingRepository _billingRepository;
-  
-  GetUsageAnalyticsUseCase(this._billingRepository);
-  
-  Future<Result<Map<String, dynamic>>> call() async {
-    return await _billingRepository.getUsageAnalytics();
-  }
-}

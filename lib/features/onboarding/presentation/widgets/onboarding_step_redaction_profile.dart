@@ -102,7 +102,7 @@ class _OnboardingStepRedactionProfileState extends ConsumerState<OnboardingStepR
         Icon(
           Icons.security,
           size: 80,
-          color: Color(0xFF6750A4),
+          color: Theme.of(context).colorScheme.primary,
         ),
         SizedBox(height: 24),
         Text(
@@ -110,7 +110,7 @@ class _OnboardingStepRedactionProfileState extends ConsumerState<OnboardingStepR
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
+            color: Theme.of(context).colorScheme.onSurface,
           ),
           textAlign: TextAlign.center,
         ),
@@ -119,7 +119,7 @@ class _OnboardingStepRedactionProfileState extends ConsumerState<OnboardingStepR
           'Tell us what information should be automatically removed from your conversations for privacy.',
           style: TextStyle(
             fontSize: 16,
-            color: Colors.grey[600],
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           textAlign: TextAlign.center,
         ),
@@ -240,7 +240,7 @@ class _OnboardingStepRedactionProfileState extends ConsumerState<OnboardingStepR
                     _redactPronouns = value;
                   });
                 },
-                activeColor: Color(0xFF6750A4),
+                activeColor: Theme.of(context).colorScheme.primary,
                 contentPadding: EdgeInsets.zero,
                 dense: true,
               ),

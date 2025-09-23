@@ -6,7 +6,9 @@ import 'package:mindhearth/core/providers/usecase_providers.dart';
 import 'package:mindhearth/core/providers/session_provider.dart';
 import 'package:mindhearth/core/models/session_state.dart';
 import 'package:mindhearth/core/utils/logger.dart';
+import 'package:mindhearth/core/utils/session_validator.dart';
 import 'package:mindhearth/features/billing/domain/providers/session_question_provider.dart';
+import 'package:mindhearth/core/domain/usecases/chat_usecases.dart';
 
 // Chat state class
 class ChatState {
@@ -50,35 +52,49 @@ class ChatNotifier extends StateNotifier<ChatState> {
   final GetSessionsUseCase _getSessionsUseCase;
   final CreateSessionUseCase _createSessionUseCase;
   final SendMessageUseCase _sendMessageUseCase;
-  final SendStreamingMessageUseCase _sendStreamingMessageUseCase;
-  final LoadChatHistoryUseCase _loadChatHistoryUseCase;
+  final StartStreamingChatUseCase _startStreamingChatUseCase;
+  final GetSessionMessagesUseCase _getSessionMessagesUseCase;
+  final UpdateSessionUseCase _updateSessionUseCase;
+  final DeleteSessionUseCase _deleteSessionUseCase;
   final Ref _ref;
-  StreamSubscription<String>? _streamSubscription;
+  StreamSubscription<ChatMessage>? _streamSubscription;
+  
+  // Conversation history for context-aware AI responses
+  List<Map<String, String>> _conversationHistory = [];
 
   ChatNotifier({
     required GetSessionsUseCase getSessionsUseCase,
     required CreateSessionUseCase createSessionUseCase,
     required SendMessageUseCase sendMessageUseCase,
-    required SendStreamingMessageUseCase sendStreamingMessageUseCase,
-    required LoadChatHistoryUseCase loadChatHistoryUseCase,
+    required StartStreamingChatUseCase startStreamingChatUseCase,
+    required GetSessionMessagesUseCase getSessionMessagesUseCase,
+    required UpdateSessionUseCase updateSessionUseCase,
+    required DeleteSessionUseCase deleteSessionUseCase,
     required Ref ref,
   }) : _getSessionsUseCase = getSessionsUseCase,
        _createSessionUseCase = createSessionUseCase,
        _sendMessageUseCase = sendMessageUseCase,
-       _sendStreamingMessageUseCase = sendStreamingMessageUseCase,
-       _loadChatHistoryUseCase = loadChatHistoryUseCase,
+       _startStreamingChatUseCase = startStreamingChatUseCase,
+       _getSessionMessagesUseCase = getSessionMessagesUseCase,
+       _updateSessionUseCase = updateSessionUseCase,
+       _deleteSessionUseCase = deleteSessionUseCase,
        _ref = ref,
        super(const ChatState()) {
+    // Delay initialization to prevent connection loss
+    Future.delayed(const Duration(milliseconds: 500), () {
     _initializeChat();
+    });
   }
 
   // Initialize chat - load sessions and create new session if needed
   Future<void> _initializeChat() async {
     try {
+      appLogger.info('Initializing chat...');
+      
+      // Only load sessions, don't create new session automatically
       await loadSessions();
-      if (state.currentSessionId == null) {
-        await createNewSession();
-      }
+      
+      appLogger.info('Chat initialization completed with ${state.sessions.length} sessions');
     } catch (e) {
       appLogger.error('Error initializing chat', {'error': e.toString()});
       state = state.copyWith(error: 'Failed to initialize chat');
@@ -90,7 +106,13 @@ class ChatNotifier extends StateNotifier<ChatState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
       
-      final result = await _getSessionsUseCase();
+      // Add timeout to prevent hanging
+      final result = await _getSessionsUseCase().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          throw Exception('Session loading timed out');
+        },
+      );
       
       if (result.isSuccess) {
         final sessions = result.data!.map((session) => {
@@ -101,42 +123,61 @@ class ChatNotifier extends StateNotifier<ChatState> {
           'created_at': session.createdAt.toIso8601String(),
           'updated_at': session.updatedAt.toIso8601String(),
         }).toList();
-        
-        state = state.copyWith(
-          sessions: sessions,
-          isLoading: false,
-        );
-        
-        appLogger.info('Loaded ${sessions.length} sessions');
+      
+      state = state.copyWith(
+        sessions: sessions,
+        isLoading: false,
+      );
+      
+      appLogger.info('Loaded ${sessions.length} sessions');
       } else {
-        throw Exception(result.error?.message ?? 'Failed to load sessions');
+        final errorMessage = result.error?.message ?? 'Failed to load sessions';
+        throw Exception(errorMessage);
       }
     } catch (e) {
       appLogger.error('Error loading sessions', {'error': e.toString()});
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to load sessions',
+        error: 'Failed to load sessions: ${e.toString()}',
       );
     }
   }
 
-  // Create a new session
+  // Create a new session (public method for user-initiated session creation)
   Future<void> createNewSession({String? name}) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
       
-      final result = await _createSessionUseCase(name: name ?? 'New Chat');
+      // Add timeout to prevent hanging
+      final result = await _createSessionUseCase(name: name ?? 'New Chat').timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          throw Exception('Session creation timed out');
+        },
+      );
       
       if (result.isSuccess) {
         final session = result.data!;
+        
+        // Add the new session to the existing sessions list instead of reloading
+        final newSessionData = {
+          'id': session.id,
+          'name': session.name,
+          'session_type': session.sessionType,
+          'purpose': session.purpose,
+          'created_at': session.createdAt.toIso8601String(),
+          'updated_at': session.updatedAt.toIso8601String(),
+        };
+        
         state = state.copyWith(
           currentSessionId: session.id,
           messages: [], // Clear messages for new session
+          sessions: [...state.sessions, newSessionData],
           isLoading: false,
         );
         
-        // Reload sessions to include the new one
-        await loadSessions();
+        // Validate the new session ID
+        SessionValidator.validateSessionId(session.id, context: 'session_creation');
         
         appLogger.info('Created new session', {'sessionId': session.id});
       } else {
@@ -149,7 +190,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       appLogger.error('Error creating new session', {'error': e.toString()});
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to create new session',
+        error: 'Failed to create new session: ${e.toString()}',
       );
     }
   }
@@ -157,34 +198,50 @@ class ChatNotifier extends StateNotifier<ChatState> {
   // Switch to a different session
   Future<void> switchToSession(String sessionId) async {
     try {
-      appLogger.info('Starting session switch', {'sessionId': sessionId});
+      // Validate session ID format
+      if (!SessionValidator.validateSessionId(sessionId, context: 'session_switch')) {
+        appLogger.warning('⚠️ Using legacy session ID format', {'sessionId': sessionId});
+      }
+      
+      appLogger.info('🔄 Starting session switch', {'sessionId': sessionId, 'previousSessionId': state.currentSessionId});
       state = state.copyWith(isLoading: true, error: null);
       
-      final success = await _chatService.switchToSession(sessionId);
-      appLogger.info('Session switch result', {'sessionId': sessionId, 'success': success});
-      
-      if (success) {
-        // Update the current session ID in the state first
-        state = state.copyWith(currentSessionId: sessionId);
-        appLogger.info('Updated current session ID in state', {'sessionId': sessionId});
+      // Switch to session - load its messages
+      final result = await _getSessionMessagesUseCase(sessionId: sessionId);
+      if (result.isSuccess && result.data != null) {
+        final messages = result.data!;
+        appLogger.debug('📊 Loaded ${messages.length} messages for session $sessionId');
         
-        // Load chat history for the new session
-        appLogger.info('About to load chat history', {'sessionId': sessionId});
-        await loadChatHistory(sessionId);
-        appLogger.info('Finished loading chat history', {'sessionId': sessionId});
+        // Sort messages chronologically (oldest first) for proper conversation flow
+        messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+        appLogger.debug('📊 Sorted ${messages.length} messages chronologically');
         
-        // Ensure loading is set to false
-        state = state.copyWith(isLoading: false);
+        // Clear conversation history for new session
+        _conversationHistory.clear();
         
-        appLogger.info('Switched to session', {'sessionId': sessionId});
+        // Populate conversation history from loaded messages (already sorted)
+        _conversationHistory = messages.map((msg) => {
+          'role': msg.role ?? 'user',
+          'content': msg.content ?? '',
+        }).toList();
+        
+        appLogger.debug('📊 Populated conversation history with ${_conversationHistory.length} items');
+        
+        state = state.copyWith(
+          currentSessionId: sessionId,
+          messages: messages,
+          isLoading: false,
+        );
+        appLogger.info('✅ Session switch successful', {'sessionId': sessionId, 'messageCount': messages.length});
       } else {
+        appLogger.error('❌ Session switch failed', {'sessionId': sessionId, 'error': result.error?.message});
         state = state.copyWith(
           isLoading: false,
-          error: 'Failed to switch to session',
+          error: result.error?.message ?? 'Failed to load session messages',
         );
       }
     } catch (e) {
-      appLogger.error('Error switching to session', {'sessionId': sessionId, 'error': e.toString()});
+      appLogger.error('💥 Error switching to session', {'sessionId': sessionId, 'error': e.toString()});
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to switch to session',
@@ -197,30 +254,32 @@ class ChatNotifier extends StateNotifier<ChatState> {
     try {
       appLogger.info('Starting to load chat history', {'sessionId': sessionId});
       
-      final history = await _chatService.getChatHistory(sessionId: sessionId);
-      
-      appLogger.info('Received chat history from service', {'sessionId': sessionId, 'historyCount': history.length});
-      
-      // Convert history to ChatMessage objects
-      final messages = history.map((comm) {
-        return ChatMessage(
-          id: comm['id'] as String,
-          sessionId: comm['session_id'] as String? ?? '',
-          content: comm['original_content'] as String? ?? '',
-          role: comm['role'] as String? ?? 'user',
-          timestamp: DateTime.parse(comm['created_at'] as String),
-        );
-      }).toList();
+      final result = await _getSessionMessagesUseCase(sessionId: sessionId);
+      if (result.isSuccess) {
+        final messages = result.data!;
+        appLogger.info('Received chat history from service', {'sessionId': sessionId, 'historyCount': messages.length});
       
       // Sort messages by timestamp (oldest first)
       messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+        
+        // Populate conversation history for context-aware responses
+        _conversationHistory = messages.map((msg) => {
+          'role': msg.role,
+          'content': msg.content,
+        }).toList();
       
       state = state.copyWith(
         messages: messages,
         error: null,
       );
       
-      appLogger.info('Loaded ${messages.length} messages for session', {'sessionId': sessionId});
+        appLogger.info('Loaded ${messages.length} messages for session and populated conversation history', {'sessionId': sessionId});
+      } else {
+        appLogger.error('Failed to load chat history', {'sessionId': sessionId, 'error': result.error?.message});
+        state = state.copyWith(
+          error: result.error?.message ?? 'Failed to load chat history',
+        );
+      }
     } catch (e) {
       appLogger.error('Error loading chat history', {'sessionId': sessionId, 'error': e.toString()});
       state = state.copyWith(
@@ -242,7 +301,8 @@ class ChatNotifier extends StateNotifier<ChatState> {
         }).toList();
         
         // Save to local storage
-        await _chatService.saveChatHistoryLocally(state.currentSessionId!, history);
+        // Save messages locally (this is now handled by the state management)
+        // No need for separate local storage call
       } catch (e) {
         appLogger.error('Error saving messages locally', {'error': e.toString()});
       }
@@ -254,26 +314,40 @@ class ChatNotifier extends StateNotifier<ChatState> {
     if (content.trim().isEmpty) return;
     
     try {
-      // Add user message immediately
-      final userMessage = ChatMessage(
-        id: 'user_${DateTime.now().millisecondsSinceEpoch}',
-        sessionId: state.currentSessionId ?? '',
-        content: content,
-        role: 'user',
-        timestamp: DateTime.now(),
-      );
+      // Add user message to conversation history
+      _conversationHistory.add({
+        'role': 'user',
+        'content': content,
+      });
       
-      state = state.copyWith(
-        messages: [...state.messages, userMessage],
-        isStreaming: true,
-        error: null,
-      );
+        // Add user message immediately
+        final userMessage = ChatMessage(
+          id: 'user_${DateTime.now().millisecondsSinceEpoch}',
+          sessionId: state.currentSessionId ?? '',
+          content: content,
+          role: 'user',
+          timestamp: DateTime.now(),
+        );
+        
+        // Add user message and maintain chronological order
+        final updatedMessages = List<ChatMessage>.from(state.messages);
+        updatedMessages.add(userMessage);
+        
+        state = state.copyWith(
+          messages: updatedMessages,
+          isStreaming: true,
+          error: null,
+        );
       
       // Track question for session question billing
       await _trackQuestionForBilling();
       
       // Try streaming first (using use case)
-      final streamResult = await _sendStreamingMessageUseCase(content, state.currentSessionId ?? '');
+      final streamResult = await _startStreamingChatUseCase(
+        sessionId: state.currentSessionId ?? '',
+        content: content,
+        conversationHistory: _conversationHistory, // NEW: Send full conversation context
+      );
       
       if (streamResult.isSuccess) {
         final stream = streamResult.data!;
@@ -287,29 +361,32 @@ class ChatNotifier extends StateNotifier<ChatState> {
           timestamp: DateTime.now(),
         );
         
-        // Add empty AI message to start
+        // Add empty AI message to start (maintain chronological order)
+        final updatedMessages = List<ChatMessage>.from(state.messages);
+        updatedMessages.add(aiMessage);
+        
         state = state.copyWith(
-          messages: [...state.messages, aiMessage],
+          messages: updatedMessages,
         );
         
         // Listen to stream
         _streamSubscription = stream.listen(
-          (chunk) {
-            aiMessageContent += chunk;
+          (message) {
             // Update the last message (AI message) with new content
             final updatedMessages = List<ChatMessage>.from(state.messages);
             if (updatedMessages.isNotEmpty) {
-              updatedMessages.last = ChatMessage(
-                id: updatedMessages.last.id,
-                sessionId: updatedMessages.last.sessionId,
-                content: aiMessageContent,
-                role: 'assistant',
-                timestamp: updatedMessages.last.timestamp,
-              );
+              updatedMessages.last = message;
               state = state.copyWith(messages: updatedMessages);
             }
           },
           onDone: () {
+            // Add AI response to conversation history
+            final lastMessage = state.messages.last;
+            _conversationHistory.add({
+              'role': 'assistant',
+              'content': lastMessage.content,
+            });
+            
             state = state.copyWith(isStreaming: false);
             appLogger.info('Streaming completed');
             // Save messages to local storage
@@ -339,15 +416,23 @@ class ChatNotifier extends StateNotifier<ChatState> {
   // Send message using standard (non-streaming) endpoint
   Future<void> _sendStandardMessage(String content) async {
     try {
-      final result = await _sendMessageUseCase(content, state.currentSessionId ?? '');
+      final result = await _sendMessageUseCase(
+        content, 
+        state.currentSessionId ?? '',
+        conversationHistory: _conversationHistory, // NEW: Send full conversation context
+      );
       
       if (result.isSuccess) {
         final message = result.data!;
+        
+        // Add AI response to conversation history
+        _conversationHistory.add({
+          'role': 'assistant',
+          'content': message.content,
+        });
+        
         // Add the AI response message
         final updatedMessages = List<ChatMessage>.from(state.messages);
-        if (updatedMessages.isNotEmpty) {
-          updatedMessages.removeLast(); // Remove the user message we added
-        }
         updatedMessages.add(message); // Add the AI response
         
         state = state.copyWith(
@@ -355,17 +440,12 @@ class ChatNotifier extends StateNotifier<ChatState> {
           isStreaming: false,
         );
       } else {
-        throw Exception(result.error?.message ?? 'Failed to send message');
+        final errorMessage = result.error?.message ?? 'Failed to send message';
+        throw Exception(errorMessage);
       }
       
       // Save messages to local storage
       _saveMessagesLocally();
-      } else {
-        state = state.copyWith(
-          isStreaming: false,
-          error: 'Failed to get AI response',
-        );
-      }
     } catch (e) {
       appLogger.error('Error in standard message sending', {'error': e.toString()});
       state = state.copyWith(
@@ -379,12 +459,32 @@ class ChatNotifier extends StateNotifier<ChatState> {
   // Clear current session
   void clearSession() {
     _streamSubscription?.cancel();
-    _chatService.clearSession();
+    // Clear conversation history
+    _conversationHistory.clear();
+    // Clear session - reset state
     state = state.copyWith(
       currentSessionId: null,
       messages: [],
+      isLoading: false,
       isStreaming: false,
+      error: null,
     );
+  }
+
+  // Start a new conversation (clear conversation history)
+  void startNewConversation() {
+    _streamSubscription?.cancel();
+    // Clear conversation history for context-aware responses
+    _conversationHistory.clear();
+    // Clear current session and messages
+    state = state.copyWith(
+      currentSessionId: null,
+      messages: [],
+      isLoading: false,
+      isStreaming: false,
+      error: null,
+    );
+    appLogger.info('Started new conversation - conversation history cleared');
   }
 
   // Track question for session question billing
@@ -414,7 +514,11 @@ class ChatNotifier extends StateNotifier<ChatState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
       
-      final success = await _chatService.updateSessionName(sessionId, newName);
+      final result = await _updateSessionUseCase(
+        id: sessionId,
+        name: newName,
+      );
+      final success = result.isSuccess;
       
       if (success) {
         // Reload sessions to get the updated name
@@ -445,7 +549,8 @@ class ChatNotifier extends StateNotifier<ChatState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
       
-      final success = await _chatService.deleteSession(sessionId);
+      final result = await _deleteSessionUseCase(sessionId);
+      final success = result.isSuccess;
       
       if (success) {
         // Reload sessions to get the updated list
@@ -468,16 +573,19 @@ class ChatNotifier extends StateNotifier<ChatState> {
         
         appLogger.info('Deleted session', {'sessionId': sessionId});
       } else {
+        final errorMessage = result.error?.message ?? 'Failed to delete session';
         state = state.copyWith(
           isLoading: false,
-          error: 'Failed to delete session',
+          error: errorMessage,
         );
+        appLogger.error('Failed to delete session', {'sessionId': sessionId, 'error': errorMessage});
       }
     } catch (e) {
+      final errorMessage = 'Failed to delete session: ${e.toString()}';
       appLogger.error('Error deleting session', {'sessionId': sessionId, 'error': e.toString()});
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to delete session',
+        error: errorMessage,
       );
     }
   }
@@ -565,8 +673,10 @@ final chatProvider = StateNotifierProvider<ChatNotifier, ChatState>((ref) {
     getSessionsUseCase: ref.read(getSessionsUseCaseProvider),
     createSessionUseCase: ref.read(createSessionUseCaseProvider),
     sendMessageUseCase: ref.read(sendMessageUseCaseProvider),
-    sendStreamingMessageUseCase: ref.read(sendStreamingMessageUseCaseProvider),
-    loadChatHistoryUseCase: ref.read(loadChatHistoryUseCaseProvider),
+    startStreamingChatUseCase: ref.read(startStreamingChatUseCaseProvider),
+    getSessionMessagesUseCase: ref.read(getSessionMessagesUseCaseProvider),
+    updateSessionUseCase: ref.read(updateSessionUseCaseProvider),
+    deleteSessionUseCase: ref.read(deleteSessionUseCaseProvider),
     ref: ref,
   );
   

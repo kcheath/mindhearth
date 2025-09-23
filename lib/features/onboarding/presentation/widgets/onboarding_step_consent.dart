@@ -74,10 +74,10 @@ class _OnboardingStepConsentState extends ConsumerState<OnboardingStepConsent> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         // Header with information from the card
-        Icon(
-          Icons.psychology,
-          size: 80,
-          color: Color(0xFF6750A4),
+        Image.asset(
+          'assets/images/mindhearth_logo.png',
+          width: 80,
+          height: 80,
         ),
         SizedBox(height: 24),
         Text(

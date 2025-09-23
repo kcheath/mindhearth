@@ -246,4 +246,17 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
       ));
     }
   }
+
+  @override
+  Future<Result<bool>> verifySafetyCode(String code) async {
+    try {
+      final isValid = await EncryptionService.validateSafetyCode(code);
+      return Result.success(isValid);
+    } catch (e) {
+      appLogger.error('Error verifying safety code', null, e is StackTrace ? e : null);
+      return Result.failure(AppErrorFactory.encryption(
+        message: 'Failed to verify safety code: ${e.toString()}',
+      ));
+    }
+  }
 }

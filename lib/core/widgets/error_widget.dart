@@ -131,7 +131,7 @@ class ContextualErrorWidget extends StatelessWidget {
         return (
           'AI Summary Error',
           'Unable to generate AI summary. Please try again.',
-          Icons.psychology_outlined
+          Image.asset('assets/images/mindhearth_logo.png', width: 24, height: 24)
         );
       default:
         return (
