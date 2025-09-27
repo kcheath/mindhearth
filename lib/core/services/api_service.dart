@@ -408,9 +408,17 @@ class ApiService {
 
   Future<ApiResponse<Map<String, dynamic>>> updateOnboardedStatus(bool onboarded) async {
     try {
+      // Get current user ID from token or user data
+      final userData = await getOnboardingData();
+      if (userData.isError) {
+        return ApiError(message: 'Failed to get user data for onboarding status update');
+      }
+      
+      final userId = userData.data!['id'] as String;
+      
       // Use a shorter timeout for this specific endpoint
       final response = await _dio.put(
-        '/users/onboarded', 
+        '/users/$userId/onboarded', 
         data: {
           'onboarded': onboarded,
         },
@@ -571,9 +579,17 @@ class ApiService {
   // Update onboarding status
   Future<ApiResponse<Map<String, dynamic>>> updateOnboardingStatus(bool isOnboarded) async {
     try {
+      // Get current user ID from token or user data
+      final userData = await getOnboardingData();
+      if (userData.isError) {
+        return ApiError(message: 'Failed to get user data for onboarding status update');
+      }
+      
+      final userId = userData.data!['id'] as String;
+      
       // Use a shorter timeout for this specific endpoint
       final response = await _dio.put(
-        '/users/onboarded', 
+        '/users/$userId/onboarded', 
         data: {
           'onboarded': isOnboarded,
         },
