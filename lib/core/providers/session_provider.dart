@@ -24,7 +24,19 @@ class SessionNotifier extends StateNotifier<SessionState> {
       
       response.when(
         success: (data, message) {
-          final sessionsList = data['sessions'] as List<dynamic>? ?? [];
+          // Handle both direct array response and wrapped response
+          List<dynamic> sessionsList;
+          if (data is List) {
+            // Backend returns sessions array directly
+            sessionsList = data;
+          } else if (data is Map<String, dynamic> && data.containsKey('sessions')) {
+            // Backend returns sessions wrapped in object
+            sessionsList = data['sessions'] as List<dynamic>? ?? [];
+          } else {
+            // Fallback to empty list
+            sessionsList = [];
+          }
+          
           final sessions = sessionsList
               .map((sessionData) => Session.fromJson(sessionData as Map<String, dynamic>))
               .toList();
