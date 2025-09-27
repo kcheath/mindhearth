@@ -504,7 +504,7 @@ class _AdaptiveNavigationState extends ConsumerState<AdaptiveNavigation> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Environment: Debug'),
-            Text('Backend: ${DebugConfig.apiUrl}'),
+            Text('Backend: ${DebugConfig.baseUrl}'),
             Text('Test User: ${DebugConfig.testEmail}'),
             const SizedBox(height: 16),
             const Text(

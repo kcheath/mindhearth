@@ -17,23 +17,39 @@ class AuthRepositoryImpl implements AuthRepository {
       
       return response.when(
         success: (data, message) async {
-          final token = data['access_token'] as String;
-          final userId = data['user_id'] as String;
-          final tenantId = data['tenant_id'] as String;
+          // Debug: Log the actual response structure
+          appLogger.debug('Login response data: $data', 'AuthRepositoryImpl');
+          
+          final token = data['access_token'] as String?;
+          
+          // Validate token
+          if (token == null || token.isEmpty) {
+            appLogger.auth('login_failed', {'email': email, 'error': 'Missing access token'});
+            return Result.failure(AppErrorFactory.authentication(message: 'Missing access token'));
+          }
           
           await _apiService.setToken(token);
           
-          // Fetch user data from backend to get onboarding status
+          // Fetch user data from backend to get user details and onboarding status
           final userResponse = await _apiService.getCurrentUser();
           
           return userResponse.when(
             success: (userData, userMessage) {
+              // Extract user information from /users/me response
+              final userId = userData['id'] as String?;
+              final userEmail = userData['email'] as String?;
+              final tenantId = userData['tenant_id'] as String?;
               final isOnboarded = userData['onboarded'] as bool? ?? false;
+              
+              if (userId == null || userId.isEmpty) {
+                appLogger.auth('login_failed', {'email': email, 'error': 'Missing user ID in user data'});
+                return Result.failure(AppErrorFactory.authentication(message: 'Missing user ID in user data'));
+              }
               
               final user = User(
                 id: userId,
-                email: email,
-                tenantId: tenantId,
+                email: userEmail ?? email, // Use email from user data or fallback to login email
+                tenantId: tenantId ?? 'unknown', // Use tenant ID from user data
                 isOnboarded: isOnboarded,
               );
               
@@ -41,16 +57,8 @@ class AuthRepositoryImpl implements AuthRepository {
               return Result.success(user);
             },
             error: (userMessage, userStatusCode, userErrors) {
-              // Fallback to basic user data if /users/me fails
-              final user = User(
-                id: userId,
-                email: email,
-                tenantId: tenantId,
-                isOnboarded: false, // Default to false for safety
-              );
-              
-              appLogger.auth('login_success_fallback', {'email': email, 'userId': userId});
-              return Result.success(user);
+              appLogger.auth('login_failed', {'email': email, 'error': 'Failed to get user data: $userMessage'});
+              return Result.failure(AppErrorFactory.authentication(message: 'Failed to get user data: $userMessage'));
             },
           );
         },

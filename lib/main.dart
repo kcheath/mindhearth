@@ -93,7 +93,7 @@ class _MindhearthAppState extends ConsumerState<MindhearthApp> with WidgetsBindi
                       const Icon(Icons.bug_report, color: Colors.white, size: 16),
                       const SizedBox(width: 8),
                       Text(
-                        'Environment: Debug | Backend: ${DebugConfig.apiUrl}',
+                        'Environment: Debug | Backend: ${DebugConfig.baseUrl}',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,

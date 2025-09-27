@@ -153,7 +153,7 @@ class SettingsPage extends ConsumerWidget {
                     ListTile(
                       leading: Icon(Icons.bug_report, color: Colors.orange),
                       title: const Text('Debug Information'),
-                      subtitle: Text('Environment: Debug | Backend: ${DebugConfig.apiUrl}'),
+                      subtitle: Text('Environment: Debug | Backend: ${DebugConfig.baseUrl}'),
                       onTap: () {
                         showDialog(
                           context: context,
@@ -164,7 +164,7 @@ class SettingsPage extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text('Environment: Debug'),
-                                Text('Backend URL: ${DebugConfig.apiUrl}'),
+                                Text('Backend URL: ${DebugConfig.baseUrl}'),
                                 Text('Test Email: ${DebugConfig.testEmail}'),
                                 Text('Debug Banner: ${DebugConfig.showDebugBanner ? "Enabled" : "Disabled"}'),
                                 const SizedBox(height: 16),
