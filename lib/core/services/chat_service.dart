@@ -588,9 +588,20 @@ class ChatService {
       });
 
       if (response.statusCode == 200) {
-        final data = response.data as Map<String, dynamic>;
-        final sessions = data['sessions'] as List<dynamic>? ?? [];
-        final sessionList = sessions.cast<Map<String, dynamic>>();
+        // Handle both direct array response and wrapped response
+        List<dynamic> sessionsList;
+        if (response.data is List) {
+          // Backend returns sessions array directly
+          sessionsList = response.data as List;
+        } else if (response.data is Map<String, dynamic>) {
+          final data = response.data as Map<String, dynamic>;
+          sessionsList = data['sessions'] as List<dynamic>? ?? [];
+        } else {
+          // Fallback to empty list
+          sessionsList = [];
+        }
+        
+        final sessionList = sessionsList.cast<Map<String, dynamic>>();
         
         // Save sessions locally for offline access
         await _saveSessionsLocally(sessionList);
