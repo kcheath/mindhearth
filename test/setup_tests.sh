@@ -45,12 +45,44 @@ check_flutter() {
 check_backend() {
     print_status "Checking backend connectivity..."
     
-    # Test backend health endpoint
-    if curl -f -s http://3.150.176.19:8080/api/health > /dev/null; then
-        print_success "Backend is running and accessible"
+    # Test the actual API endpoints that the Flutter app uses
+    print_status "Testing login endpoint..."
+    local login_response=$(curl -s -w "%{http_code}" -X POST http://3.150.176.19:8080/api/auth/login \
+        -H "Content-Type: application/json" \
+        -d '{"email":"test@tsukiyo.dev","password":"testpass123","tenant_id":"1aca2ef7-b1fa-46bb-af08-a8fdb449b1f9","application_id":"2852276f-16ca-462f-aa46-5e191880eb33"}')
+    
+    local http_code="${login_response: -3}"
+    local response_body="${login_response%???}"
+    
+    if [ "$http_code" = "200" ]; then
+        print_success "Backend login endpoint is working"
+        
+        # Extract token for further testing
+        local token=$(echo "$response_body" | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
+        
+        if [ -n "$token" ]; then
+            print_status "Testing sessions endpoint..."
+            local sessions_response=$(curl -s -w "%{http_code}" -X GET http://3.150.176.19:8080/api/sessions/ \
+                -H "Authorization: Bearer $token" \
+                -H "Content-Type: application/json")
+            
+            local sessions_http_code="${sessions_response: -3}"
+            
+            if [ "$sessions_http_code" = "200" ]; then
+                print_success "Backend sessions endpoint is working"
+                print_success "Backend is fully accessible and ready for testing"
+            else
+                print_error "Backend sessions endpoint returned HTTP $sessions_http_code"
+                print_warning "Backend may not be fully functional"
+                exit 1
+            fi
+        else
+            print_error "Could not extract access token from login response"
+            exit 1
+        fi
     else
-        print_error "Backend is not accessible at http://3.150.176.19:8080/api/health"
-        print_warning "Please ensure the backend is running before running tests"
+        print_error "Backend login endpoint returned HTTP $http_code"
+        print_warning "Please ensure the backend is running and accessible"
         exit 1
     fi
 }

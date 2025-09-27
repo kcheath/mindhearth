@@ -3,6 +3,7 @@ import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/core/config/test_config.dart';
 import 'package:mindhearth/core/di/service_locator.dart';
 import 'package:mindhearth/core/models/api_response.dart';
+import 'package:dio/dio.dart';
 
 void main() {
   group('API Endpoints Integration Tests', () {
@@ -13,6 +14,60 @@ void main() {
       // Initialize service locator
       await setupServiceLocator();
       apiService = getIt<ApiService>();
+    });
+
+    group('Backend Connectivity Tests', () {
+      test('should connect to real backend', () async {
+        // Test direct backend connectivity
+        final dio = Dio();
+        final response = await dio.post(
+          '${TestConfig.apiBaseUrl}/auth/login',
+          data: {
+            'email': TestConfig.testEmail,
+            'password': TestConfig.testPassword,
+            'tenant_id': TestConfig.tenantId,
+            'application_id': TestConfig.applicationId,
+          },
+        );
+        
+        expect(response.statusCode, 200);
+        expect(response.data, isA<Map<String, dynamic>>());
+        expect(response.data['access_token'], isNotNull);
+        
+        accessToken = response.data['access_token'] as String;
+      });
+
+      test('should access sessions endpoint with real backend', () async {
+        if (accessToken == null) {
+          // Get token first
+          final dio = Dio();
+          final loginResponse = await dio.post(
+            '${TestConfig.apiBaseUrl}/auth/login',
+            data: {
+              'email': TestConfig.testEmail,
+              'password': TestConfig.testPassword,
+              'tenant_id': TestConfig.tenantId,
+              'application_id': TestConfig.applicationId,
+            },
+          );
+          accessToken = loginResponse.data['access_token'] as String;
+        }
+
+        final dio = Dio();
+        final response = await dio.get(
+          '${TestConfig.apiBaseUrl}/sessions/',
+          options: Options(
+            headers: {
+              'Authorization': 'Bearer $accessToken',
+              'Content-Type': 'application/json',
+            },
+          ),
+        );
+        
+        expect(response.statusCode, 200);
+        expect(response.data, isA<List>());
+        expect(response.data.length, greaterThanOrEqualTo(0));
+      });
     });
 
     group('Authentication Tests', () {
