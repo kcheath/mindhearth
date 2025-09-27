@@ -26,7 +26,20 @@ class ChatRepositoryImpl implements ChatRepository {
 
       return response.when(
         success: (data, message) {
-          final sessions = (data['sessions'] as List)
+          // Handle both direct array response and wrapped response
+          List<dynamic> sessionsList;
+          if (data is List) {
+            // Backend returns sessions array directly
+            sessionsList = data;
+          } else if (data is Map<String, dynamic> && data.containsKey('sessions')) {
+            // Backend returns sessions wrapped in object
+            sessionsList = data['sessions'] as List;
+          } else {
+            // Fallback to empty list
+            sessionsList = [];
+          }
+          
+          final sessions = sessionsList
               .map((json) => Session.fromJson(json as Map<String, dynamic>))
               .toList();
           appLogger.info('✅ Retrieved ${sessions.length} sessions');
