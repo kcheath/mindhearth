@@ -250,7 +250,7 @@ class ApiService {
     }
   }
 
-  Future<ApiResponse<Map<String, dynamic>>> getSessions({
+  Future<ApiResponse<dynamic>> getSessions({
     int limit = 100,
     int offset = 0,
     String? sessionType,
