@@ -20,7 +20,7 @@ class ApiService {
 
   ApiService() {
     _dio = Dio(BaseOptions(
-      baseUrl: DebugConfig.apiUrl,
+      baseUrl: DebugConfig.baseUrl,
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 15),
       sendTimeout: const Duration(seconds: 15),
@@ -44,9 +44,7 @@ class ApiService {
             options.headers['Authorization'] = 'Bearer $token';
           }
           
-          // Add required headers for Tsukiyo API
-          options.headers['X-Tenant-ID'] = _tenantId;
-          options.headers['X-App-ID'] = _applicationId;
+          // Headers are now extracted from JWT token by API Gateway
           
           // Debug logging to verify headers are being added
           appLogger.debug('API Request Headers: ${options.headers}', 'ApiService');
@@ -116,7 +114,7 @@ class ApiService {
       
       // Create a separate Dio instance for login without auth headers
       final loginDio = Dio(BaseOptions(
-        baseUrl: DebugConfig.apiUrl,
+        baseUrl: DebugConfig.baseUrl,
         connectTimeout: const Duration(seconds: 60),
         receiveTimeout: const Duration(seconds: 60),
         sendTimeout: const Duration(seconds: 60),

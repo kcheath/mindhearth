@@ -23,8 +23,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     
     // Pre-fill with debug credentials in debug mode
     if (DebugConfig.isDebugMode) {
-      _emailController.text = 'test@tsukiyo.dev';
-      _passwordController.text = 'password123';
+      _emailController.text = DebugConfig.testEmail;
+      _passwordController.text = DebugConfig.testPassword;
     }
   }
 
