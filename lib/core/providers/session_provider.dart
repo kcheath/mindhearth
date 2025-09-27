@@ -28,7 +28,7 @@ class SessionNotifier extends StateNotifier<SessionState> {
           List<dynamic> sessionsList;
           if (data is List) {
             // Backend returns sessions array directly
-            sessionsList = data;
+            sessionsList = data as List<dynamic>;
           } else if (data is Map<String, dynamic> && data.containsKey('sessions')) {
             // Backend returns sessions wrapped in object
             sessionsList = data['sessions'] as List<dynamic>? ?? [];
