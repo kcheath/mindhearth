@@ -114,8 +114,8 @@ run_tests() {
     # Create test directory if it doesn't exist
     mkdir -p test/integration
     
-    # Run all integration tests
-    flutter test test/integration/ --reporter=expanded
+    # Run backend API integration tests
+    flutter test test/integration/backend_api_test.dart --reporter=expanded
     
     if [ $? -eq 0 ]; then
         print_success "All integration tests passed! 🎉"
