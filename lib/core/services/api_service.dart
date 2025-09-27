@@ -410,11 +410,20 @@ class ApiService {
     try {
       // Get current user ID from token or user data
       final userData = await getOnboardingData();
-      if (userData.isError) {
+      String? userId;
+      
+      userData.when(
+        success: (data, message) {
+          userId = data['id'] as String;
+        },
+        error: (message, statusCode, errors) {
+          // Handle error case
+        },
+      );
+      
+      if (userId == null) {
         return ApiError(message: 'Failed to get user data for onboarding status update');
       }
-      
-      final userId = userData.data!['id'] as String;
       
       // Use a shorter timeout for this specific endpoint
       final response = await _dio.put(
@@ -581,11 +590,20 @@ class ApiService {
     try {
       // Get current user ID from token or user data
       final userData = await getOnboardingData();
-      if (userData.isError) {
+      String? userId;
+      
+      userData.when(
+        success: (data, message) {
+          userId = data['id'] as String;
+        },
+        error: (message, statusCode, errors) {
+          // Handle error case
+        },
+      );
+      
+      if (userId == null) {
         return ApiError(message: 'Failed to get user data for onboarding status update');
       }
-      
-      final userId = userData.data!['id'] as String;
       
       // Use a shorter timeout for this specific endpoint
       final response = await _dio.put(
