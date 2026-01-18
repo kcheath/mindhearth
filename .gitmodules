@@ -1,0 +1,3 @@
+[submodule "fortessa_shared"]
+	path = fortessa_shared
+	url = https://github.com/kcheath/fortessa_shared.git
