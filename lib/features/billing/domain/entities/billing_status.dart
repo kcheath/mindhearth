@@ -23,14 +23,22 @@ class BillingStatus {
   factory BillingStatus.fromJson(Map<String, dynamic> json) {
     return BillingStatus(
       status: json['status'] as String,
-      currentBalance: json['current_balance'] as int,
-      monthlyGrant: json['monthly_grant'] as int?,
-      daysUntilGrant: json['days_until_grant'] as int?,
+      currentBalance: json['current_balance'] as int? ?? 0,
+      monthlyGrant: json['monthly_grants'] as int?,
+      daysUntilGrant: null, // Not provided in API response
       warnings: List<String>.from(json['warnings'] ?? []),
       actionsRequired: List<String>.from(json['actions_required'] ?? []),
-      metadata: json['metadata'] != null 
-          ? Map<String, dynamic>.from(json['metadata'])
-          : null,
+      metadata: {
+        'user_id': json['user_id'],
+        'current_cycle': json['current_cycle'],
+        'total_purchases': json['total_purchases'],
+        'credits_used_this_cycle': json['credits_used_this_cycle'],
+        'low_credit_threshold': json['low_credit_threshold'],
+        'min_balance': json['min_balance'],
+        'can_send_messages': json['can_send_messages'],
+        'can_upload_documents': json['can_upload_documents'],
+        'can_access_chat': json['can_access_chat'],
+      },
     );
   }
 

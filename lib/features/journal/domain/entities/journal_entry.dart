@@ -114,6 +114,34 @@ class AIJournalSummaryRequest {
   }
 }
 
+class AIJournalSummaryResponse {
+  final String id;
+  final String aiSummary;
+  final DateTime createdAt;
+
+  AIJournalSummaryResponse({
+    required this.id,
+    required this.aiSummary,
+    required this.createdAt,
+  });
+
+  factory AIJournalSummaryResponse.fromJson(Map<String, dynamic> json) {
+    return AIJournalSummaryResponse(
+      id: json['id'] as String,
+      aiSummary: json['ai_summary'] as String,
+      createdAt: DateTime.parse(json['created_at'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'ai_summary': aiSummary,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
+}
+
 class JournalEntriesResponse {
   final List<JournalEntry> journalEntries;
   final int total;
@@ -124,11 +152,23 @@ class JournalEntriesResponse {
   });
 
   factory JournalEntriesResponse.fromJson(Map<String, dynamic> json) {
+    // Handle different response formats safely
+    List<dynamic> entriesList = [];
+    int total = 0;
+    
+    if (json['journal_entries'] is List) {
+      entriesList = json['journal_entries'] as List;
+    } else if (json['journal_entries'] == null) {
+      entriesList = [];
+    }
+    
+    total = json['total'] ?? entriesList.length;
+    
     return JournalEntriesResponse(
-      journalEntries: (json['journal_entries'] as List)
-          .map((e) => JournalEntry.fromJson(e))
+      journalEntries: entriesList
+          .map((e) => JournalEntry.fromJson(e as Map<String, dynamic>))
           .toList(),
-      total: json['total'],
+      total: total,
     );
   }
 }

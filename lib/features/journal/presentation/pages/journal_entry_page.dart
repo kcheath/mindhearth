@@ -6,7 +6,6 @@ import 'package:mindhearth/core/providers/journal_provider.dart';
 import 'package:mindhearth/core/providers/api_providers.dart';
 import 'package:mindhearth/core/models/journal_state.dart';
 import 'package:mindhearth/core/utils/logger.dart';
-import 'package:mindhearth/core/services/chat_service.dart';
 
 class JournalEntryPage extends ConsumerStatefulWidget {
   final String entryId;
@@ -319,13 +318,24 @@ class _JournalEntryPageState extends ConsumerState<JournalEntryPage> {
       });
 
       try {
-        await ref.read(journalNotifierProvider.notifier).deleteJournalEntry(_entry!.id);
+        final success = await ref.read(journalNotifierProvider.notifier).deleteJournalEntry(_entry!.id);
         
         if (mounted) {
-          context.go('/journal');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Journal entry deleted successfully')),
-          );
+          if (success) {
+            context.go('/journal');
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Journal entry deleted successfully')),
+            );
+          } else {
+            setState(() {
+              _isLoading = false;
+            });
+            
+            final error = ref.read(journalNotifierProvider).error;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to delete entry: ${error ?? 'Unknown error'}')),
+            );
+          }
         }
       } catch (e) {
         if (mounted) {

@@ -72,6 +72,7 @@ dependencies:
   uuid: ^4.4.2
   crypto: ^3.0.3
   get_it: ^7.6.7
+  jwt_decoder: ^2.0.1
 
 dev_dependencies:
   flutter_test:

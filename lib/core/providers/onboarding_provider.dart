@@ -1,7 +1,7 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/models/onboarding_state.dart';
-import 'package:mindhearth/core/di/service_locator.dart';
 import 'package:mindhearth/core/domain/usecases/onboarding_usecases.dart';
+import 'package:mindhearth/core/providers/usecase_providers.dart';
 import 'package:mindhearth/core/config/logging_config.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/core/providers/auth_provider.dart';
@@ -9,8 +9,32 @@ import 'package:mindhearth/core/providers/auth_provider.dart';
 /// Onboarding state notifier
 class OnboardingNotifier extends StateNotifier<OnboardingState> {
   final Ref ref;
+  final GetOnboardingDataUseCase _getOnboardingDataUseCase;
+  final SaveSituationDataUseCase _saveSituationDataUseCase;
+  final SaveRedactionProfileUseCase _saveRedactionProfileUseCase;
+  final SaveConsentFormUseCase _saveConsentFormUseCase;
+  final ClearPassphraseUseCase _clearPassphraseUseCase;
+  final ClearSafetyCodesUseCase _clearSafetyCodesUseCase;
+  final SavePassphraseUseCase _savePassphraseUseCase;
   
-  OnboardingNotifier(this.ref) : super(const OnboardingState());
+  OnboardingNotifier({
+    required Ref ref,
+    required GetOnboardingDataUseCase getOnboardingDataUseCase,
+    required SaveSituationDataUseCase saveSituationDataUseCase,
+    required SaveRedactionProfileUseCase saveRedactionProfileUseCase,
+    required SaveConsentFormUseCase saveConsentFormUseCase,
+    required ClearPassphraseUseCase clearPassphraseUseCase,
+    required ClearSafetyCodesUseCase clearSafetyCodesUseCase,
+    required SavePassphraseUseCase savePassphraseUseCase,
+  })  : ref = ref,
+        _getOnboardingDataUseCase = getOnboardingDataUseCase,
+        _saveSituationDataUseCase = saveSituationDataUseCase,
+        _saveRedactionProfileUseCase = saveRedactionProfileUseCase,
+        _saveConsentFormUseCase = saveConsentFormUseCase,
+        _clearPassphraseUseCase = clearPassphraseUseCase,
+        _clearSafetyCodesUseCase = clearSafetyCodesUseCase,
+        _savePassphraseUseCase = savePassphraseUseCase,
+        super(const OnboardingState());
 
   /// Start onboarding flow
   void startOnboarding() {
@@ -96,12 +120,8 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     
     try {
       // Clear local onboarding data (passphrase, safety codes, etc.)
-      final clearPassphraseUseCase = serviceLocator.get<ClearPassphraseUseCase>();
-      final clearSafetyCodesUseCase = serviceLocator.get<ClearSafetyCodesUseCase>();
-      
-      // Clear passphrase and safety codes
-      await clearPassphraseUseCase();
-      await clearSafetyCodesUseCase();
+      await _clearPassphraseUseCase();
+      await _clearSafetyCodesUseCase();
       
       // Reset local onboarding state
       state = state.resetOnboarding().startOnboarding();
@@ -129,8 +149,7 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     state = state.setLoading(true);
     
     try {
-      final getOnboardingDataUseCase = serviceLocator.get<GetOnboardingDataUseCase>();
-      final result = await getOnboardingDataUseCase();
+      final result = await _getOnboardingDataUseCase();
       
       result.when(
         success: (data) {
@@ -172,8 +191,7 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     state = state.setLoading(true);
     
     try {
-      final saveSituationDataUseCase = serviceLocator.get<SaveSituationDataUseCase>();
-      final result = await saveSituationDataUseCase(situationData);
+      final result = await _saveSituationDataUseCase(situationData);
       
       result.when(
         success: (_) {
@@ -211,8 +229,7 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     state = state.setLoading(true);
     
     try {
-      final saveRedactionProfileUseCase = serviceLocator.get<SaveRedactionProfileUseCase>();
-      final result = await saveRedactionProfileUseCase(profileData);
+      final result = await _saveRedactionProfileUseCase(profileData);
       
       result.when(
         success: (_) {
@@ -250,8 +267,7 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     state = state.setLoading(true);
     
     try {
-      final saveConsentFormUseCase = serviceLocator.get<SaveConsentFormUseCase>();
-      final result = await saveConsentFormUseCase(accepted);
+      final result = await _saveConsentFormUseCase(accepted);
       
       result.when(
         success: (_) {
@@ -289,8 +305,7 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     state = state.setLoading(true);
     
     try {
-      final savePassphraseUseCase = serviceLocator.get<SavePassphraseUseCase>();
-      final result = await savePassphraseUseCase(passphrase);
+      final result = await _savePassphraseUseCase(passphrase);
       
       result.when(
         success: (_) {
@@ -336,7 +351,16 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
 
 /// Onboarding state provider
 final onboardingNotifierProvider = StateNotifierProvider<OnboardingNotifier, OnboardingState>((ref) {
-  return OnboardingNotifier(ref);
+  return OnboardingNotifier(
+    ref: ref,
+    getOnboardingDataUseCase: ref.watch(getOnboardingDataUseCaseProvider),
+    saveSituationDataUseCase: ref.watch(saveSituationDataUseCaseProvider),
+    saveRedactionProfileUseCase: ref.watch(saveRedactionProfileUseCaseProvider),
+    saveConsentFormUseCase: ref.watch(saveConsentFormUseCaseProvider),
+    clearPassphraseUseCase: ref.watch(clearPassphraseUseCaseProvider),
+    clearSafetyCodesUseCase: ref.watch(clearSafetyCodesUseCaseProvider),
+    savePassphraseUseCase: ref.watch(savePassphraseUseCaseProvider),
+  );
 });
 
 /// Onboarding state provider (read-only)

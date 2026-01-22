@@ -153,7 +153,7 @@ class JournalNotifier extends StateNotifier<JournalState> {
   }
 
   // Create AI journal summary
-  Future<JournalEntry?> createAIJournalSummary({
+  Future<AIJournalSummaryResponse?> createAIJournalSummary({
     required String sessionId,
     String? entryType,
     List<String>? tags,
@@ -170,21 +170,17 @@ class JournalNotifier extends StateNotifier<JournalState> {
       final response = await _journalService.createAIJournalSummary(request);
       
       return response.when(
-        success: (entry, statusCode) {
-          // Add to local list
-          final updatedEntries = <JournalEntry>[entry, ...state.journalEntries];
+        success: (summary, statusCode) {
           state = state.copyWith(
-            journalEntries: updatedEntries,
-            totalEntries: state.totalEntries + 1,
             isLoading: false,
           );
           
           appLogger.info('Created AI journal summary', {
-            'entryId': entry.id,
+            'summaryId': summary.id,
             'sessionId': sessionId,
           });
           
-          return entry;
+          return summary;
         },
         error: (message, statusCode, errors) {
           state = state.copyWith(
@@ -267,6 +263,52 @@ class JournalNotifier extends StateNotifier<JournalState> {
         error: 'Failed to update journal entry',
       );
       return null;
+    }
+  }
+
+  // Delete journal entry
+  Future<bool> deleteJournalEntry(String entryId) async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+      
+      final response = await _journalService.deleteJournalEntry(entryId);
+      
+      return response.when(
+        success: (data, statusCode) {
+          // Remove from local list
+          final updatedEntries = state.journalEntries.where((e) => e.id != entryId).toList();
+          
+          state = state.copyWith(
+            journalEntries: updatedEntries,
+            totalEntries: state.totalEntries - 1,
+            isLoading: false,
+          );
+          
+          appLogger.info('Deleted journal entry', {
+            'entryId': entryId,
+          });
+          
+          return true;
+        },
+        error: (message, statusCode, errors) {
+          state = state.copyWith(
+            isLoading: false,
+            error: message,
+          );
+          appLogger.error('Failed to delete journal entry', {
+            'error': message,
+            'statusCode': statusCode,
+          });
+          return false;
+        },
+      );
+    } catch (e) {
+      appLogger.error('Error deleting journal entry', {'error': e.toString()});
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to delete journal entry',
+      );
+      return false;
     }
   }
 

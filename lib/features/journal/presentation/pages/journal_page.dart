@@ -33,7 +33,8 @@ class _JournalPageState extends ConsumerState<JournalPage> {
   }
 
   void _onCreateEntry() {
-    // TODO: Navigate to create journal entry page
+    // Create journal entry via dialog
+    // Future enhancement: Navigate to dedicated journal entry creation page
     _showCreateEntryDialog();
   }
 

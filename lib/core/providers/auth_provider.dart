@@ -1,22 +1,38 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/models/auth_state.dart';
 import 'package:mindhearth/core/models/user.dart';
-import 'package:mindhearth/core/di/service_locator.dart';
 import 'package:mindhearth/core/domain/usecases/auth_usecases.dart';
+import 'package:mindhearth/core/providers/usecase_providers.dart';
 import 'package:mindhearth/core/config/logging_config.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 
 /// Authentication state notifier
 class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier() : super(const AuthState());
+  final LoginUseCase _loginUseCase;
+  final LogoutUseCase _logoutUseCase;
+  final GetCurrentUserUseCase _getCurrentUserUseCase;
+  final IsAuthenticatedUseCase _isAuthenticatedUseCase;
+  final UpdateOnboardingStatusUseCase _updateOnboardingStatusUseCase;
+
+  AuthNotifier({
+    required LoginUseCase loginUseCase,
+    required LogoutUseCase logoutUseCase,
+    required GetCurrentUserUseCase getCurrentUserUseCase,
+    required IsAuthenticatedUseCase isAuthenticatedUseCase,
+    required UpdateOnboardingStatusUseCase updateOnboardingStatusUseCase,
+  })  : _loginUseCase = loginUseCase,
+        _logoutUseCase = logoutUseCase,
+        _getCurrentUserUseCase = getCurrentUserUseCase,
+        _isAuthenticatedUseCase = isAuthenticatedUseCase,
+        _updateOnboardingStatusUseCase = updateOnboardingStatusUseCase,
+        super(const AuthState());
 
   /// Login user
   Future<void> login(String email, String password) async {
     state = state.setLoading(true);
     
     try {
-      final loginUseCase = serviceLocator.get<LoginUseCase>();
-      final result = await loginUseCase(email, password);
+      final result = await _loginUseCase(email, password);
       
       result.when(
         success: (user) {
@@ -57,8 +73,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Logout user
   Future<void> logout() async {
     try {
-      final logoutUseCase = serviceLocator.get<LogoutUseCase>();
-      final result = await logoutUseCase();
+      final result = await _logoutUseCase();
       
       result.when(
         success: (_) {
@@ -100,8 +115,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.setLoading(true);
     
     try {
-      final getCurrentUserUseCase = serviceLocator.get<GetCurrentUserUseCase>();
-      final result = await getCurrentUserUseCase();
+      final result = await _getCurrentUserUseCase();
       
       result.when(
         success: (user) {
@@ -141,8 +155,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Check authentication status
   Future<void> checkAuthStatus() async {
     try {
-      final isAuthenticatedUseCase = serviceLocator.get<IsAuthenticatedUseCase>();
-      final result = await isAuthenticatedUseCase();
+      final result = await _isAuthenticatedUseCase();
       
       result.when(
         success: (isAuthenticated) {
@@ -182,8 +195,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Update onboarding status
   Future<void> updateOnboardingStatus(bool isOnboarded) async {
     try {
-      final updateOnboardingStatusUseCase = serviceLocator.get<UpdateOnboardingStatusUseCase>();
-      final result = await updateOnboardingStatusUseCase(isOnboarded);
+      final result = await _updateOnboardingStatusUseCase(isOnboarded);
       
       result.when(
         success: (_) {
@@ -234,8 +246,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     // Retry after 5 seconds
     Future.delayed(const Duration(seconds: 5), () async {
       try {
-        final updateOnboardingStatusUseCase = serviceLocator.get<UpdateOnboardingStatusUseCase>();
-        final result = await updateOnboardingStatusUseCase(isOnboarded);
+        final result = await _updateOnboardingStatusUseCase(isOnboarded);
         
         result.when(
           success: (_) {
@@ -271,7 +282,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
 /// Authentication state provider
 final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier();
+  return AuthNotifier(
+    loginUseCase: ref.watch(loginUseCaseProvider),
+    logoutUseCase: ref.watch(logoutUseCaseProvider),
+    getCurrentUserUseCase: ref.watch(getCurrentUserUseCaseProvider),
+    isAuthenticatedUseCase: ref.watch(isAuthenticatedUseCaseProvider),
+    updateOnboardingStatusUseCase: ref.watch(updateOnboardingStatusUseCaseProvider),
+  );
 });
 
 /// Authentication state provider (read-only)

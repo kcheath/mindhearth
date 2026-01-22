@@ -174,12 +174,43 @@ class JournalRepositoryImpl implements JournalRepository {
     try {
       appLogger.info('🤖 Generating AI summary for session: $sessionId');
 
+      // Get conversation history for context
+      List<Map<String, dynamic>>? conversationHistory;
+      try {
+        final chatHistoryResponse = await _apiService.dio.get('/communications/', queryParameters: {
+          'session_id': sessionId,
+          'item_type': 'chat',
+          'limit': 50, // Get last 50 messages for context
+        });
+        
+        if (chatHistoryResponse.statusCode == 200) {
+          final data = chatHistoryResponse.data as Map<String, dynamic>;
+          final communications = data['communications'] as List<dynamic>? ?? [];
+          
+          conversationHistory = communications.map((comm) {
+            final commData = comm as Map<String, dynamic>;
+            return {
+              'role': commData['role'] ?? 'user',
+              'content': commData['original_content'] ?? commData['content'] ?? '',
+              'timestamp': commData['created_at'] ?? '',
+            };
+          }).toList();
+          
+          appLogger.info('🤖 Retrieved ${conversationHistory.length} messages for AI summary context');
+        }
+      } catch (e) {
+        appLogger.warning('🤖 Failed to get conversation history for AI summary, proceeding without context: $e');
+      }
+
+      final requestData = {
+        'session_id': sessionId,
+        if (purpose != null) 'purpose': purpose,
+        if (conversationHistory != null && conversationHistory.isNotEmpty) 'conversation_history': conversationHistory,
+      };
+
       final response = await _apiService.post(
         '/journals/ai-summary',
-        data: {
-          'session_id': sessionId,
-          if (purpose != null) 'purpose': purpose,
-        },
+        data: requestData,
       );
 
       return response.when(

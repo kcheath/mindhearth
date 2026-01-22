@@ -59,10 +59,10 @@ flutter test test/integration/session_management_test.dart
 ### **Test Credentials**
 ```dart
 // From test_config.dart
-Email: test@tsukiyo.dev
-Password: testpass123
-Tenant ID: 1aca2ef7-b1fa-46bb-af08-a8fdb449b1f9
-Application ID: 2852276f-16ca-462f-aa46-5e191880eb33
+Email: test@mindhearth.dev
+Password: password123
+Tenant ID: 50cd82c6-22a2-4532-9743-e9ebef4f21e0
+Application ID: 60dd93d7-33b3-5643-0854-f0fcf5f32f1f
 Base URL: http://3.150.176.19:8080/api
 ```
 
@@ -328,8 +328,8 @@ echo "✅ Cleanup completed"
 ## 📚 **Resources**
 
 ### **Test Data**
-- **Test User:** test@tsukiyo.dev
-- **Test Password:** testpass123
+- **Test User:** test@mindhearth.dev
+- **Test Password:** password123
 - **Test Sessions:** 5 pre-created sessions
 - **Test Messages:** Sample conversation data
 

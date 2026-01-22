@@ -1,6 +1,5 @@
 import 'package:mindhearth/core/domain/repositories/onboarding_repository.dart';
 import 'package:mindhearth/core/domain/entities/result.dart';
-import 'package:mindhearth/core/domain/entities/app_error.dart';
 
 /// Use case for getting stored safety codes
 class GetSafetyCodesUseCase {

@@ -4,15 +4,19 @@ import 'package:mindhearth/core/domain/entities/result.dart';
 import 'package:mindhearth/core/domain/entities/app_error.dart';
 import 'package:mindhearth/core/domain/repositories/chat_repository.dart';
 import 'package:mindhearth/core/services/api_service.dart';
+import 'package:mindhearth/core/services/unified_chat_service.dart';
 import 'package:mindhearth/features/chat/domain/entities/session.dart';
 import 'package:mindhearth/features/chat/domain/entities/chat_message.dart';
 import 'package:mindhearth/features/chat/domain/entities/communication_item.dart';
+import 'package:mindhearth/core/models/unified_chat_models.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 
 class ChatRepositoryImpl implements ChatRepository {
   final ApiService _apiService;
+  final UnifiedChatService _unifiedChatService;
 
-  ChatRepositoryImpl(this._apiService);
+  ChatRepositoryImpl(this._apiService, {UnifiedChatService? unifiedChatService})
+      : _unifiedChatService = unifiedChatService ?? UnifiedChatService(apiService: _apiService);
 
   @override
   Future<Result<List<Session>>> getSessions({
@@ -200,7 +204,10 @@ class ChatRepositoryImpl implements ChatRepository {
           appLogger.debug('📊 Communications API response data structure:', {'data': data});
           
           // FIXED: Parse communications response format
-          final communicationsList = data['communications'] as List? ?? [];
+          // Handle both direct array response and wrapped response
+          final communicationsList = data is List 
+              ? data as List 
+              : (data['communications'] as List? ?? []);
           appLogger.debug('📊 Communications list length: ${communicationsList.length}');
           
           if (communicationsList.isNotEmpty) {
@@ -284,13 +291,24 @@ class ChatRepositoryImpl implements ChatRepository {
       appLogger.info('💬 Sending message to session: $sessionId');
 
       final response = await _apiService.post(
-        '/chat/',
+        // Note: Chat endpoint path - may need adjustment based on backend clarification
+        '/communications/chat',
         data: {
-          'session_id': sessionId,
           'message': content,
-          if (messageType != null) 'message_type': messageType,
-          if (conversationHistory != null) 'messages': conversationHistory, // NEW: Send full conversation context
-          'purpose': 'chat', // NEW: Explicit purpose
+          'mode': 'standard',
+          'options': {
+            'use_rag': true,
+            'persist_messages': true,
+            'consent': true,
+            'context_limit': 5,
+            'temperature': 0.7,
+            'max_tokens': 1000,
+          },
+          'metadata': {
+            'purpose': 'chat',
+            'session_type': 'conversation',
+          },
+          'session_id': sessionId,
         },
       );
 
@@ -341,13 +359,23 @@ class ChatRepositoryImpl implements ChatRepository {
       appLogger.info('💬 Sending streaming message to session: $sessionId');
 
       final response = await _apiService.postStream(
-        '/chat/stream',
+        // Note: Chat streaming endpoint path - may need adjustment based on backend clarification
+        '/communications/chat/stream',
         data: {
-          'session_id': sessionId,
           'message': content,
-          if (messageType != null) 'message_type': messageType,
-          if (conversationHistory != null) 'messages': conversationHistory, // NEW: Send full conversation context
-          'purpose': 'chat', // NEW: Explicit purpose
+          'mode': 'streaming',
+          'options': {
+            'use_rag': true,
+            'streaming': true,
+            'persist_messages': true,
+            'consent': true,
+            'context_limit': 5,
+          },
+          'metadata': {
+            'purpose': 'chat',
+            'session_type': 'conversation',
+          },
+          'session_id': sessionId,
         },
       );
 
@@ -518,6 +546,140 @@ class ChatRepositoryImpl implements ChatRepository {
     } catch (e) {
       appLogger.error('💥 Exception restoring session: $e');
       return Result.failure(AppErrorFactory.network(message: 'Failed to restore session: $e'));
+    }
+  }
+
+  // Unified chat methods
+  @override
+  Future<Result<UnifiedChatResponse>> sendUnifiedMessage({
+    required String message,
+    String? sessionId,
+    ChatMode mode = ChatMode.auto,
+    RAGOptions? ragOptions,
+    ChatMetadata? metadata,
+    List<Map<String, String>>? conversationHistory,
+  }) async {
+    try {
+      appLogger.info('💬 Sending unified message', {
+        'sessionId': sessionId,
+        'mode': mode.name,
+        'useRAG': ragOptions?.useRAG ?? false,
+      });
+      
+      final response = await _unifiedChatService.sendMessage(
+        message: message,
+        sessionId: sessionId,
+        mode: mode,
+        ragOptions: ragOptions,
+        metadata: metadata,
+        conversationHistory: conversationHistory,
+      );
+      
+      if (response.success) {
+        appLogger.info('✅ Unified message sent successfully');
+        return Result.success(response);
+      } else {
+        appLogger.error('❌ Unified message failed: ${response.error?.message}');
+        return Result.failure(
+          AppErrorFactory.network(message: response.error?.message ?? 'Unknown error')
+        );
+      }
+    } catch (e) {
+      appLogger.error('💥 Exception sending unified message: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to send unified message: $e'));
+    }
+  }
+
+  @override
+  Future<Result<Stream<UnifiedChatResponse>>> sendUnifiedStreamingMessage({
+    required String message,
+    String? sessionId,
+    RAGOptions? ragOptions,
+    ChatMetadata? metadata,
+    List<Map<String, String>>? conversationHistory,
+  }) async {
+    try {
+      appLogger.info('💬 Sending unified streaming message', {
+        'sessionId': sessionId,
+        'useRAG': ragOptions?.useRAG ?? false,
+      });
+      
+      final stream = _unifiedChatService.sendStreamingMessage(
+        message: message,
+        sessionId: sessionId,
+        ragOptions: ragOptions,
+        metadata: metadata,
+        conversationHistory: conversationHistory,
+      );
+      
+      appLogger.info('✅ Unified streaming message started');
+      return Result.success(stream);
+    } catch (e) {
+      appLogger.error('💥 Exception starting unified streaming: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to start unified streaming: $e'));
+    }
+  }
+
+  @override
+  Future<Result<List<UnifiedChatResponse>>> sendBatchMessages({
+    required List<String> messages,
+    String? sessionId,
+    RAGOptions? ragOptions,
+    ChatMetadata? metadata,
+  }) async {
+    try {
+      appLogger.info('💬 Sending batch messages', {
+        'sessionId': sessionId,
+        'messageCount': messages.length,
+        'useRAG': ragOptions?.useRAG ?? false,
+      });
+      
+      final responses = await _unifiedChatService.sendBatchMessages(
+        messages: messages,
+        sessionId: sessionId,
+        ragOptions: ragOptions,
+        metadata: metadata,
+      );
+      
+      appLogger.info('✅ Batch messages sent successfully');
+      return Result.success(responses);
+    } catch (e) {
+      appLogger.error('💥 Exception sending batch messages: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to send batch messages: $e'));
+    }
+  }
+
+  @override
+  Future<Result<UnifiedChatResponse>> getUnifiedChatHistory({
+    required String sessionId,
+    int? limit,
+    int? offset,
+  }) async {
+    try {
+      appLogger.info('💬 Getting unified chat history', {
+        'sessionId': sessionId,
+        'limit': limit,
+        'offset': offset,
+      });
+      
+      final response = await _unifiedChatService.getChatHistory(
+        sessionId: sessionId,
+        limit: limit,
+        offset: offset,
+      );
+      
+      if (response.success) {
+        appLogger.info('✅ Unified chat history retrieved successfully');
+        return Result.success(response);
+      } else {
+        appLogger.error('❌ Unified chat history failed: ${response.error?.message}');
+        return Result.failure(
+          AppErrorFactory.network(message: response.error?.message ?? 'Unknown error')
+        );
+      }
+    } catch (e) {
+      appLogger.error('💥 Exception getting unified chat history: $e');
+      return Result.failure(AppErrorFactory.network(message: 'Failed to get unified chat history: $e'));
     }
   }
 }

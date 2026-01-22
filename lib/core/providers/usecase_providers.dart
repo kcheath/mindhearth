@@ -2,7 +2,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/domain/usecases/chat_usecases.dart';
 import 'package:mindhearth/core/domain/usecases/journal_usecases.dart';
 import 'package:mindhearth/core/domain/usecases/billing_usecases.dart';
-import 'package:mindhearth/core/domain/usecases/safety_usecases.dart';
+import 'package:mindhearth/core/domain/usecases/auth_usecases.dart';
+import 'package:mindhearth/core/domain/usecases/onboarding_usecases.dart';
 import 'package:mindhearth/core/domain/usecases/debug_billing_usecases.dart';
 import 'package:mindhearth/core/domain/usecases/balance_stream_usecases.dart';
 import 'package:mindhearth/core/domain/usecases/session_question_usecases.dart';
@@ -103,13 +104,17 @@ final getUsageAnalyticsUseCaseProvider = Provider<GetUsageAnalyticsUseCase>((ref
   return GetUsageAnalyticsUseCase(ref.watch(billingRepositoryProvider));
 });
 
-// Safety Use Cases
+// Safety Use Cases (using onboarding use cases)
 final getSafetyCodesUseCaseProvider = Provider<GetSafetyCodesUseCase>((ref) {
   return GetSafetyCodesUseCase(ref.watch(onboardingRepositoryProvider));
 });
 
-final verifySafetyCodeUseCaseProvider = Provider<VerifySafetyCodeUseCase>((ref) {
-  return VerifySafetyCodeUseCase(ref.watch(onboardingRepositoryProvider));
+final verifySafetyCodeUseCaseProvider = Provider<ValidateSafetyCodeUseCase>((ref) {
+  return ValidateSafetyCodeUseCase(repository: ref.watch(onboardingRepositoryProvider));
+});
+
+final saveSafetyCodesUseCaseProvider = Provider<SaveSafetyCodesUseCase>((ref) {
+  return SaveSafetyCodesUseCase(repository: ref.watch(onboardingRepositoryProvider));
 });
 
 // Debug Billing Use Cases
@@ -161,4 +166,60 @@ final getSessionQuestionCountUseCaseProvider = Provider<GetSessionQuestionCountU
 
 final getSessionQuestionStatusUseCaseProvider = Provider<GetSessionQuestionStatusUseCase>((ref) {
   return GetSessionQuestionStatusUseCase(ref.watch(billingRepositoryProvider));
+});
+
+// Auth Use Cases
+final loginUseCaseProvider = Provider<LoginUseCase>((ref) {
+  return LoginUseCase(
+    repository: ref.watch(authRepositoryProvider),
+  );
+});
+
+final logoutUseCaseProvider = Provider<LogoutUseCase>((ref) {
+  return LogoutUseCase(ref.watch(authRepositoryProvider));
+});
+
+final getCurrentUserUseCaseProvider = Provider<GetCurrentUserUseCase>((ref) {
+  return GetCurrentUserUseCase(ref.watch(authRepositoryProvider));
+});
+
+final isAuthenticatedUseCaseProvider = Provider<IsAuthenticatedUseCase>((ref) {
+  return IsAuthenticatedUseCase(ref.watch(authRepositoryProvider));
+});
+
+final updateOnboardingStatusUseCaseProvider = Provider<UpdateOnboardingStatusUseCase>((ref) {
+  return UpdateOnboardingStatusUseCase(ref.watch(authRepositoryProvider));
+});
+
+// Onboarding Use Cases
+final getOnboardingDataUseCaseProvider = Provider<GetOnboardingDataUseCase>((ref) {
+  return GetOnboardingDataUseCase(ref.watch(onboardingRepositoryProvider));
+});
+
+final saveSituationDataUseCaseProvider = Provider<SaveSituationDataUseCase>((ref) {
+  return SaveSituationDataUseCase(ref.watch(onboardingRepositoryProvider));
+});
+
+final saveRedactionProfileUseCaseProvider = Provider<SaveRedactionProfileUseCase>((ref) {
+  return SaveRedactionProfileUseCase(ref.watch(onboardingRepositoryProvider));
+});
+
+final saveConsentFormUseCaseProvider = Provider<SaveConsentFormUseCase>((ref) {
+  return SaveConsentFormUseCase(ref.watch(onboardingRepositoryProvider));
+});
+
+final clearOnboardingDataUseCaseProvider = Provider<ClearOnboardingDataUseCase>((ref) {
+  return ClearOnboardingDataUseCase(ref.watch(onboardingRepositoryProvider));
+});
+
+final savePassphraseUseCaseProvider = Provider<SavePassphraseUseCase>((ref) {
+  return SavePassphraseUseCase(repository: ref.watch(onboardingRepositoryProvider));
+});
+
+final clearPassphraseUseCaseProvider = Provider<ClearPassphraseUseCase>((ref) {
+  return ClearPassphraseUseCase(ref.watch(onboardingRepositoryProvider));
+});
+
+final clearSafetyCodesUseCaseProvider = Provider<ClearSafetyCodesUseCase>((ref) {
+  return ClearSafetyCodesUseCase(ref.watch(onboardingRepositoryProvider));
 });

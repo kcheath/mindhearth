@@ -47,7 +47,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     if (message.trim().isEmpty) return;
     
     final chatNotifier = ref.read(chatProvider.notifier);
-    await chatNotifier.sendMessage(message);
+    await chatNotifier.sendUnifiedMessage(message);
     
     // Scroll to bottom after sending message
     _scrollToBottom();

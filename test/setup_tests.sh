@@ -49,7 +49,7 @@ check_backend() {
     print_status "Testing login endpoint..."
     local login_response=$(curl -s -w "%{http_code}" -X POST http://3.150.176.19:8080/api/auth/login \
         -H "Content-Type: application/json" \
-        -d '{"email":"test@tsukiyo.dev","password":"testpass123","tenant_id":"1aca2ef7-b1fa-46bb-af08-a8fdb449b1f9","application_id":"2852276f-16ca-462f-aa46-5e191880eb33"}')
+        -d '{"email":"test@mindhearth.dev","password":"password123","tenant_id":"50cd82c6-22a2-4532-9743-e9ebef4f21e0","application_id":"60dd93d7-33b3-5643-0854-f0fcf5f32f1f"}')
     
     local http_code="${login_response: -3}"
     local response_body="${login_response%???}"

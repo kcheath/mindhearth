@@ -1,10 +1,12 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/features/chat/domain/entities/chat_message.dart';
 import 'package:mindhearth/core/providers/usecase_providers.dart';
+import 'package:mindhearth/core/providers/unified_chat_providers.dart';
 import 'package:mindhearth/core/providers/session_provider.dart';
 import 'package:mindhearth/core/models/session_state.dart';
+import 'package:mindhearth/core/models/unified_chat_models.dart';
+import 'package:mindhearth/core/domain/usecases/unified_chat_usecases.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/core/utils/session_validator.dart';
 import 'package:mindhearth/features/billing/domain/providers/session_question_provider.dart';
@@ -51,33 +53,49 @@ class ChatState {
 class ChatNotifier extends StateNotifier<ChatState> {
   final GetSessionsUseCase _getSessionsUseCase;
   final CreateSessionUseCase _createSessionUseCase;
-  final SendMessageUseCase _sendMessageUseCase;
-  final StartStreamingChatUseCase _startStreamingChatUseCase;
   final GetSessionMessagesUseCase _getSessionMessagesUseCase;
   final UpdateSessionUseCase _updateSessionUseCase;
   final DeleteSessionUseCase _deleteSessionUseCase;
+  
+  // Unified chat use cases
+  final SendUnifiedMessageUseCase _sendUnifiedMessageUseCase;
+  final SendUnifiedStreamingMessageUseCase _sendUnifiedStreamingMessageUseCase;
+  final CreateRAGOptionsUseCase _createRAGOptionsUseCase;
+  final CreateChatMetadataUseCase _createChatMetadataUseCase;
+  final SelectChatModeUseCase _selectChatModeUseCase;
+  
   final Ref _ref;
   StreamSubscription<ChatMessage>? _streamSubscription;
+  StreamSubscription<UnifiedChatResponse>? _unifiedStreamSubscription;
   
   // Conversation history for context-aware AI responses
   List<Map<String, String>> _conversationHistory = [];
+  
+  // RAG settings
+  bool _ragEnabled = true;
 
   ChatNotifier({
     required GetSessionsUseCase getSessionsUseCase,
     required CreateSessionUseCase createSessionUseCase,
-    required SendMessageUseCase sendMessageUseCase,
-    required StartStreamingChatUseCase startStreamingChatUseCase,
     required GetSessionMessagesUseCase getSessionMessagesUseCase,
     required UpdateSessionUseCase updateSessionUseCase,
     required DeleteSessionUseCase deleteSessionUseCase,
+    required SendUnifiedMessageUseCase sendUnifiedMessageUseCase,
+    required SendUnifiedStreamingMessageUseCase sendUnifiedStreamingMessageUseCase,
+    required CreateRAGOptionsUseCase createRAGOptionsUseCase,
+    required CreateChatMetadataUseCase createChatMetadataUseCase,
+    required SelectChatModeUseCase selectChatModeUseCase,
     required Ref ref,
   }) : _getSessionsUseCase = getSessionsUseCase,
        _createSessionUseCase = createSessionUseCase,
-       _sendMessageUseCase = sendMessageUseCase,
-       _startStreamingChatUseCase = startStreamingChatUseCase,
        _getSessionMessagesUseCase = getSessionMessagesUseCase,
        _updateSessionUseCase = updateSessionUseCase,
        _deleteSessionUseCase = deleteSessionUseCase,
+       _sendUnifiedMessageUseCase = sendUnifiedMessageUseCase,
+       _sendUnifiedStreamingMessageUseCase = sendUnifiedStreamingMessageUseCase,
+       _createRAGOptionsUseCase = createRAGOptionsUseCase,
+       _createChatMetadataUseCase = createChatMetadataUseCase,
+       _selectChatModeUseCase = selectChatModeUseCase,
        _ref = ref,
        super(const ChatState()) {
     // Delay initialization to prevent connection loss
@@ -309,8 +327,16 @@ class ChatNotifier extends StateNotifier<ChatState> {
     }
   }
 
-  // Send a message with streaming response
+  // Legacy method - now redirects to unified method for backward compatibility
   Future<void> sendMessage(String content) async {
+    // Redirect to unified method for backward compatibility
+    await sendUnifiedMessage(content);
+  }
+
+
+  // Unified chat methods
+  /// Send a message using the unified chat endpoint with RAG support
+  Future<void> sendUnifiedMessage(String content) async {
     if (content.trim().isEmpty) return;
     
     try {
@@ -320,39 +346,166 @@ class ChatNotifier extends StateNotifier<ChatState> {
         'content': content,
       });
       
-        // Add user message immediately
-        final userMessage = ChatMessage(
-          id: 'user_${DateTime.now().millisecondsSinceEpoch}',
-          sessionId: state.currentSessionId ?? '',
-          content: content,
-          role: 'user',
-          timestamp: DateTime.now(),
-        );
-        
-        // Add user message and maintain chronological order
-        final updatedMessages = List<ChatMessage>.from(state.messages);
-        updatedMessages.add(userMessage);
-        
-        state = state.copyWith(
-          messages: updatedMessages,
-          isStreaming: true,
-          error: null,
-        );
-      
-      // Track question for session question billing
-      await _trackQuestionForBilling();
-      
-      // Try streaming first (using use case)
-      final streamResult = await _startStreamingChatUseCase(
+      // Add user message immediately
+      final userMessage = ChatMessage(
+        id: 'user_${DateTime.now().millisecondsSinceEpoch}',
         sessionId: state.currentSessionId ?? '',
         content: content,
-        conversationHistory: _conversationHistory, // NEW: Send full conversation context
+        role: 'user',
+        timestamp: DateTime.now(),
+      );
+      
+      final updatedMessages = List<ChatMessage>.from(state.messages);
+      updatedMessages.add(userMessage);
+      
+      state = state.copyWith(
+        messages: updatedMessages,
+        isStreaming: true,
+        error: null,
+      );
+      
+      // Track question for billing
+      await _trackQuestionForBilling();
+      
+      // Create RAG options and metadata
+      final ragOptions = _createRAGOptionsUseCase(
+        useRAG: _ragEnabled,
+        streaming: true,
+        persistMessages: true,
+        consent: true,
+        contextLimit: 5,
+      );
+      
+      final metadata = _createChatMetadataUseCase(
+        purpose: 'chat',
+        sessionType: 'conversation',
+      );
+      
+      // Select intelligent chat mode
+      final mode = _selectChatModeUseCase(
+        message: content,
+        useRAG: _ragEnabled,
+        streaming: true,
+        messageLength: content.length,
+      );
+      
+      // Use unified endpoint
+      final result = await _sendUnifiedMessageUseCase(
+        message: content,
+        sessionId: state.currentSessionId,
+        mode: mode,
+        ragOptions: ragOptions,
+        metadata: metadata,
+        conversationHistory: _conversationHistory,
+      );
+      
+      if (result.isSuccess) {
+        final unifiedResponse = result.data!;
+        
+        if (unifiedResponse.success && unifiedResponse.data != null) {
+          // Add AI response to conversation history
+          _conversationHistory.add({
+            'role': 'assistant',
+            'content': unifiedResponse.data!.response,
+          });
+          
+          // Create enhanced ChatMessage with RAG data
+          final aiMessage = ChatMessage(
+            id: unifiedResponse.data!.messageMetadata.messageId,
+            sessionId: unifiedResponse.data!.sessionId,
+            content: unifiedResponse.data!.response,
+            role: 'assistant',
+            timestamp: unifiedResponse.data!.messageMetadata.timestamp,
+            metadata: {
+              'sources': unifiedResponse.data!.sources.map((s) => s.toJson()).toList(),
+              'rag_metadata': unifiedResponse.data!.ragMetadata.toJson(),
+              'message_metadata': unifiedResponse.data!.messageMetadata.toJson(),
+            },
+          );
+          
+          // Add the AI response message
+          final updatedMessages = List<ChatMessage>.from(state.messages);
+          updatedMessages.add(aiMessage);
+          
+          state = state.copyWith(
+            messages: updatedMessages,
+            isStreaming: false,
+          );
+        } else {
+          throw Exception(unifiedResponse.error?.message ?? 'Failed to send message');
+        }
+      } else {
+        final errorMessage = result.error?.message ?? 'Failed to send message';
+        throw Exception(errorMessage);
+      }
+      
+      // Save messages to local storage
+      _saveMessagesLocally();
+    } catch (e) {
+      appLogger.error('Error sending unified message', {'error': e.toString()});
+      state = state.copyWith(
+        isStreaming: false,
+        error: 'Failed to send message',
+      );
+    }
+  }
+  
+  /// Send a streaming message using the unified chat endpoint
+  Future<void> sendUnifiedStreamingMessage(String content) async {
+    if (content.trim().isEmpty) return;
+    
+    try {
+      // Add user message to conversation history
+      _conversationHistory.add({
+        'role': 'user',
+        'content': content,
+      });
+      
+      // Add user message immediately
+      final userMessage = ChatMessage(
+        id: 'user_${DateTime.now().millisecondsSinceEpoch}',
+        sessionId: state.currentSessionId ?? '',
+        content: content,
+        role: 'user',
+        timestamp: DateTime.now(),
+      );
+      
+      final updatedMessages = List<ChatMessage>.from(state.messages);
+      updatedMessages.add(userMessage);
+      
+      state = state.copyWith(
+        messages: updatedMessages,
+        isStreaming: true,
+        error: null,
+      );
+      
+      // Create RAG options and metadata
+      final ragOptions = _createRAGOptionsUseCase(
+        useRAG: _ragEnabled,
+        streaming: true,
+        persistMessages: true,
+        consent: true,
+        contextLimit: 5,
+      );
+      
+      final metadata = _createChatMetadataUseCase(
+        purpose: 'chat',
+        sessionType: 'conversation',
+      );
+      
+      // Use unified streaming endpoint
+      final streamResult = await _sendUnifiedStreamingMessageUseCase(
+        message: content,
+        sessionId: state.currentSessionId,
+        ragOptions: ragOptions,
+        metadata: metadata,
+        conversationHistory: _conversationHistory,
       );
       
       if (streamResult.isSuccess) {
         final stream = streamResult.data!;
-        // Handle streaming response
-        String aiMessageContent = '';
+        
+        // Create empty AI message for streaming
         final aiMessage = ChatMessage(
           id: 'ai_${DateTime.now().millisecondsSinceEpoch}',
           sessionId: state.currentSessionId ?? '',
@@ -361,22 +514,29 @@ class ChatNotifier extends StateNotifier<ChatState> {
           timestamp: DateTime.now(),
         );
         
-        // Add empty AI message to start (maintain chronological order)
         final updatedMessages = List<ChatMessage>.from(state.messages);
         updatedMessages.add(aiMessage);
         
-        state = state.copyWith(
-          messages: updatedMessages,
-        );
+        state = state.copyWith(messages: updatedMessages);
         
-        // Listen to stream
-        _streamSubscription = stream.listen(
-          (message) {
-            // Update the last message (AI message) with new content
-            final updatedMessages = List<ChatMessage>.from(state.messages);
-            if (updatedMessages.isNotEmpty) {
-              updatedMessages.last = message;
-              state = state.copyWith(messages: updatedMessages);
+        // Listen to unified stream
+        _unifiedStreamSubscription = stream.listen(
+          (unifiedResponse) {
+            if (unifiedResponse.success && unifiedResponse.data != null) {
+              // Update the last message with streaming content
+              final updatedMessages = List<ChatMessage>.from(state.messages);
+              if (updatedMessages.isNotEmpty) {
+                final lastMessage = updatedMessages.last;
+                updatedMessages.last = lastMessage.copyWith(
+                  content: unifiedResponse.data!.response,
+                  metadata: {
+                    'sources': unifiedResponse.data!.sources.map((s) => s.toJson()).toList(),
+                    'rag_metadata': unifiedResponse.data!.ragMetadata.toJson(),
+                    'message_metadata': unifiedResponse.data!.messageMetadata.toJson(),
+                  },
+                );
+                state = state.copyWith(messages: updatedMessages);
+              }
             }
           },
           onDone: () {
@@ -388,12 +548,11 @@ class ChatNotifier extends StateNotifier<ChatState> {
             });
             
             state = state.copyWith(isStreaming: false);
-            appLogger.info('Streaming completed');
-            // Save messages to local storage
+            appLogger.info('Unified streaming completed');
             _saveMessagesLocally();
           },
           onError: (error) {
-            appLogger.error('Streaming error', {'error': error.toString()});
+            appLogger.error('Unified streaming error', {'error': error.toString()});
             state = state.copyWith(
               isStreaming: false,
               error: 'Streaming failed',
@@ -401,60 +560,26 @@ class ChatNotifier extends StateNotifier<ChatState> {
           },
         );
       } else {
-        // Fallback to standard chat
-        await _sendStandardMessage(content);
+        // Fallback to standard unified message
+        await sendUnifiedMessage(content);
       }
     } catch (e) {
-      appLogger.error('Error sending message', {'error': e.toString()});
+      appLogger.error('Error sending unified streaming message', {'error': e.toString()});
       state = state.copyWith(
         isStreaming: false,
         error: 'Failed to send message',
       );
     }
   }
-
-  // Send message using standard (non-streaming) endpoint
-  Future<void> _sendStandardMessage(String content) async {
-    try {
-      final result = await _sendMessageUseCase(
-        content, 
-        state.currentSessionId ?? '',
-        conversationHistory: _conversationHistory, // NEW: Send full conversation context
-      );
-      
-      if (result.isSuccess) {
-        final message = result.data!;
-        
-        // Add AI response to conversation history
-        _conversationHistory.add({
-          'role': 'assistant',
-          'content': message.content,
-        });
-        
-        // Add the AI response message
-        final updatedMessages = List<ChatMessage>.from(state.messages);
-        updatedMessages.add(message); // Add the AI response
-        
-        state = state.copyWith(
-          messages: updatedMessages,
-          isStreaming: false,
-        );
-      } else {
-        final errorMessage = result.error?.message ?? 'Failed to send message';
-        throw Exception(errorMessage);
-      }
-      
-      // Save messages to local storage
-      _saveMessagesLocally();
-    } catch (e) {
-      appLogger.error('Error in standard message sending', {'error': e.toString()});
-      state = state.copyWith(
-        isStreaming: false,
-        error: 'Failed to send message',
-      );
-    }
+  
+  /// Toggle RAG functionality
+  void toggleRAG(bool enabled) {
+    _ragEnabled = enabled;
+    appLogger.info('RAG toggled', {'enabled': enabled});
   }
-
+  
+  /// Get current RAG status
+  bool get ragEnabled => _ragEnabled;
 
   // Clear current session
   void clearSession() {
@@ -655,7 +780,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       final lastMessage = state.messages.last;
       if (lastMessage.role == 'user') {
         // Resend the last user message
-        await sendMessage(lastMessage.content);
+        await sendUnifiedMessage(lastMessage.content);
       }
     }
   }
@@ -672,11 +797,14 @@ final chatProvider = StateNotifierProvider<ChatNotifier, ChatState>((ref) {
   final chatNotifier = ChatNotifier(
     getSessionsUseCase: ref.read(getSessionsUseCaseProvider),
     createSessionUseCase: ref.read(createSessionUseCaseProvider),
-    sendMessageUseCase: ref.read(sendMessageUseCaseProvider),
-    startStreamingChatUseCase: ref.read(startStreamingChatUseCaseProvider),
     getSessionMessagesUseCase: ref.read(getSessionMessagesUseCaseProvider),
     updateSessionUseCase: ref.read(updateSessionUseCaseProvider),
     deleteSessionUseCase: ref.read(deleteSessionUseCaseProvider),
+    sendUnifiedMessageUseCase: ref.read(sendUnifiedMessageUseCaseProvider),
+    sendUnifiedStreamingMessageUseCase: ref.read(sendUnifiedStreamingMessageUseCaseProvider),
+    createRAGOptionsUseCase: ref.read(createRAGOptionsUseCaseProvider),
+    createChatMetadataUseCase: ref.read(createChatMetadataUseCaseProvider),
+    selectChatModeUseCase: ref.read(selectChatModeUseCaseProvider),
     ref: ref,
   );
   

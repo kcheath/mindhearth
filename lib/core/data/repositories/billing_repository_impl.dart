@@ -388,7 +388,7 @@ class BillingRepositoryImpl implements BillingRepository {
       appLogger.info('🛒 Simulating purchase of $credits credits');
 
       final response = await _apiService.post(
-        '/billing/debug/simulate-purchase',
+        '/billing/dev/top-up',
         data: {'credits': credits},
       );
 

@@ -1,21 +1,34 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mindhearth/core/models/safety_code_state.dart';
-import 'package:mindhearth/core/di/service_locator.dart';
 import 'package:mindhearth/core/domain/usecases/onboarding_usecases.dart';
+import 'package:mindhearth/core/providers/usecase_providers.dart';
 import 'package:mindhearth/core/config/logging_config.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 
 /// Safety code state notifier
 class SafetyCodeNotifier extends StateNotifier<SafetyCodeState> {
-  SafetyCodeNotifier() : super(const SafetyCodeState());
+  final SaveSafetyCodesUseCase _saveSafetyCodesUseCase;
+  final ValidateSafetyCodeUseCase _validateSafetyCodeUseCase;
+  final ClearSafetyCodesUseCase _clearSafetyCodesUseCase;
+  final GetSafetyCodesUseCase _getSafetyCodesUseCase;
+
+  SafetyCodeNotifier({
+    required SaveSafetyCodesUseCase saveSafetyCodesUseCase,
+    required ValidateSafetyCodeUseCase validateSafetyCodeUseCase,
+    required ClearSafetyCodesUseCase clearSafetyCodesUseCase,
+    required GetSafetyCodesUseCase getSafetyCodesUseCase,
+  })  : _saveSafetyCodesUseCase = saveSafetyCodesUseCase,
+        _validateSafetyCodeUseCase = validateSafetyCodeUseCase,
+        _clearSafetyCodesUseCase = clearSafetyCodesUseCase,
+        _getSafetyCodesUseCase = getSafetyCodesUseCase,
+        super(const SafetyCodeState());
 
   /// Set safety codes
   Future<void> setSafetyCodes(Map<String, String> codes) async {
     state = state.setLoading(true);
     
     try {
-      final saveSafetyCodesUseCase = serviceLocator.get<SaveSafetyCodesUseCase>();
-      final result = await saveSafetyCodesUseCase(codes);
+      final result = await _saveSafetyCodesUseCase(codes);
       
       result.when(
         success: (_) {
@@ -53,8 +66,7 @@ class SafetyCodeNotifier extends StateNotifier<SafetyCodeState> {
     state = state.setLoading(true);
     
     try {
-      final validateSafetyCodeUseCase = serviceLocator.get<ValidateSafetyCodeUseCase>();
-      final result = await validateSafetyCodeUseCase(code);
+      final result = await _validateSafetyCodeUseCase(code);
       
       result.when(
         success: (isValid) {
@@ -102,8 +114,7 @@ class SafetyCodeNotifier extends StateNotifier<SafetyCodeState> {
     state = state.setLoading(true);
     
     try {
-      final clearSafetyCodesUseCase = serviceLocator.get<ClearSafetyCodesUseCase>();
-      final result = await clearSafetyCodesUseCase();
+      final result = await _clearSafetyCodesUseCase();
       
       result.when(
         success: (_) {
@@ -139,8 +150,7 @@ class SafetyCodeNotifier extends StateNotifier<SafetyCodeState> {
     state = state.setLoading(true);
     
     try {
-      final getSafetyCodesUseCase = serviceLocator.get<GetSafetyCodesUseCase>();
-      final result = await getSafetyCodesUseCase();
+      final result = await _getSafetyCodesUseCase();
       
       result.when(
         success: (codes) {
@@ -200,7 +210,12 @@ class SafetyCodeNotifier extends StateNotifier<SafetyCodeState> {
 
 /// Safety code state provider
 final safetyCodeNotifierProvider = StateNotifierProvider<SafetyCodeNotifier, SafetyCodeState>((ref) {
-  return SafetyCodeNotifier();
+  return SafetyCodeNotifier(
+    saveSafetyCodesUseCase: ref.watch(saveSafetyCodesUseCaseProvider),
+    validateSafetyCodeUseCase: ref.watch(verifySafetyCodeUseCaseProvider),
+    clearSafetyCodesUseCase: ref.watch(clearSafetyCodesUseCaseProvider),
+    getSafetyCodesUseCase: ref.watch(getSafetyCodesUseCaseProvider),
+  );
 });
 
 /// Safety code state provider (read-only)

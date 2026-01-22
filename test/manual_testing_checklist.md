@@ -15,7 +15,7 @@ This checklist ensures all critical user flows work correctly after backend chan
 ### **Login Tests**
 - [ ] **Valid Login**
   - [ ] Open app
-  - [ ] Enter test credentials: `test@tsukiyo.dev` / `testpass123`
+  - [ ] Enter test credentials: `test@mindhearth.dev` / `password123`
   - [ ] Tap "Login" button
   - [ ] Verify successful login
   - [ ] Check navigation to main app

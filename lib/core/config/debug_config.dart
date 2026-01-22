@@ -111,15 +111,15 @@ class DebugConfig {
   }
   
   /// API URL for development
-  static String get baseUrl => 'http://3.150.176.19:8080/api';
+  static String get baseUrl => 'http://3.150.176.19:3012/api/v1';
   
   /// Test credentials for development
-  static String get testEmail => 'test@tsukiyo.dev';
-  static String get testPassword => 'testpass123';
+  static String get testEmail => 'test@mindhearth.dev';
+  static String get testPassword => 'password123';
   
   /// Test tenant and application IDs
-  static String get tenantId => '1aca2ef7-b1fa-46bb-af08-a8fdb449b1f9';
-  static String get applicationId => '2852276f-16ca-462f-aa46-5e191880eb33';
+  static String get tenantId => '50cd82c6-22a2-4532-9743-e9ebef4f21e0';
+  static String get applicationId => '60dd93d7-33b3-5643-0854-f0fcf5f32f1f';
   static String get userId => 'c9380306-ea04-47de-bd14-3e26afa0063f';
   static String get apiKey => 'test-api-key-12345-new';
   

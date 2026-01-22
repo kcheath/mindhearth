@@ -148,112 +148,6 @@ class ChatService {
     }
   }
 
-  // Send a user message and get AI response in one call
-  Future<List<ChatMessage>?> sendMessageAndGetResponse(String message) async {
-    try {
-      // Check credits before sending message
-      final hasCredits = await checkChatCredits();
-      if (!hasCredits) {
-        appLogger.warning('Insufficient credits for chat operation');
-        return [
-          ChatMessage(
-            id: 'insufficient_credits_${DateTime.now().millisecondsSinceEpoch}',
-            sessionId: _currentSessionId ?? '',
-            content: 'You don\'t have enough credits to send a chat message. This is completely normal - healing takes time and resources. You can purchase more credits or wait for your monthly grant.',
-            role: 'assistant',
-            timestamp: DateTime.now(),
-          ),
-        ];
-      }
-
-      // Ensure we have a session
-      if (_currentSessionId == null) {
-        await createChatSession();
-        if (_currentSessionId == null) {
-          return null;
-        }
-      }
-
-      // Try the AI chat endpoint first
-      final messages = [
-        {
-          'role': 'user',
-          'content': message,
-        }
-      ];
-
-      final response = await _apiService.sendChatMessage(
-        messages: messages,
-        sessionId: _currentSessionId,
-        purpose: 'chat',
-        sessionType: 'conversation',
-      );
-
-      return response.when(
-        success: (data, responseMessage) {
-          final List<ChatMessage> chatMessages = [];
-          
-          // Add user message
-          chatMessages.add(ChatMessage(
-            id: 'user_${DateTime.now().millisecondsSinceEpoch}',
-            sessionId: _currentSessionId ?? '',
-            content: message,
-            role: 'user',
-            timestamp: DateTime.now(),
-          ));
-
-          // Add AI response
-          final aiMessage = data['message'] as String? ?? '';
-          if (aiMessage.isNotEmpty) {
-            chatMessages.add(ChatMessage(
-              id: 'ai_${DateTime.now().millisecondsSinceEpoch}',
-              sessionId: _currentSessionId ?? '',
-              content: aiMessage,
-              role: 'assistant',
-              timestamp: DateTime.now(),
-            ));
-          }
-
-          return chatMessages;
-        },
-        error: (errorMessage, statusCode, errors) {
-          // If AI chat endpoint fails (404), use communication system with contextual responses
-          if (statusCode == 404) {
-            appLogger.warning('AI chat endpoint not available, using communication system with contextual responses');
-            return _sendMessageWithCommunication(message);
-          }
-          
-          appLogger.error('Failed to send message and get AI response', {
-            'errorMessage': errorMessage,
-            'statusCode': statusCode,
-          });
-          return null;
-        },
-      );
-    } catch (e) {
-      appLogger.error('Error sending message and getting AI response', {'error': e.toString()});
-      return null;
-    }
-  }
-
-  // Send message with streaming response (Tsukiyo pattern)
-  Future<Stream<String>?> sendMessageStream(String message) async {
-    try {
-      // Ensure we have a session
-      if (_currentSessionId == null) {
-        await createChatSession();
-        if (_currentSessionId == null) {
-          return null;
-        }
-      }
-
-      // Try streaming chat endpoint first
-      return await _sendStreamingMessage(message);
-    } catch (e) {
-      appLogger.error('Error sending streaming message', {'error': e.toString()});
-      return null;
-    }
-  }
 
   // Send streaming message using the streaming endpoint
   Future<Stream<String>?> _sendStreamingMessage(String message) async {
@@ -265,14 +159,24 @@ class ChatService {
         }
       ];
 
-      // Use Dio to create a streaming request (Tsukiyo API)
+      // Use Dio to create a streaming request (Unified API)
       final response = await _apiService.dio.post(
-        '/chat/stream',
+        '/api/communications/chat/stream',
         data: {
-          'messages': messages,
+          'message': message,
+          'mode': 'streaming',
+          'options': {
+            'use_rag': true,
+            'streaming': true,
+            'persist_messages': true,
+            'consent': true,
+            'context_limit': 5,
+          },
+          'metadata': {
+            'purpose': 'chat',
+            'session_type': 'conversation',
+          },
           'session_id': _currentSessionId,
-          'session_type': 'conversation',
-          'purpose': 'chat',
         },
         options: Options(
           responseType: ResponseType.stream,
@@ -552,19 +456,6 @@ class ChatService {
     
     return responses[DateTime.now().millisecond % responses.length];
   }
-
-  // Send a user message (for backward compatibility)
-  Future<ChatMessage?> sendUserMessage(String message) async {
-    final messages = await sendMessageAndGetResponse(message);
-    return messages?.isNotEmpty == true ? messages!.first : null;
-  }
-
-  // Get AI response (for backward compatibility)
-  Future<ChatMessage?> getAIResponse(String userMessage, {String? sessionId}) async {
-    final messages = await sendMessageAndGetResponse(userMessage);
-    return messages?.length == 2 ? messages![1] : null;
-  }
-
 
   // Clear current session
   void clearSession() {

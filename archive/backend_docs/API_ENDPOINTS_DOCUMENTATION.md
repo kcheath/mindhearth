@@ -24,7 +24,7 @@ All authenticated requests include:
 **Request Data**:
 ```json
 {
-  "email": "test@tsukiyo.dev",
+  "email": "test@mindhearth.dev",
   "password": "password123",
   "tenant_id": "4de48d40-bbdf-4f43-83f7-01e1c102dde8",
   "application_id": "50cd82c6-22a2-4532-9743-e9ebef4f21e0"
@@ -39,7 +39,7 @@ All authenticated requests include:
   "expires_in": 1440,
   "user": {
     "id": "c9380306-ea04-47de-bd14-3e26afa0063f",
-    "email": "test@tsukiyo.dev",
+    "email": "test@mindhearth.dev",
     "first_name": "Debug",
     "last_name": "User",
     "tenant_id": "4de48d40-bbdf-4f43-83f7-01e1c102dde8"
@@ -381,6 +381,6 @@ All endpoints may return error responses with the following structure:
 - Safety codes are encrypted with user-provided passphrases
 
 ## Development Configuration
-- Debug mode uses test credentials: `test@tsukiyo.dev` / `password123`
+- Debug mode uses test credentials: `test@mindhearth.dev` / `password123`
 - All requests include debug headers in development
 - Enhanced logging is enabled for all API calls in debug mode

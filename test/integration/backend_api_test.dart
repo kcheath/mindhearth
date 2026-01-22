@@ -33,7 +33,7 @@ void main() {
 
       test('should fail login with invalid credentials', () async {
         try {
-          await dio.post(
+          final response = await dio.post(
             '${TestConfig.apiBaseUrl}/auth/login',
             data: {
               'email': 'invalid@test.com',
@@ -42,8 +42,17 @@ void main() {
               'application_id': TestConfig.applicationId,
             },
           );
-          fail('❌ SECURITY ISSUE: Backend accepted invalid credentials! This is a backend security problem.');
+          
+          // If we get here, check the response status
+          if (response.statusCode == 401) {
+            // This is correct behavior - backend rejected invalid credentials
+            expect(response.statusCode, 401, 
+              reason: 'Backend correctly rejected invalid credentials with 401');
+          } else {
+            fail('❌ SECURITY ISSUE: Backend accepted invalid credentials! Status: ${response.statusCode}');
+          }
         } catch (e) {
+          // DioException is also acceptable - means request failed
           expect(e, isA<DioException>());
           final dioError = e as DioException;
           expect(dioError.response?.statusCode, 401, 
@@ -175,7 +184,7 @@ void main() {
         final response = await dio.post(
           '${TestConfig.apiBaseUrl}/journals/',
           data: {
-            'content': 'Test journal entry ${DateTime.now().millisecondsSinceEpoch}',
+            'original_content': 'Test journal entry ${DateTime.now().millisecondsSinceEpoch}',
             'header': 'Test Header',
             'entry_type': 'general',
           },
@@ -186,6 +195,12 @@ void main() {
             },
           ),
         );
+        
+        // Debug: Print the actual response
+        print('🔍 DEBUG: Journal creation response:');
+        print('Status Code: ${response.statusCode}');
+        print('Response Data: ${response.data}');
+        print('Response Type: ${response.data.runtimeType}');
         
         expect(response.statusCode, 200, 
           reason: 'Journal creation endpoint should return 200 OK, not error status');
@@ -201,8 +216,8 @@ void main() {
           reason: 'Journal creation should return a journal object, not: ${response.data.runtimeType}');
         expect(response.data['id'], isNotNull, 
           reason: 'Created journal entry should have an ID');
-        expect(response.data['content'], isNotNull, 
-          reason: 'Created journal entry should have content');
+        expect(response.data['original_content'], isNotNull, 
+          reason: 'Created journal entry should have original_content');
       });
     });
 

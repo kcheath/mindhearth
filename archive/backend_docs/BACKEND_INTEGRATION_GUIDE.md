@@ -14,15 +14,15 @@ API_VERSION: "v1"
 ### **👤 Test User Credentials**
 ```dart
 // Updated in lib/core/config/debug_config.dart and test_config.dart
-Email: "test@tsukiyo.dev"
+Email: "test@mindhearth.dev"
 Password: "password123"
 ```
 
 ### **🏢 Tenant & Application IDs**
 ```dart
 // Updated in lib/core/services/api_service.dart
-TENANT_ID: "1aca2ef7-b1fa-46bb-af08-a8fdb449b1f9"
-APPLICATION_ID: "2852276f-16ca-462f-aa46-5e191880eb33"
+TENANT_ID: "50cd82c6-22a2-4532-9743-e9ebef4f21e0"
+APPLICATION_ID: "60dd93d7-33b3-5643-0854-f0fcf5f32f1f"
 API_KEY: "test-api-key-12345-new"
 ```
 
@@ -47,7 +47,7 @@ The app is already configured with the new backend settings. No additional setup
 ### **2. Test Login Flow**
 ```dart
 // The login page automatically pre-fills with test credentials in debug mode:
-Email: test@tsukiyo.dev
+Email: test@mindhearth.dev
 Password: password123
 ```
 
@@ -59,7 +59,7 @@ The app automatically includes the required headers:
   "Authorization": "Bearer {access_token}",
   "X-User-ID": "{user_id}",
   "X-API-Key": "test-api-key-12345-new",
-  "X-App-ID": "2852276f-16ca-462f-aa46-5e191880eb33"
+  "X-App-ID": "60dd93d7-33b3-5643-0854-f0fcf5f32f1f"
 }
 ```
 

@@ -26,7 +26,17 @@ class JournalNotifier extends StateNotifier<JournalState> {
       
       response.when(
         success: (data, message) {
-          final entriesList = data['journal_entries'] as List<dynamic>? ?? [];
+          // Extract journal entries from the response
+          List<dynamic> entriesList = [];
+          
+          if (data is Map<String, dynamic>) {
+            // The API service should have already normalized the response
+            final journalEntries = data['journal_entries'];
+            if (journalEntries is List) {
+              entriesList = journalEntries;
+            }
+          }
+          
           final entries = entriesList
               .map((entryData) => JournalEntry.fromJson(entryData as Map<String, dynamic>))
               .toList();
@@ -193,13 +203,13 @@ class JournalNotifier extends StateNotifier<JournalState> {
   }
 
   /// Delete journal entry
-  Future<void> deleteJournalEntry(String entryId) async {
+  Future<bool> deleteJournalEntry(String entryId) async {
     state = state.setLoading(true);
     
     try {
       final response = await _apiService.deleteJournalEntry(entryId);
       
-      response.when(
+      return response.when(
         success: (data, message) {
           state = state.deleteEntry(entryId);
           
@@ -208,6 +218,8 @@ class JournalNotifier extends StateNotifier<JournalState> {
               'entryId': entryId,
             });
           }
+          
+          return true;
         },
         error: (message, statusCode, errors) {
           state = state.setError(message);
@@ -215,6 +227,8 @@ class JournalNotifier extends StateNotifier<JournalState> {
           if (LoggingConfig.enableApiLogs) {
             appLogger.apiError('DELETE', '/journals/$entryId', statusCode ?? 500, message);
           }
+          
+          return false;
         },
       );
     } catch (e) {
@@ -223,6 +237,8 @@ class JournalNotifier extends StateNotifier<JournalState> {
       if (LoggingConfig.enableApiLogs) {
         appLogger.apiError('DELETE', '/journals/$entryId', 500, e.toString());
       }
+      
+      return false;
     }
   }
 

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:mindhearth/core/services/api_service.dart';
 import 'package:mindhearth/core/models/api_response.dart';
@@ -37,7 +36,26 @@ class JournalService {
       appLogger.debug('getJournalEntries - response data: ${response.data}', 'JournalService');
       
       if (response.statusCode == 200) {
-        final journalResponse = JournalEntriesResponse.fromJson(response.data);
+        // Handle different response formats
+        Map<String, dynamic> responseData;
+        if (response.data is List) {
+          // If response is a list (empty array), wrap it in the expected format
+          responseData = {
+            'journal_entries': response.data,
+            'total': (response.data as List).length,
+          };
+        } else if (response.data is Map<String, dynamic>) {
+          // If response is already a map, use it directly
+          responseData = response.data as Map<String, dynamic>;
+        } else {
+          // Fallback for unexpected format
+          responseData = {
+            'journal_entries': [],
+            'total': 0,
+          };
+        }
+        
+        final journalResponse = JournalEntriesResponse.fromJson(responseData);
         return ApiSuccess(data: journalResponse);
       } else {
         return ApiError(
@@ -131,22 +149,55 @@ class JournalService {
   }
 
   // Create AI journal summary
-  Future<ApiResponse<JournalEntry>> createAIJournalSummary(AIJournalSummaryRequest request) async {
+  Future<ApiResponse<AIJournalSummaryResponse>> createAIJournalSummary(AIJournalSummaryRequest request) async {
     try {
       appLogger.debug('createAIJournalSummary - sending request', 'JournalService');
       appLogger.debug('createAIJournalSummary - request data: ${request.toJson()}', 'JournalService');
       
+      // Get conversation history for context
+      List<Map<String, dynamic>>? conversationHistory;
+      try {
+        final chatHistoryResponse = await _apiService.dio.get('/communications/', queryParameters: {
+          'session_id': request.sessionId,
+          'item_type': 'chat',
+          'limit': 50, // Get last 50 messages for context
+        });
+        
+        if (chatHistoryResponse.statusCode == 200) {
+          final data = chatHistoryResponse.data as Map<String, dynamic>;
+          final communications = data['communications'] as List<dynamic>? ?? [];
+          
+          conversationHistory = communications.map((comm) {
+            final commData = comm as Map<String, dynamic>;
+            return {
+              'role': commData['role'] ?? 'user',
+              'content': commData['original_content'] ?? commData['content'] ?? '',
+              'timestamp': commData['created_at'] ?? '',
+            };
+          }).toList();
+          
+          appLogger.debug('createAIJournalSummary - retrieved ${conversationHistory.length} messages for context', 'JournalService');
+        }
+      } catch (e) {
+        appLogger.warning('createAIJournalSummary - failed to get conversation history, proceeding without context', 'JournalService');
+      }
+      
+      final requestData = {
+        ...request.toJson(),
+        if (conversationHistory != null && conversationHistory.isNotEmpty) 'conversation_history': conversationHistory,
+      };
+      
       final response = await _apiService.dio.post(
         '/journals/ai-summary',
-        data: request.toJson(),
+        data: requestData,
       );
       
       appLogger.debug('createAIJournalSummary - response status: ${response.statusCode}', 'JournalService');
       appLogger.debug('createAIJournalSummary - response data: ${response.data}', 'JournalService');
       
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final entry = JournalEntry.fromJson(response.data);
-        return ApiSuccess(data: entry);
+        final summary = AIJournalSummaryResponse.fromJson(response.data);
+        return ApiSuccess(data: summary);
       } else {
         return ApiError(
           message: 'Failed to create AI journal summary',
@@ -202,6 +253,43 @@ class JournalService {
       
       return ApiError(
         message: e.response?.data?['detail'] ?? 'Failed to update journal entry',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  // Delete journal entry
+  Future<ApiResponse<void>> deleteJournalEntry(String entryId) async {
+    try {
+      appLogger.debug('deleteJournalEntry - sending request to /journals/$entryId', 'JournalService');
+      
+      final response = await _apiService.dio.delete('/journals/$entryId');
+      
+      appLogger.debug('deleteJournalEntry - response status: ${response.statusCode}', 'JournalService');
+      appLogger.debug('deleteJournalEntry - response data: ${response.data}', 'JournalService');
+      
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return ApiSuccess(data: null);
+      } else {
+        return ApiError(
+          message: 'Failed to delete journal entry',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      appLogger.debug('deleteJournalEntry - error: ${e.toString()}', 'JournalService');
+      appLogger.debug('deleteJournalEntry - error response: ${e.response?.data}', 'JournalService');
+      appLogger.debug('deleteJournalEntry - error status code: ${e.response?.statusCode}', 'JournalService');
+      
+      if (e.response?.statusCode == 404) {
+        return ApiError(
+          message: 'Journal entry not found',
+          statusCode: 404,
+        );
+      }
+      
+      return ApiError(
+        message: e.response?.data?['detail'] ?? 'Failed to delete journal entry',
         statusCode: e.response?.statusCode,
       );
     }

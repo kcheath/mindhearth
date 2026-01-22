@@ -61,8 +61,7 @@ class BillingNotifier extends StateNotifier<BillingState> {
   /// Load all billing data
   Future<void> loadBillingData() async {
     await Future.wait([
-      loadBalance(),
-      loadBillingStatus(),
+      loadBillingStatus(), // This includes balance information
       loadLedger(),
       loadPurchases(),
     ]);
@@ -114,6 +113,7 @@ class BillingNotifier extends StateNotifier<BillingState> {
         success: (billingStatus, statusCode) {
           state = state.copyWith(
             billingStatus: billingStatus,
+            balance: billingStatus.currentBalance, // Set balance from billing status
             isLoading: false,
           );
           appLogger.info('Billing status loaded successfully', {

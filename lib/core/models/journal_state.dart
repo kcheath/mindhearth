@@ -28,8 +28,12 @@ class JournalState {
 
   /// Load journal entries
   JournalState loadEntries(List<JournalEntry> entries) {
+    // Sort entries by creation date (most recent first)
+    final sortedEntries = List<JournalEntry>.from(entries)
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    
     return copyWith(
-      entries: entries,
+      entries: sortedEntries,
       error: null,
       isLoading: false,
     );
@@ -37,15 +41,20 @@ class JournalState {
 
   /// Add new journal entry
   JournalState addEntry(JournalEntry entry) {
+    // Add entry and maintain sorted order (most recent first)
+    final updatedEntries = [entry, ...entries]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    
     return copyWith(
-      entries: [entry, ...entries],
+      entries: updatedEntries,
       isLoading: false,
     );
   }
 
   /// Update existing journal entry
   JournalState updateEntry(JournalEntry entry) {
-    final updatedEntries = entries.map((e) => e.id == entry.id ? entry : e).toList();
+    final updatedEntries = entries.map((e) => e.id == entry.id ? entry : e).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return copyWith(entries: updatedEntries, isLoading: false);
   }
 
