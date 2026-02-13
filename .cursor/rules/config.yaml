@@ -1,0 +1,15 @@
+project_name: Fortessa Workspace
+entrypoint: .
+includes:
+  - .
+rules:
+  - .cursor/rules/project_overview.md
+  - .cursor/rules/coding_standards.md
+  - .cursor/rules/backend_architecture.md
+  - .cursor/rules/flutter_ui_architecture.md
+  - .cursor/rules/testing.md
+  - .cursor/rules/git_workflow.md
+  - .cursor/rules/security_principles.md
+  - .cursor/rules/task_templates.md
+  - .cursor/rules/shared_artifacts.md
+

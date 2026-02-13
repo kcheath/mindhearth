@@ -1,0 +1,32 @@
+# Fortessa Workspace Cursor Rules (Synced)
+
+# Required Context (Read First)
+- Before making changes, read and follow:
+  - .cursor/rules/README.md
+  - .cursor/rules/coding_standards.md
+- If instructions conflict, prioritize:
+  1) .cursorrules
+  2) .cursor/rules/README.md and the referenced files
+  3) repository codebase patterns
+
+# Documentation Placement Policy
+- NEVER create new markdown files under /docs in this repository.
+- Durable docs (architecture, runbooks, ADR/RFC, integration guides) MUST be created in the fortessa-docs repository under fortessa-docs/docs/**.
+- Ephemeral docs (debug notes, test plans, cursor plans, investigations, handoffs) MUST be created under /scratch/** in this repository.
+
+# Cross-team docs
+- If asked to create docs for another repo/team to review, default to /scratch/handoffs/.
+- Cross-team handoffs MUST include:
+  DELETE_OK: true
+  EXPIRES_ON: YYYY-MM-DD
+  OWNER_TEAM: <team>
+  REVIEW_TEAM: <team>
+  RELATED_PR: <link or placeholder>
+
+# Thin docs rule
+- Only docs/README.md is allowed in this repository's /docs folder.
+- If a durable doc is needed, add a link in docs/README.md pointing to fortessa-docs.
+
+# Output defaults
+- When producing an implementation plan or analysis, write to:
+  /scratch/cursor/YYYY-MM-DD_<topic>.md
