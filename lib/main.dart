@@ -6,19 +6,21 @@ import 'package:mindhearth/core/config/debug_config.dart';
 import 'package:mindhearth/core/config/logging_config.dart';
 import 'package:mindhearth/core/providers/auth_provider.dart';
 import 'package:mindhearth/core/providers/safety_code_provider.dart';
+import 'package:mindhearth/core/synapse/mindhearth_synapse_integration.dart';
 import 'package:mindhearth/core/utils/logger.dart';
 import 'package:mindhearth/core/di/service_locator.dart';
 
 void main() async {
   // Initialize logging system
   appLogger.initialize(enableDebugLogs: LoggingConfig.enableDebugLogs);
-  
+
   // Initialize service locator
   await ServiceLocator.initialize();
-  
+
   runApp(
-    const ProviderScope(
-      child: MindhearthApp(),
+    ProviderScope(
+      overrides: mindhearthSynapseProviderOverrides(),
+      child: const MindhearthApp(),
     ),
   );
 }
@@ -30,12 +32,13 @@ class MindhearthApp extends ConsumerStatefulWidget {
   ConsumerState<MindhearthApp> createState() => _MindhearthAppState();
 }
 
-class _MindhearthAppState extends ConsumerState<MindhearthApp> with WidgetsBindingObserver {
+class _MindhearthAppState extends ConsumerState<MindhearthApp>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    
+
     // Initialize auth status when app starts
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authNotifier = ref.read(authNotifierProvider.notifier);
@@ -52,21 +55,23 @@ class _MindhearthAppState extends ConsumerState<MindhearthApp> with WidgetsBindi
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    
+
     // Reset safety code verification when app is paused or terminated
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
       final safetyCodeNotifier = ref.read(safetyCodeNotifierProvider.notifier);
       safetyCodeNotifier.resetVerification();
-      appLogger.info('Safety code verification reset due to app lifecycle change', {
-        'state': state.toString(),
-      });
+      appLogger.info(
+        'Safety code verification reset due to app lifecycle change',
+        {'state': state.toString()},
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
-    
+
     return MaterialApp.router(
       title: 'Mindhearth',
       theme: AppTheme.lightTheme,
@@ -86,11 +91,18 @@ class _MindhearthAppState extends ConsumerState<MindhearthApp> with WidgetsBindi
                 left: 0,
                 right: 0,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  color: Colors.orange.withOpacity(0.9),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  color: Colors.orange.withValues(alpha: 0.9),
                   child: Row(
                     children: [
-                      const Icon(Icons.bug_report, color: Colors.white, size: 16),
+                      const Icon(
+                        Icons.bug_report,
+                        color: Colors.white,
+                        size: 16,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'Environment: Debug | Backend: ${DebugConfig.baseUrl}',

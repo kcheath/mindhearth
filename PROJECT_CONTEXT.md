@@ -11,7 +11,7 @@
 - **RAG Integration**: Document retrieval and context management
 
 ### Frontend Stack
-- **Framework**: Flutter 3.8.1+ with Dart 3.8.1+
+- **Framework**: Flutter with Dart 3.11+ (aligned with `synapse_state`)
 - **State Management**: Riverpod with code generation
 - **Navigation**: GoRouter with authentication guards
 - **UI Framework**: Material 3 with dynamic theming
@@ -177,6 +177,7 @@ All endpoints are relative to base URL: `http://3.150.176.19:3012/api/v1`
 - [2025-01-27] **Backend Documentation Archive**: Moved all backend-related documentation files to `archive/backend_docs/` folder. Archived documents include: API_DOCUMENTATION.md, API_ENDPOINTS_DOCUMENTATION.md, API_ENDPOINT_FIXES.md, API_FLOW_DIAGRAM.md, BACKEND_INTEGRATION_GUIDE.md, and BACKEND_INTEGRATION_TEST_PLAN.md. Going forward, all API contract documents and integration documents should be placed in the `/fortessa_shared` folder for centralized management.
 - [2026-01-28] **API Migration to Fortessa Platform**: Migrated all API endpoints to align with Fortessa Platform API specification. Updated base URL from `http://3.150.176.19:8080` to `http://3.150.176.19:3012/api/v1`. Removed unnecessary headers (X-Tenant-ID, X-App-ID, X-User-ID) as backend extracts these from JWT token. Updated all endpoint paths to use `/api/v1/` prefix pattern. Removed all deprecated chat methods. Cleaned up unused imports and orphaned code. All endpoints now follow the documented API structure.
 - [2026-01-28] **Dependency Injection Standardization**: Standardized all StateNotifier providers to use constructor injection with Riverpod providers instead of GetIt service locator pattern. Refactored `AuthNotifier`, `OnboardingNotifier`, and `SafetyCodeNotifier` to inject use cases via constructors. Added missing use case providers for auth and onboarding use cases. Updated `core_service_providers.dart` to create services directly instead of wrapping service locator. All providers now follow consistent dependency injection pattern improving testability and maintainability.
+- [2026-05-28] **Synapse consumer runtime adoption start**: Added `synapse_state` path dependency, root `ProviderScope` overrides via `mindhearthSynapseProviderOverrides`, and `MindhearthSynapseHostHandoffController` for applying safe host/BFF JSON handoff material into Synapse consumer runtime. Tests verify consumer posture, package context handoff, and Fortessa API key leakage rejection. Application API keys remain host/BFF-only; Flutter receives only end-user bearer and runtime package context.
 - Future changes will be appended here automatically
 
 ---
