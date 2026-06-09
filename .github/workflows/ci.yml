@@ -6,9 +6,14 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 35
 
     steps:
     - uses: actions/checkout@v4
@@ -18,6 +23,7 @@ jobs:
       with:
         flutter-version: '3.19.0'
         channel: 'stable'
+        cache: true
 
     - name: Install dependencies
       run: flutter pub get
